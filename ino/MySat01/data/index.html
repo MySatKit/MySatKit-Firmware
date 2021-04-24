@@ -1,0 +1,207 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MySat UA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <div class="topnav">
+    <h1>Mission Control</h1>
+  </div>
+  <div id="container">
+    <h2>Picture from MySat</h2>
+    <p>It might take more than 5 seconds to capture a photo.</p>
+      <button onclick="capturePhoto()">CAPTURE PHOTO</button>
+      <button onclick="location.reload();">REFRESH PAGE</button>
+  </div>
+  <div>
+      <img src="saved-photo" id="photo"></img>  
+  </div>
+  <div class="content">
+    <div class="cards">
+      <div class="card">
+        <p><i class="fas fa-thermometer-half" style="color:#059e8a;"></i> TEMPERATURE</p><p><span class="reading"><span id="temp">%TEMPERATURE%</span> &deg;C</span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-tint" style="color:#00add6;"></i> HUMIDITY</p><p><span class="reading"><span id="hum">%HUMIDITY%</span> &percnt;</span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-angle-double-down" style="color:#e1e437;"></i> PRESSURE</p><p><span class="reading"><span id="pres">%PRESSURE%</span> hPa</span></p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <p><i class="far fa-clock" style="color:#00add6;"></i> TIME</p><p><span class="reading"><span id="time_id">%TIME%</span> &percnt;</span></p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <p><i class="fas fa-arrow-right" style="color:#059e8a;"></i> A X</p><p><span class="reading"><span id="ax_id">%AX%</span> </span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-arrow-down" style="color:#00add6;"></i> A Y</p><p><span class="reading"><span id="ay_id">%AY%</span> </span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-arrow-up" style="color:#e1e437;"></i> A Z</p><p><span class="reading"><span id="az_id">%AZ%</span> </span></p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <p><i class="fas fa-arrow-right" style="color:#059e8a;"></i> G X</p><p><span class="reading"><span id="gx_id">%GX%</span> </span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-arrow-down" style="color:#00add6;"></i> G Y</p><p><span class="reading"><span id="gy_id">%GY%</span> </span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-arrow-up" style="color:#e1e437;"></i> G Z</p><p><span class="reading"><span id="gz_id">%GZ%</span> </span></p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <p><i class="fas fa-arrow-right" style="color:#059e8a;"></i> M X</p><p><span class="reading"><span id="mx_id">%MX%</span> </span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-arrow-down" style="color:#00add6;"></i> M Y</p><p><span class="reading"><span id="my_id">%MY%</span> </span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-arrow-up" style="color:#e1e437;"></i> M Z</p><p><span class="reading"><span id="mz_id">%MZ%</span> </span></p>
+      </div>
+    </div>
+    <div class="cards2">
+      <div class="card">
+        <p><i class="fas fa-sun" style="color:#059e8a;"></i> Ph1</p><p><span class="reading"><span id="ph1_id">%PH1%</span> </span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-sun" style="color:#00add6;"></i> Ph2</p><p><span class="reading"><span id="ph2_id">%PH2%</span> </span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-sun" style="color:#e1e437;"></i> Ph3</p><p><span class="reading"><span id="ph3_id">%PH3%</span> </span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-sun" style="color:#e1e437;"></i> Ph4</p><p><span class="reading"><span id="ph4_id">%PH4%</span> </span></p>
+      </div>
+    </div>
+    <div class="cards2">
+      <div class="card">
+        <p><i class="fas fa-sun" style="color:#059e8a;"></i> shuntvoltage</p><p><span class="reading"><span id="shuntvoltage_id">%SHUNTVOLTAGE%</span> V</span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-sun" style="color:#00add6;"></i> busvoltage</p><p><span class="reading"><span id="busvoltage_id">%BUSVOLTAGE%</span> V</span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-sun" style="color:#e1e437;"></i> current</p><p><span class="reading"><span id="current_id">%CURRENT%</span> mA</span></p>
+      </div>
+      <div class="card">
+        <p><i class="fas fa-sun" style="color:#e1e437;"></i> power</p><p><span class="reading"><span id="power_id">%POWER%</span> mW</span></p>
+      </div>
+    </div>
+  </div> 
+<script>
+if (!!window.EventSource) {
+ var source = new EventSource('/events');
+  source.addEventListener('open', function(e) {
+  console.log("Events Connected");
+ }, false);
+ source.addEventListener('error', function(e) {
+  if (e.target.readyState != EventSource.OPEN) {
+    console.log("Events Disconnected");
+  }
+ }, false);
+ source.addEventListener('message', function(e) {
+  console.log("message", e.data);
+ }, false);
+ source.addEventListener('temperature', function(e) {
+  console.log("temperature", e.data);
+  document.getElementById("temp").innerHTML = e.data;
+ }, false);
+ source.addEventListener('humidity', function(e) {
+  console.log("humidity", e.data);
+  document.getElementById("hum").innerHTML = e.data;
+ }, false);
+ source.addEventListener('pressure', function(e) {
+  console.log("pressure", e.data);
+  document.getElementById("pres").innerHTML = e.data;
+ }, false);
+ source.addEventListener('sTime', function(e) {
+  console.log("sTime", e.data);
+  document.getElementById("time_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('aX', function(e) {
+  console.log("aX", e.data);
+  document.getElementById("ax_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('aY', function(e) {
+  console.log("aY", e.data);
+  document.getElementById("ay_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('aZ', function(e) {
+  console.log("aZ", e.data);
+  document.getElementById("az_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('gX', function(e) {
+  console.log("gX", e.data);
+  document.getElementById("gx_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('gY', function(e) {
+  console.log("gY", e.data);
+  document.getElementById("gy_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('gZ', function(e) {
+  console.log("gZ", e.data);
+  document.getElementById("gz_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('mX', function(e) {
+  console.log("mX", e.data);
+  document.getElementById("mx_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('mY', function(e) {
+  console.log("mY", e.data);
+  document.getElementById("my_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('mZ', function(e) {
+  console.log("mZ", e.data);
+  document.getElementById("mz_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('ph1', function(e) {
+  console.log("ph1", e.data);
+  document.getElementById("ph1_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('ph2', function(e) {
+  console.log("ph2", e.data);
+  document.getElementById("ph2_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('ph3', function(e) {
+  console.log("ph3", e.data);
+  document.getElementById("ph3_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('ph4', function(e) {
+  console.log("ph4", e.data);
+  document.getElementById("ph4_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('shuntvoltage', function(e) {
+  console.log("shuntvoltage", e.data);
+  document.getElementById("shuntvoltage_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('busvoltage', function(e) {
+  console.log("busvoltage", e.data);
+  document.getElementById("busvoltage_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('current', function(e) {
+  console.log("current", e.data);
+  document.getElementById("current_id").innerHTML = e.data;
+ }, false);
+ source.addEventListener('power', function(e) {
+  console.log("power", e.data);
+  document.getElementById("power_id").innerHTML = e.data;
+ }, false);
+ function capturePhoto() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "/capture", true);
+    xhr.send();
+ }
+}
+</script>
+</body>
+</html>

@@ -29,8 +29,6 @@
 // RTC
 #include <RtcDS3231.h>
 #include "rtc.h"
-#include "pressure.h"
-#include "mcu.h"
 
 #include "Adafruit_INA219.h"
 #include <Adafruit_BME280.h>
@@ -43,7 +41,8 @@ float temperature;
 float humidity;
 float pressure;
 
-
+// File system with html and css
+// https://randomnerdtutorials.com/esp32-web-server-spiffs-spi-flash-file-system/
 
 float shuntvoltage = 0;
 float busvoltage = 0;
@@ -99,226 +98,6 @@ boolean takeNewPhoto = false;
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
-const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>MySat UA</title>
-  <style>
-    html {font-family: Arial; display: inline-block; text-align: center;}
-    p { font-size: 1.2rem;}
-    body {  margin: 0;}
-    .topnav { overflow: hidden; background-color: #50B8B4; color: white; font-size: 1rem; }
-    .content { padding: 20px; }
-    .card { background-color: white; box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5); }
-    .cards { max-width: 800px; margin: 0 auto; display: grid; grid-gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-    .cards2 { max-width: 800px; margin: 0 auto; display: grid; grid-gap: 3rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-    .reading { font-size: 1.4rem; }
-  </style>
-</head>
-<body>
-  <div class="topnav">
-    <h1>MySat UA Mission Control</h1>
-  </div>
-  <div id="container">
-    <h2>Picture from MySat</h2>
-    <p>It might take more than 5 seconds to capture a photo.</p>
-    <p>
-      <button onclick="capturePhoto()">CAPTURE PHOTO</button>
-      <button onclick="location.reload();">REFRESH PAGE</button>
-    </p>
-  </div>
-  <div>
-      <img src="saved-photo" id="photo"></img>  
-  </div>
-  <div class="content">
-    <div class="cards">
-      <div class="card">
-        <p><i class="fas fa-thermometer-half" style="color:#059e8a;"></i> TEMPERATURE</p><p><span class="reading"><span id="temp">%TEMPERATURE%</span> &deg;C</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-tint" style="color:#00add6;"></i> HUMIDITY</p><p><span class="reading"><span id="hum">%HUMIDITY%</span> &percnt;</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-angle-double-down" style="color:#e1e437;"></i> PRESSURE</p><p><span class="reading"><span id="pres">%PRESSURE%</span> hPa</span></p>
-      </div>
-    </div>
-    <div class="cards">
-      <div class="card">
-        <p><i class="far fa-clock" style="color:#00add6;"></i> TIME</p><p><span class="reading"><span id="time_id">%TIME%</span> &percnt;</span></p>
-      </div>
-    </div>
-    <div class="cards">
-      <div class="card">
-        <p><i class="fas fa-arrow-right" style="color:#059e8a;"></i> A X</p><p><span class="reading"><span id="ax_id">%AX%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-down" style="color:#00add6;"></i> A Y</p><p><span class="reading"><span id="ay_id">%AY%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-up" style="color:#e1e437;"></i> A Z</p><p><span class="reading"><span id="az_id">%AZ%</span> </span></p>
-      </div>
-    </div>
-    <div class="cards">
-      <div class="card">
-        <p><i class="fas fa-arrow-right" style="color:#059e8a;"></i> G X</p><p><span class="reading"><span id="gx_id">%GX%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-down" style="color:#00add6;"></i> G Y</p><p><span class="reading"><span id="gy_id">%GY%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-up" style="color:#e1e437;"></i> G Z</p><p><span class="reading"><span id="gz_id">%GZ%</span> </span></p>
-      </div>
-    </div>
-    <div class="cards">
-      <div class="card">
-        <p><i class="fas fa-arrow-right" style="color:#059e8a;"></i> M X</p><p><span class="reading"><span id="mx_id">%MX%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-down" style="color:#00add6;"></i> M Y</p><p><span class="reading"><span id="my_id">%MY%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-up" style="color:#e1e437;"></i> M Z</p><p><span class="reading"><span id="mz_id">%MZ%</span> </span></p>
-      </div>
-    </div>
-    <div class="cards2">
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#059e8a;"></i> Ph1</p><p><span class="reading"><span id="ph1_id">%PH1%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#00add6;"></i> Ph2</p><p><span class="reading"><span id="ph2_id">%PH2%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#e1e437;"></i> Ph3</p><p><span class="reading"><span id="ph3_id">%PH3%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#e1e437;"></i> Ph4</p><p><span class="reading"><span id="ph4_id">%PH4%</span> </span></p>
-      </div>
-    </div>
-    <div class="cards2">
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#059e8a;"></i> shuntvoltage</p><p><span class="reading"><span id="shuntvoltage_id">%SHUNTVOLTAGE%</span> V</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#00add6;"></i> busvoltage</p><p><span class="reading"><span id="busvoltage_id">%BUSVOLTAGE%</span> V</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#e1e437;"></i> current</p><p><span class="reading"><span id="current_id">%CURRENT%</span> mA</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#e1e437;"></i> power</p><p><span class="reading"><span id="power_id">%POWER%</span> mW</span></p>
-      </div>
-    </div>
-  </div> 
-<script>
-if (!!window.EventSource) {
- var source = new EventSource('/events');
-  source.addEventListener('open', function(e) {
-  console.log("Events Connected");
- }, false);
- source.addEventListener('error', function(e) {
-  if (e.target.readyState != EventSource.OPEN) {
-    console.log("Events Disconnected");
-  }
- }, false);
- source.addEventListener('message', function(e) {
-  console.log("message", e.data);
- }, false);
- source.addEventListener('temperature', function(e) {
-  console.log("temperature", e.data);
-  document.getElementById("temp").innerHTML = e.data;
- }, false);
- source.addEventListener('humidity', function(e) {
-  console.log("humidity", e.data);
-  document.getElementById("hum").innerHTML = e.data;
- }, false);
- source.addEventListener('pressure', function(e) {
-  console.log("pressure", e.data);
-  document.getElementById("pres").innerHTML = e.data;
- }, false);
- source.addEventListener('sTime', function(e) {
-  console.log("sTime", e.data);
-  document.getElementById("time_id").innerHTML = e.data;
- }, false);
- source.addEventListener('aX', function(e) {
-  console.log("aX", e.data);
-  document.getElementById("ax_id").innerHTML = e.data;
- }, false);
- source.addEventListener('aY', function(e) {
-  console.log("aY", e.data);
-  document.getElementById("ay_id").innerHTML = e.data;
- }, false);
- source.addEventListener('aZ', function(e) {
-  console.log("aZ", e.data);
-  document.getElementById("az_id").innerHTML = e.data;
- }, false);
- source.addEventListener('gX', function(e) {
-  console.log("gX", e.data);
-  document.getElementById("gx_id").innerHTML = e.data;
- }, false);
- source.addEventListener('gY', function(e) {
-  console.log("gY", e.data);
-  document.getElementById("gy_id").innerHTML = e.data;
- }, false);
- source.addEventListener('gZ', function(e) {
-  console.log("gZ", e.data);
-  document.getElementById("gz_id").innerHTML = e.data;
- }, false);
- source.addEventListener('mX', function(e) {
-  console.log("mX", e.data);
-  document.getElementById("mx_id").innerHTML = e.data;
- }, false);
- source.addEventListener('mY', function(e) {
-  console.log("mY", e.data);
-  document.getElementById("my_id").innerHTML = e.data;
- }, false);
- source.addEventListener('mZ', function(e) {
-  console.log("mZ", e.data);
-  document.getElementById("mz_id").innerHTML = e.data;
- }, false);
- source.addEventListener('ph1', function(e) {
-  console.log("ph1", e.data);
-  document.getElementById("ph1_id").innerHTML = e.data;
- }, false);
- source.addEventListener('ph2', function(e) {
-  console.log("ph2", e.data);
-  document.getElementById("ph2_id").innerHTML = e.data;
- }, false);
- source.addEventListener('ph3', function(e) {
-  console.log("ph3", e.data);
-  document.getElementById("ph3_id").innerHTML = e.data;
- }, false);
- source.addEventListener('ph4', function(e) {
-  console.log("ph4", e.data);
-  document.getElementById("ph4_id").innerHTML = e.data;
- }, false);
- source.addEventListener('shuntvoltage', function(e) {
-  console.log("shuntvoltage", e.data);
-  document.getElementById("shuntvoltage_id").innerHTML = e.data;
- }, false);
- source.addEventListener('busvoltage', function(e) {
-  console.log("busvoltage", e.data);
-  document.getElementById("busvoltage_id").innerHTML = e.data;
- }, false);
- source.addEventListener('current', function(e) {
-  console.log("current", e.data);
-  document.getElementById("current_id").innerHTML = e.data;
- }, false);
- source.addEventListener('power', function(e) {
-  console.log("power", e.data);
-  document.getElementById("power_id").innerHTML = e.data;
- }, false);
- function capturePhoto() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', "/capture", true);
-    xhr.send();
- }
-}
-</script>
-</body>
-</html>
-)rawliteral";
-
 void getSensorReadings(){
   temperature = bme.readTemperature();
   // Convert temperature to Fahrenheit
@@ -328,127 +107,16 @@ void getSensorReadings(){
 }
 
 
-
-void printValuesBME() {
-    Serial.print("Temperature = ");
-    Serial.print(bme.readTemperature());
-    Serial.println(" *C");
-
-    Serial.print("Pressure = ");
-
-    Serial.print(bme.readPressure() / 100.0F);
-    Serial.println(" hPa");
-
-    Serial.print("Approx. Altitude = ");
-    Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-    Serial.println(" m");
-
-    Serial.print("Humidity = ");
-    Serial.print(bme.readHumidity());
-    Serial.println(" %");
-
-    Serial.println();
-}
+#include "pressure.h"
 
 
 
 
 
-void printValuesINA219()
-{
-  
+#include "ina.h"
+#include "mcu.h"
+#include "sun.h"
 
-  shuntvoltage = ina219.getShuntVoltage_mV();
-  busvoltage = ina219.getBusVoltage_V();
-  current = ina219.getCurrent_mA();
-  power = ina219.getPower_mW();
-  loadvoltage = busvoltage + (shuntvoltage / 1000);
-
-  Serial.print("BV"); Serial.print("\t"); // Bus Voltage
-  Serial.print("SV"); Serial.print("\t"); // Shunt Voltage
-  Serial.print("LV"); Serial.print("\t"); // Load Voltage
-  Serial.print("C"); Serial.print("\t");  // Current
-  Serial.println("P");  // Power
-
-  Serial.print(busvoltage); Serial.print("\t"); 
-  Serial.print(shuntvoltage); Serial.print("\t");
-  Serial.print(loadvoltage); Serial.print("\t");
-  Serial.print(current); Serial.print("\t");
-  Serial.println(power);
-
-}
-
-
-void printValues9250() {
-    uint8_t sensorId = 0x69;
-  if (mySensor.readId(&sensorId) == 0) {
-    Serial.println("sensorId: " + String(sensorId));
-  } else {
-    Serial.println("Cannot read sensorId");
-  }
- 
-  if (mySensor.accelUpdate() == 0) {
-    aX = mySensor.accelX();
-    aY = mySensor.accelY();
-    aZ = mySensor.accelZ();
-    aSqrt = mySensor.accelSqrt();
-    Serial.println("accelX: " + String(aX));
-    Serial.println("accelY: " + String(aY));
-    Serial.println("accelZ: " + String(aZ));
-    Serial.println("accelSqrt: " + String(aSqrt));
-  } else {
-    Serial.println("Cannod read accel values");
-  }
- 
-  if (mySensor.gyroUpdate() == 0) {
-    gX = mySensor.gyroX();
-    gY = mySensor.gyroY();
-    gZ = mySensor.gyroZ();
-    Serial.println("gyroX: " + String(gX));
-    Serial.println("gyroY: " + String(gY));
-    Serial.println("gyroZ: " + String(gZ));
-  } else {
-    Serial.println("Cannot read gyro values");
-  }
- 
-  if (mySensor.magUpdate() == 0) {
-    mX = mySensor.magX();
-    mY = mySensor.magY();
-    mZ = mySensor.magZ();
-    mDirection = mySensor.magHorizDirection();
-    Serial.println("magX: " + String(mX));
-    Serial.println("maxY: " + String(mY));
-    Serial.println("magZ: " + String(mZ));
-    Serial.println("horizontal direction: " + String(mDirection));
-  } else {
-    Serial.println("Cannot read mag values");
-  }
-
-}
-
-
-
-void printValuesPhotoRes(){
-
-Serial.println("Phores"); 
-
- Serial.print("Photo 1: ");
-// ph1 = analogRead(12);
- Serial.println(ph1);
-
- Serial.print("Photo 2: ");
-// ph2 = analogRead(13);
- Serial.println(ph2);
-
- Serial.print("Photo 3: ");
-// ph3 = analogRead(14);
- Serial.println(ph3);
-
- Serial.print("Photo 4: ");
-// ph4 = analogRead(15);
- Serial.println(ph4);
-
-}
 
 String processor(const String& var){
   getSensorReadings();
@@ -583,40 +251,13 @@ void capturePhotoSaveSpiffs( void ) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void blinkLEDs(){
-// Blink leds
-digitalWrite(16, HIGH); 
-digitalWrite(0, HIGH); 
-delay(1000); 
-digitalWrite(16, LOW); 
-digitalWrite(0, LOW); 
-delay(1000); 
-  
-}
-
-
-
+#include "led.h"
 
 
 void setup() {
 
   Serial.begin(115200);
     delay(100);
-
 
   // Turn-off the 'brownout detector'
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
@@ -625,15 +266,8 @@ void setup() {
    Serial.println("");
    Serial.println("Start Init");
  
+  // Init I2C
    I2Cnew.begin(I2C_SDA, I2C_SCL, 400000);
-
-
-
-
-
-
-
-
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -689,6 +323,7 @@ void setup() {
     config.jpeg_quality = 12;
     config.fb_count = 1;
   }
+
   // Camera init
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
@@ -712,12 +347,6 @@ void setup() {
   // Start server
   //server.begin();
 
-
-  // Handle Web Server
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html", index_html, processor);
-  });
-
   // Handle Web Server Events
   events.onConnect([](AsyncEventSourceClient *client){
     if(client->lastId()){
@@ -727,11 +356,19 @@ void setup() {
     // and set reconnect delay to 1 second
     client->send("hello!", NULL, millis(), 10000);
   });
+
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/index.html", String(), false, processor);
+  });
+  
+  // Route to load style.css file
+  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/style.css", "text/css");
+  });  
   
   server.addHandler(&events);
   server.begin();
-
-
 
     bool status;
     // BME
@@ -785,33 +422,22 @@ void setup() {
 // RTC
     Rtc.Begin();
 
-
-
-
-
   Serial.println("End Init");
   Serial.println("");
 
 }
 
-
-
-
-
-
-
 void loop() {
  Serial.println("");
  Serial.println("Loop begin");
 
-/*  if (takeNewPhoto) {
+  if (takeNewPhoto) {
     Serial.println("takeNewPhoto");
     capturePhotoSaveSpiffs();
     takeNewPhoto = false;
   }
   
-*/ 
-  now = Rtc.GetDateTime();
+   now = Rtc.GetDateTime();
   printDateTimeS(now);
   Serial.println();
 
@@ -825,11 +451,6 @@ void loop() {
  
    //printValuesPhotoRes();
   // blinkLEDs();
-
-
-
-
-
 
     getSensorReadings();
    Serial.printf("Temperature = %.2f ºC \n", temperature);
@@ -870,18 +491,12 @@ void loop() {
     events.send(String(current).c_str(),"current_id",millis());
     events.send(String(power).c_str(),"power_id",millis());
  
-
-
-
-
  now = Rtc.GetDateTime();
  printDateTimeS(now);
  Serial.println();
   
  Serial.println("Loop End");  // Power
  Serial.println("");
-
- 
  
 delay(1000); 
 }
