@@ -66,8 +66,8 @@ float aX, aY, aZ, aSqrt, gX, gY, gZ, mDirection, mX, mY, mZ;
 #define SEALEVELPRESSURE_HPA (1013.25)
 int ph1,ph2,ph3,ph4;
 // Replace with your network credentials
-const char* ssid = "TP-LINK_87CC";
-const char* password = "Kelep1632";
+const char* ssid = "LUNAR_WIFI";
+const char* password = "ElonMars2024?";
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
