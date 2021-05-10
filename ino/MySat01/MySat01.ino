@@ -495,6 +495,9 @@ void loop() {
  printDateTimeS(now);
  Serial.println();
   
+ Serial.print("RSSI:");
+ Serial.println(WiFi.RSSI());  
+  
  Serial.println("Loop End");  // Power
  Serial.println("");
  
