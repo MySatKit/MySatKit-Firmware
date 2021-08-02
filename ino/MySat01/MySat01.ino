@@ -28,11 +28,9 @@
 
 // RTC
 #include <RtcDS3231.h>
-#include "rtc.h"
 
 #include "Adafruit_INA219.h"
 #include <Adafruit_BME280.h>
-
 
 Adafruit_INA219 ina219;
 MPU9250_asukiaaa mySensor(0x69);
@@ -79,7 +77,6 @@ boolean takeNewPhoto = false;
 //https://randomnerdtutorials.com/esp32-cam-take-photo-display-web-server/
 #define FILE_PHOTO "/photo.jpg" 
 
-
 // OV2640 camera module pins (CAMERA_MODEL_AI_THINKER)
 #define PWDN_GPIO_NUM     32
 #define RESET_GPIO_NUM    -1
@@ -98,290 +95,82 @@ boolean takeNewPhoto = false;
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
-void getSensorReadings(){
-  temperature = bme.readTemperature();
-  // Convert temperature to Fahrenheit
-  //temperature = 1.8 * bme.readTemperature() + 32;
-  humidity = bme.readHumidity();
-  pressure = bme.readPressure()/ 100.0F;
-}
+#include "Log.h"
 
+void getSensorReadings();
+String processor(const String& var);
+bool checkPhoto( fs::FS &fs );// Check if photo capture was successful
+void capturePhotoSaveSpiffs();// Capture Photo and Save it to SPIFFS
+void initServerRoute();
+void sendEvents();
+void initCamera(camera_config_t &config);
 
-#include "pressure.h"
-
-
-
-
-
-#include "ina.h"
-#include "mcu.h"
-#include "sun.h"
-
-
-String processor(const String& var){
-  getSensorReadings();
-  now = Rtc.GetDateTime();
-  printDateTimeS(now);
-  printValuesBME();
-  printValues9250();
-  printValuesINA219();
-  Serial.println(var);
-  if(var == "TEMPERATURE"){
-    return String(temperature);
-  }
-  else if(var == "HUMIDITY"){
-    return String(humidity);
-  }
-  else if(var == "PRESSURE"){
-    return String(pressure);
-  }
-  else if(var == "TIME"){
-    return String(sTime);
-  }
-  else if(var == "AX"){
-    return String(aX);
-  }
-  else if(var == "AY"){
-    return String(aY);
-  }
-  else if(var == "AZ"){
-    return String(aZ);
-  }
-  else if(var == "GX"){
-    return String(gX);
-  }
-  else if(var == "GY"){
-    return String(gY);
-  }
-  else if(var == "GZ"){
-    return String(gZ);
-  }
-  else if(var == "MX"){
-    return String(mX);
-  }
-  else if(var == "MY"){
-    return String(mY);
-  }
-  else if(var == "MZ"){
-    return String(mZ);
-  }
-
-   else if(var == "PH1"){
-    return String(ph1);
-  }
-   else if(var == "PH2"){
-    return String(ph2);
-  }
-   else if(var == "PH3"){
-    return String(ph3);
-  }
-   else if(var == "PH4"){
-    return String(ph4);
-  }
- 
-   else if(var == "SHUNTVOLTAGE"){
-    return String(shuntvoltage);
-  }
-   else if(var == "BUSVOLTAGE"){
-    return String(busvoltage);
-  }
-   else if(var == "CURRENT"){
-    return String(current);
-  }
-   else if(var == "POWER"){
-    return String(power);
-  }
- 
-  
-  return String("No data");
-}
-
-
-
-// Check if photo capture was successful
-bool checkPhoto( fs::FS &fs ) {
-  Serial.println("checkPhoto");
-  File f_pic = fs.open( FILE_PHOTO );
-  unsigned int pic_sz = f_pic.size();
-  return ( pic_sz > 100 );
-}
-
-
-
-
-// Capture Photo and Save it to SPIFFS
-void capturePhotoSaveSpiffs( void ) {
-  Serial.println("capturePhotoSaveSpiffs");
-  camera_fb_t * fb = NULL; // pointer
-  bool ok = 0; // Boolean indicating if the picture has been taken correctly
-
-  do {
-    // Take a photo with the camera
-    Serial.println("Taking a photo...");
-
-    fb = esp_camera_fb_get();
-    if (!fb) {
-      Serial.println("Camera capture failed");
-      return;
-    }
-
-    // Photo file name
-    Serial.printf("Picture file name: %s\n", FILE_PHOTO);
-    File file = SPIFFS.open(FILE_PHOTO, FILE_WRITE);
-
-    // Insert the data in the photo file
-    if (!file) {
-      Serial.println("Failed to open file in writing mode");
-    }
-    else {
-      file.write(fb->buf, fb->len); // payload (image), payload length
-      Serial.print("The picture has been saved in ");
-      Serial.print(FILE_PHOTO);
-      Serial.print(" - Size: ");
-      Serial.print(file.size());
-      Serial.println(" bytes");
-    }
-    // Close the file
-    file.close();
-   esp_camera_fb_return(fb);
-
-   //  check if file has been correctly saved in SPIFFS
-        ok = checkPhoto(SPIFFS);
-  } while ( !ok );
-}
-
-
-#include "led.h"
-
-
-void setup() {
-
+void setup() 
+{
   Serial.begin(115200);
-    delay(100);
+  delay(100);
 
   // Turn-off the 'brownout detector'
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
-
-
-   Serial.println("");
-   Serial.println("Start Init");
- 
+  Serial.println(""); 
+  Serial.println("Start Init");
   // Init I2C
-   I2Cnew.begin(I2C_SDA, I2C_SCL, 400000);
-
+  I2Cnew.begin(I2C_SDA, I2C_SCL, 400000);
+  
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) 
+  {
     delay(1000);
     Serial.println("Connecting to WiFi...");
   }
-
   // Print ESP32 Local IP Address
   Serial.print("IP Address: http://");
   Serial.println(WiFi.localIP());
 
-  if (!SPIFFS.begin(true)) {
+  if (!SPIFFS.begin(true)) 
+  {
     Serial.println("An Error has occurred while mounting SPIFFS");
     ESP.restart();
   }
-  else {
+  else 
+  {
     delay(500);
     Serial.println("SPIFFS mounted successfully");
   }
- 
- 
-
   // OV2640 camera module
   camera_config_t config;
-  config.ledc_channel = LEDC_CHANNEL_0;
-  config.ledc_timer = LEDC_TIMER_0;
-  config.pin_d0 = Y2_GPIO_NUM;
-  config.pin_d1 = Y3_GPIO_NUM;
-  config.pin_d2 = Y4_GPIO_NUM;
-  config.pin_d3 = Y5_GPIO_NUM;
-  config.pin_d4 = Y6_GPIO_NUM;
-  config.pin_d5 = Y7_GPIO_NUM;
-  config.pin_d6 = Y8_GPIO_NUM;
-  config.pin_d7 = Y9_GPIO_NUM;
-  config.pin_xclk = XCLK_GPIO_NUM;
-  config.pin_pclk = PCLK_GPIO_NUM;
-  config.pin_vsync = VSYNC_GPIO_NUM;
-  config.pin_href = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
-  config.pin_pwdn = PWDN_GPIO_NUM;
-  config.pin_reset = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 20000000;
-  config.pixel_format = PIXFORMAT_JPEG;
+  initCamera(config);
 
-  if (psramFound()) {
+  if (psramFound()) 
+  {
     config.frame_size = FRAMESIZE_UXGA;
     config.jpeg_quality = 10;
     config.fb_count = 2;
-  } else {
+  } 
+  else 
+  {
     config.frame_size = FRAMESIZE_SVGA;
     config.jpeg_quality = 12;
     config.fb_count = 1;
   }
-
   // Camera init
   esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) {
+  if (err != ESP_OK) 
+  {
     Serial.printf("Camera init failed with error 0x%x", err);
     ESP.restart();
   }
   else
-  {
     Serial.println("Camera init... OK");
-  }
-
-  server.on("/capture", HTTP_GET, [](AsyncWebServerRequest * request) {
-    takeNewPhoto = true;
-    request->send_P(200, "text/plain", "Taking Photo");
-  });
-
-  server.on("/saved-photo", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, FILE_PHOTO, "image/jpg", false);
-  });
-
-  // Start server
-  //server.begin();
 
   // Handle Web Server Events
-  events.onConnect([](AsyncEventSourceClient *client){
-    if(client->lastId()){
-      Serial.printf("Client reconnected! Last message ID that it got is: %u\n", client->lastId());
-    }
-    // send event with message "hello!", id current millis
-    // and set reconnect delay to 1 second
-    client->send("hello!", NULL, millis(), 10000);
-  });
-
-  // Route for root / web page
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
-  
-  // Route to load style.css file
-  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/style.css", "text/css");
-  });  
-  
-  server.addHandler(&events);
-  server.begin();
-
-    bool status;
-    // BME
-    Serial.print("Check BME...");
-    status = bme.begin(0x76, &I2Cnew);  
-    if (status)
-    {
-        Serial.println(" Done.");
-    } 
-    else
-    {
-        Serial.println(" Fail");
-    }
+  initServerRoute();
+  bool status = false;
+  // BME
+  Serial.print("Check BME...");
+  status = bme.begin(0x76, &I2Cnew);  
+  Log::printMessageInitialization(status); // log
 
   // 9250
   Serial.print("Check MCU...");
@@ -394,72 +183,205 @@ void setup() {
   Serial.print("Check RTC...");
   Serial.println(" TBD.");
 
-    Serial.print("Check INA219...");
-    status = ina219.begin(&I2Cnew);  
-    if (status)
-    {
-        Serial.println(" Done.");
-    } 
-    else
-    {
-        Serial.println(" Fail");
-    }
-
-// LED (Boot)
-//pinMode(16, OUTPUT);
-
-// LED (LED Star)
-//pinMode(0, OUTPUT);
-
-
-// Photores
-// pinMode(12, INPUT);
-// pinMode(13, INPUT);
-// pinMode(14, INPUT);
-// pinMode(15, INPUT);
-
-
-// RTC
-    Rtc.Begin();
-
+  Serial.print("Check INA219...");
+  status = ina219.begin(&I2Cnew);  
+  Log::printMessageInitialization(status); // log
+  Rtc.Begin();
   Serial.println("End Init");
   Serial.println("");
-
 }
 
-void loop() {
- Serial.println("");
- Serial.println("Loop begin");
+void loop() 
+{
+  Serial.println("");
+  Serial.println("Loop begin");
 
-  if (takeNewPhoto) {
+  if (takeNewPhoto) 
+  {
     Serial.println("takeNewPhoto");
     capturePhotoSaveSpiffs();
     takeNewPhoto = false;
   }
-  
-   now = Rtc.GetDateTime();
-  printDateTimeS(now);
+  now = Rtc.GetDateTime();
+  Log::printDateTimeS(now);
   Serial.println();
 
   temp = Rtc.GetTemperature();
   temp.Print(Serial); // you may also get the temperature as a float and print it Serial.print(temp.AsFloatDegC());
   Serial.println("C");
 
-   printValuesBME();
-   printValues9250();
-   printValuesINA219();
+  Log::printValuesBME();
+  Log::printValues9250();
+  printValuesINA219();
  
-   //printValuesPhotoRes();
-  // blinkLEDs();
+  getSensorReadings();
+  Serial.printf("Temperature = %.2f ºC \n", temperature);
+  Serial.printf("Humidity = %.2f \n", humidity);
+  Serial.printf("Pressure = %.2f hPa \n", pressure);
+  Serial.printf("Time: ", sTime);
+  Serial.println();
+  // Send Events to the Web Server with the Sensor Readings
+  sendEvents();
+  now = Rtc.GetDateTime();
 
-    getSensorReadings();
-   Serial.printf("Temperature = %.2f ºC \n", temperature);
-    Serial.printf("Humidity = %.2f \n", humidity);
-    Serial.printf("Pressure = %.2f hPa \n", pressure);
-    Serial.printf("Time: ", sTime);
-    Serial.println();
+  Log::printDateTimeS(now);
+  Serial.println();
+  Serial.print("RSSI:");
+  Serial.println(WiFi.RSSI());  
+  Serial.println("Loop End");  // Power
+  Serial.println("");
+  delay(1000); 
+}
 
-    // Send Events to the Web Server with the Sensor Readings
+void getSensorReadings()
+{
+  temperature = bme.readTemperature();
+  humidity = bme.readHumidity();
+  pressure = bme.readPressure()/ 100.0F;
+}
+
+String processor(const String& var)
+{
+  getSensorReadings();
+  now = Rtc.GetDateTime();
+  Log::printDateTimeS(now);
+  Log::printValuesBME();
+  Log::printValues9250();
+  printValuesINA219();
+  Serial.println(var);
+
+  if(var == "TEMPERATURE")
+    return String(temperature);
+  else if(var == "HUMIDITY")
+    return String(humidity);
+  else if(var == "PRESSURE")
+    return String(pressure);
+  else if(var == "TIME")
+    return String(sTime);
+  else if(var == "AX")
+    return String(aX);
+  else if(var == "AY")
+    return String(aY);
+  else if(var == "AZ")
+    return String(aZ);
+  else if(var == "GX")
+    return String(gX);
+  else if(var == "GY")
+    return String(gY);
+  else if(var == "GZ")
+    return String(gZ);
+  else if(var == "MX")
+    return String(mX);
+  else if(var == "MY")
+    return String(mY);
+  else if(var == "MZ")
+    return String(mZ);
+  else if(var == "PH1")
+    return String(ph1);
+  else if(var == "PH2")
+    return String(ph2);
+  else if(var == "PH3")
+    return String(ph3);
+  else if(var == "PH4")
+    return String(ph4);
+  else if(var == "SHUNTVOLTAGE")
+    return String(shuntvoltage);
+  else if(var == "BUSVOLTAGE")
+    return String(busvoltage);
+  else if(var == "CURRENT")
+    return String(current);
+  else if(var == "POWER")
+    return String(power);
+
+  return String("No data");
+}
+
+bool checkPhoto( fs::FS &fs ) 
+{
+  Serial.println("checkPhoto");
+  File f_pic = fs.open( FILE_PHOTO );
+  unsigned int pic_sz = f_pic.size();
+  return ( pic_sz > 100 );
+}
+
+void capturePhotoSaveSpiffs() 
+{
+  Serial.println("capturePhotoSaveSpiffs");
+  camera_fb_t *fb = NULL; // pointer
+
+  for(bool isPictureCorrectly = false; !isPictureCorrectly;)
+    {
+        // Take a photo with the camera
+        Serial.println("Taking a photo...");
+        fb = esp_camera_fb_get();
+        if (!fb) 
+        {
+            Serial.println("Camera capture failed");
+            return;
+        }
+        // Photo file name
+        Serial.printf("Picture file name: %s\n", FILE_PHOTO);
+        File file = SPIFFS.open(FILE_PHOTO, FILE_WRITE);
+        // Insert the data in the photo file
+        if (!file)
+            Serial.println("Failed to open file in writing mode");
+        else 
+        {
+            file.write(fb->buf, fb->len); // payload (image), payload length
+            Serial.print("The picture has been saved in ");
+            Serial.print(FILE_PHOTO);
+            Serial.print(" - Size: ");
+            Serial.print(file.size());
+            Serial.println(" bytes");
+        }   
+       // Close the file
+       file.close();
+      esp_camera_fb_return(fb);
+      //  check if file has been correctly saved in SPIFFS
+      isPictureCorrectly = checkPhoto(SPIFFS);
+  } 
+}
+
+void initServerRoute()
+{
+  server.on("/capture", HTTP_GET, [](AsyncWebServerRequest *request) 
+  {
+    takeNewPhoto = true;
+    request->send_P(200, "text/plain", "Taking Photo");
+  });
+
+  server.on("/saved-photo", HTTP_GET, [](AsyncWebServerRequest *request) 
+  {
+    request->send(SPIFFS, FILE_PHOTO, "image/jpg", false);
+  });
+
+  events.onConnect([](AsyncEventSourceClient *client)
+  {
+    if(client->lastId())
+        Serial.printf("Client reconnected! Last message ID that it got is: %u\n", client->lastId());
+
+    // send event with message "hello!", id current millis
+    // and set reconnect delay to 1 second
+    client->send("hello!", NULL, millis(), 10000);
+  });
+
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+  {
+    request->send(SPIFFS, "/index.html", String(), false, processor);
+  });
+  
+  // Route to load style.css file
+  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
+  {
+    request->send(SPIFFS, "/style.css", "text/css");
+  });  
+  
+  server.addHandler(&events);
+  server.begin();
+}
+void sendEvents()
+{
     events.send("ping",NULL,millis());
     events.send(String(temperature).c_str(),"temperature",millis());
     Serial.print("Send event: ");
@@ -490,16 +412,28 @@ void loop() {
     events.send(String(busvoltage).c_str(),"busvoltage_id",millis());
     events.send(String(current).c_str(),"current_id",millis());
     events.send(String(power).c_str(),"power_id",millis());
- 
- now = Rtc.GetDateTime();
- printDateTimeS(now);
- Serial.println();
-  
- Serial.print("RSSI:");
- Serial.println(WiFi.RSSI());  
-  
- Serial.println("Loop End");  // Power
- Serial.println("");
- 
-delay(1000); 
+}
+
+void initCamera(camera_config_t& config)
+{
+  config.ledc_channel = LEDC_CHANNEL_0;
+  config.ledc_timer = LEDC_TIMER_0;
+  config.pin_d0 = Y2_GPIO_NUM;
+  config.pin_d1 = Y3_GPIO_NUM;
+  config.pin_d2 = Y4_GPIO_NUM;
+  config.pin_d3 = Y5_GPIO_NUM;
+  config.pin_d4 = Y6_GPIO_NUM;
+  config.pin_d5 = Y7_GPIO_NUM;
+  config.pin_d6 = Y8_GPIO_NUM;
+  config.pin_d7 = Y9_GPIO_NUM;
+  config.pin_xclk = XCLK_GPIO_NUM;
+  config.pin_pclk = PCLK_GPIO_NUM;
+  config.pin_vsync = VSYNC_GPIO_NUM;
+  config.pin_href = HREF_GPIO_NUM;
+  config.pin_sscb_sda = SIOD_GPIO_NUM;
+  config.pin_sscb_scl = SIOC_GPIO_NUM;
+  config.pin_pwdn = PWDN_GPIO_NUM;
+  config.pin_reset = RESET_GPIO_NUM;
+  config.xclk_freq_hz = 20000000;
+  config.pixel_format = PIXFORMAT_JPEG;
 }
