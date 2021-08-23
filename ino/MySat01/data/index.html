@@ -1,5 +1,12 @@
 <!DOCTYPE HTML>
 <html>
+  <script>
+     function capturePhoto() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "/capture", true);
+    xhr.send();
+ }
+  </script>
 <head>
   <title>MySat UA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
