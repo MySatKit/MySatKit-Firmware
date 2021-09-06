@@ -8,7 +8,6 @@ void initINA219()
 {
   Serial.print("Check INA219...");
   bool status = ina219.begin(&getI2C());  
-  Log::checkStatus(status);
 }
 
 Adafruit_INA219& getINA219()

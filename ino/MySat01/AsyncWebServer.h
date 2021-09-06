@@ -8,12 +8,17 @@ static AsyncEventSource events("/events"); //https://randomnerdtutorials.com/esp
 
 void initServer()
 {
- server.on("/capture", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/switch", HTTP_GET, [](AsyncWebServerRequest *request) {
+    isLedLight = !isLedLight;
+    request->send_P(200, "text/plain", "Switch LED");
+  });
+  
+ server.on("/capture", HTTP_GET, [](AsyncWebServerRequest *request) {
     isPhotoNeeded = true;
     request->send_P(200, "text/plain", "Taking Photo");
   });
 
-  server.on("/saved-photo", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/saved-photo", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, FILE_PHOTO, "image/jpg", false);
   });
 

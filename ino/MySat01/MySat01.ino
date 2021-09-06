@@ -24,20 +24,14 @@
 #include "esp_log.h"
 
 // RTC
-#include <RtcDS3231.h>
-#include <Wire.h>
-// RTC
 #include "RTC.h"
 // MPU9250
-#include <MPU9250_asukiaaa.h> // http://www.esp32learning.com/code/esp32-and-mpu-9250-sensor-example.php
 #include "MPU9250.h"
-
-#include "Adafruit_INA219.h" //https://github.com/Makuna/Rtc
-#include <Adafruit_BME280.h>
-#include "log.h"
-
 //Adafruit_INA219 ina219;
 #include "INA219.h"
+#include "log.h"
+#include <analogWrite.h>
+
 float temperature;
 float humidity;
 float pressure;
@@ -85,6 +79,9 @@ const char* password = "12345678";
 #define VSYNC_GPIO_NUM    25
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
+
+// star pin
+#define STAR_GIPIO 16
 
 String processor(const String& var)
 {
@@ -162,6 +159,7 @@ String processor(const String& var)
 
 // Create AsyncWebServer object on port 80
 boolean isPhotoNeeded = false;
+boolean isLedLight = false;
 #include "AsyncWebServer.h"
 
 void connectWiFI()
@@ -197,9 +195,17 @@ void takePhoto()
   }
 }
 
+void switchStar()
+{
+    if(!isLedLight)
+    analogWrite(STAR_GIPIO, 0);
+  else
+    analogWrite(STAR_GIPIO, 255);
+}
+
 void setup() 
 {
-  pinMode(10, INPUT);    // sets the digital pin 13 as output
+  pinMode(STAR_GIPIO, OUTPUT);    
   Serial.begin(115200);
   delay(100);
   // Turn-off the 'brownout detector'
@@ -217,16 +223,16 @@ void setup()
   initMPU9250();
   initINA219();
   initRTC();
-  digitalWrite(10, LOW);
   Log::printWiFiInfo();
 }
 
 void loop() 
 {
-  digitalWrite(10, LOW);
+  switchStar();
   takePhoto();
   getSensorReadings(temperature, humidity, pressure);
   sendEvents();// Send Events to the Web Server with the Sensor Readings
+  
   Serial.println("");
   Serial.println("Loop Start");  
   Serial.println("");
