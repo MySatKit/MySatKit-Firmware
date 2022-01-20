@@ -7,6 +7,13 @@
     xhr.send();
  }
   </script>
+  <script>
+    function switchLed() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', "/switch", true);
+       xhr.send();
+    }
+  </script>
 <head>
   <title>MySat UA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,8 +27,9 @@
   <div id="container">
     <h2>Picture from MySat</h2>
     <p>It might take more than 5 seconds to capture a photo.</p>
-      <button onclick="capturePhoto()">CAPTURE PHOTO</button>
+      <button onclick="capturePhoto();">CAPTURE PHOTO</button>
       <button onclick="location.reload();">REFRESH PAGE</button>
+      <button onclick="switchLed();">SWITCH LED</button>
   </div>
   <div>
       <img src="saved-photo" id="photo"></img>  
