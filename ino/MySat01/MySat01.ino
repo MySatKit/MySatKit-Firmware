@@ -76,7 +76,7 @@ boolean isPhotoNeeded = false;
 // Photo File Name to save in SPIFFS
 //https://randomnerdtutorials.com/esp32-cam-take-photo-display-web-server/
 #define FILE_PHOTO "/photo.jpg" 
-
+File myFile;
 // OV2640 camera module pins (CAMERA_MODEL_AI_THINKER)
 #define PWDN_GPIO_NUM     32
 #define RESET_GPIO_NUM    -1
@@ -327,11 +327,15 @@ void initCamera()
 
 void connectWiFI()
 {
-  WiFi.begin(ssid, password);
+  String logn, pas;
+  readConfig(SPIFFS, logn, pas);
+
+  WiFi.begin(logn.c_str(), pas.c_str());
   while (WiFi.status() != WL_CONNECTED) 
   {
     delay(1000);
     Serial.println("Connecting to WiFi...");
+    //Serial.println(logn+", "+pas);
   }
 }
 
@@ -416,6 +420,46 @@ void takePhoto()
   }
 }
 
+void writeConfig(fs::FS &fs){
+  myFile = fs.open("/config.txt", FILE_WRITE);
+  myFile.print("Tenda_C000C0,12345678");
+  myFile.close();
+  }
+
+void readConfig(fs::FS &fs, String& logn, String&  pas){
+
+   bool flag = true;
+   myFile = fs.open("/config.txt", FILE_READ);
+   if(!myFile){
+    writeConfig(SPIFFS);
+    }
+   String textFile = myFile.readString();
+   for(int i = 0; i < textFile.length(); i++){
+       if (textFile[i] == ','){
+          flag = false; 
+       }else{
+           if (flag){
+               if (isalnum(textFile[i]) || textFile[i] == '_'){
+                   logn +=textFile[i];
+               }else{
+                    writeConfig(SPIFFS);
+                }
+           }else{
+               if(textFile[i] != ' ' || textFile[i]!='\n'){
+                   pas+=textFile[i];
+               }else{
+                    writeConfig(SPIFFS);
+                }
+           }
+       }
+       
+   }
+   if(flag){
+    writeConfig(SPIFFS);
+    }
+   myFile.close();
+}
+
 void setup() 
 {
   Serial.begin(115200);
@@ -424,11 +468,11 @@ void setup()
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
 
   Serial.println("");
-  Serial.println("Start Init");
+  Serial.println("Start Init"); 
 
   I2Cnew.begin(I2C_SDA, I2C_SCL, 400000);  // Init I2C
-  connectWiFI();
   initSPIFFS();
+  connectWiFI();
   initCamera();
   initServer();
   initBME();
@@ -445,6 +489,7 @@ void loop()
   currentTime = Rtc.GetDateTime();
   rtcTemperature = Rtc.GetTemperature();
   getSensorReadings();
+
   // Send Events to the Web Server with the Sensor Readings
   sendEvents();
   Log::printPeriferiaInfo();
