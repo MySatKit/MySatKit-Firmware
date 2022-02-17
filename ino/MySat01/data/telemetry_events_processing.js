@@ -100,4 +100,9 @@ if (!!window.EventSource) {
     xhr.open('GET', "/capture", true);
     xhr.send();
  }
+ function switchLED() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "/switch", true);
+    xhr.send();
+ }
 }

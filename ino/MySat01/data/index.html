@@ -1,110 +1,363 @@
-<!DOCTYPE HTML>
-<html>
-  <script>
-     function capturePhoto() {
+<!DOCTYPE html>
+<html lang="en">
+<script>
+function capturePhoto() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', "/capture", true);
     xhr.send();
  }
-  </script>
+ function switchLED() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "/switch", true);
+    xhr.send();
+ }
+</script>
 <head>
-  <title>MySat UA</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:200,300,400,500i,900,900i">
+    <link rel="stylesheet" href="style.css">
+    <script src="web.js"></script>
 </head>
 <body>
-  <div class="topnav">
-    <h1>Mission Control</h1>
-  </div>
-  <div id="container">
-    <h2>Picture from MySat</h2>
-    <p>It might take more than 5 seconds to capture a photo.</p>
-      <button onclick="capturePhoto()">CAPTURE PHOTO</button>
-      <button onclick="location.reload();">REFRESH PAGE</button>
-  </div>
-  <div>
-      <img src="saved-photo" id="photo"></img>  
-  </div>
-  <div class="content">
-    <div class="cards">
-      <div class="card">
-        <p><i class="fas fa-thermometer-half" style="color:#059e8a;"></i> TEMPERATURE</p><p><span class="reading"><span id="temp">%TEMPERATURE%</span> &deg;C</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-tint" style="color:#00add6;"></i> HUMIDITY</p><p><span class="reading"><span id="hum">%HUMIDITY%</span> &percnt;</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-angle-double-down" style="color:#e1e437;"></i> PRESSURE</p><p><span class="reading"><span id="pres">%PRESSURE%</span> hPa</span></p>
-      </div>
+
+
+<div class="wrapper">
+    <div class="title">MySat Mission Control v.2.01</div>
+    <div class="mainContainer titleType1">
+        <div class="mainBlock">
+            <div class="velocityBlock">
+                <div class="image-wrapper"><img src="" alt=""></div>
+
+                <div class="velocityValue">
+                    <div>Relative <br>Velocity</div>
+                    <div class="content">5 m/s</div>
+                </div>
+
+            </div>
+            <div class="imageBlock block">
+                <div class="image-wrapper"><img src="saved-photo" id = "photo" alt=""></div>
+                <div class="timeAndButtonBlock">
+                    <div class="shootingTimeBlock">
+                        <div>Shooting time</div>
+                        <div class="timer">
+                            <div class="time">%SHOOTING_TIME%</div>
+                            <div class="layer"><img src="" alt="clockImg"></div>
+                        </div>
+                    </div>
+                    <div class="buttonBlock">
+                        <button onclick="capturePhoto()" >Capture Photo</button>
+                    </div>
+                </div>
+            </div>
+            <div class="starSolarBlock">
+                <div class="starBlock block">
+                    <div class="switcherBlock">
+                        <div>Star</div>
+                        <div class="switcher">
+                            <div id="On1">ON</div>
+                            <label class="switch">
+                                <input type="checkbox" onclick = "switchLED()">
+                                <span class="slider round"></span>
+                            </label>
+                            <div id="Off1">OFF</div>
+                        </div>
+                    </div>
+                    <div class="starTimerBlock">
+                        <div>Star timer</div>
+                        <div class="timer">
+                            <div class="time">%STAR_TIME%</div>
+                            <div class="layer"><img src="" alt="clockImg"></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="solarBlock block">
+                    <div class="switcherBlock">
+                        <div>Solar Panels</div>
+                        <div class="switcher">
+                            <div id="On2">ON</div>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider round"></span>
+                            </label>
+                            <div id="Off2">OFF</div>
+                        </div>
+                    </div>
+                    <div class="squareBlock">
+                        <div class="vector"></div>
+                        <div id="square"></div>
+                        <div class="vector"></div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="separator1"></div>
+        <div class="infoBlock">
+			<div class="temperatureBlock block">
+                <div>
+                    <div>Temperature</div>
+                    <div class="content"><span class="reading"><span id="temp">%TEMPERATURE%</span> &deg;C</span></div>
+                </div>
+
+                <div>
+                    <div>Humidity</div>
+                    <div class="content">%HUMIDITY%</div>
+                </div>
+                <div>
+                    <div>Pressure</div>
+                    <div class="content">%PRESSURE%</div>
+                </div>
+                <div>
+                    <div>Altitude</div>
+                    <div class="content">%ALTITUDE%</div>
+                </div>
+            </div>
+
+            <div class="gyroscopeBlock block">
+                <div class="gyroscope">
+                    <div>Gyroscope</div>
+                    <div>
+                        <div class="data">
+                            <div>X</div>
+                            <div class="value">%GX%</div>
+                        </div>
+                        <div class="data">
+                            <div>Y</div>
+                            <div class="value">%GY%</div>
+                        </div>
+                        <div class="data">
+                            <div>Z</div>
+                            <div class="value">%GZ%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accelerometer">
+                    <div>Accelerometer</div>
+                    <div>
+                        <div class="data">
+                            <div>X</div>
+                            <div class="value">%AX%</div>
+                        </div>
+                        <div class="data">
+                            <div>Y</div>
+                            <div class="value">%AY%</div>
+                        </div>
+                        <div class="data">
+                            <div>Z</div>
+                            <div class="value">%AZ%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="velocityBlock">
+                    <div>
+                        <div>Relative <br>Velocity</div>
+                        <div class="content">%VELOCITY%</div>
+                    </div>
+                    <div class="image-wrapper"><img src="" alt=""></div>
+                </div>
+            </div>
+
+            <div class="anotherInfoBlock">
+			<div>
+                <div class="airSunlightBlock">
+                    <div class="airBlock block">
+                        <div>Air Quality</div>
+                        <div id="qualityRow">
+                            <div style="background-color:#05FF78" class="quality-el"></div>
+                            <div style="background-color:#BEFF05" class="quality-el"></div>
+                            <div style="background-color:#FAFF05" class="quality-el el3">Lightly polluted</div>
+                            <div style="background-color:#E16C37" class="quality-el"></div>
+                            <div style="background-color:#D33F31" class="quality-el"></div>
+                            <div style="background-color:#7E4278" class="quality-el"></div>
+                        </div>
+                    </div>
+                    <div class="sunlightBlock block">
+                        <div>Sunlight trackers</div>
+                        <div class="sunlightTrackerCircle">
+                            <div class="circle-line num1"></div>
+                            <div class="circle-line num2"></div>
+                            <div class="circle-line num3"></div>
+                            <div class="circle-line num4"></div>
+                            <div class="circle-line num5"></div>
+                            <div class="circle-line num6"></div>
+                            <div class="circle-line num7 active"></div>
+                            <div class="circle-line num8 active"></div>
+                            <div class="sunImg"></div>
+                            <div class="circle-line num9 active"></div>
+                            <div class="circle-line num10 "></div>
+                            <div class="circle-line num11"></div>
+                            <div class="circle-line num12"></div>
+                            <div class="inner-square"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="separator2"></div>
+                <div class="magnetometerBatteryTimeBlock">
+                    <div class="magnetometerBlock block">
+                        <div>Magnetometer</div>
+                        <div class="magnetometerCircles">
+                            <div class="circle">
+                                <div>X</div>
+                                <div class="outer-circle">
+                                    <div class="cross">
+                                        <div class="hrz"></div>
+                                        <div class="vrt"></div>
+                                    </div>
+                                    <div class="circle-line num1"></div>
+                                    <div class="circle-line num2"></div>
+                                    <div class="circle-line num3"></div>
+                                    <div class="circle-line num4"></div>
+                                    <div class="circle-line num5"></div>
+                                    <div class="circle-line num6"></div>
+                                    <div class="circle-line num7"></div>
+                                    <div class="circle-line num8"></div>
+                                    <div class="circle-line num9"></div>
+                                    <div class="circle-line num10"></div>
+                                    <div class="circle-line num11"></div>
+                                    <div class="circle-line num12"></div>
+                                    <div class="arrow-wrapper">
+                                        <div class="arrow"></div>
+                                    </div>
+                                    <div class="inner-circle">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="circle">
+                                <div>Y</div>
+                                <div class="outer-circle">
+                                    <div class="cross">
+                                        <div class="hrz"></div>
+                                        <div class="vrt"></div>
+                                    </div>
+                                    <div class="circle-line num1"></div>
+                                    <div class="circle-line num2"></div>
+                                    <div class="circle-line num3"></div>
+                                    <div class="circle-line num4"></div>
+                                    <div class="circle-line num5"></div>
+                                    <div class="circle-line num6"></div>
+                                    <div class="circle-line num7"></div>
+                                    <div class="circle-line num8"></div>
+                                    <div class="circle-line num9"></div>
+                                    <div class="circle-line num10"></div>
+                                    <div class="circle-line num11"></div>
+                                    <div class="circle-line num12"></div>
+                                    <div class="arrow-wrapper">
+                                        <div class="arrow"></div>
+                                    </div>
+                                    <div class="inner-circle">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="circle">
+                                <div>Z</div>
+                                <div class="outer-circle">
+                                    <div class="cross">
+                                        <div class="hrz"></div>
+                                        <div class="vrt"></div>
+                                    </div>
+                                    <div class="circle-line num1"></div>
+                                    <div class="circle-line num2"></div>
+                                    <div class="circle-line num3"></div>
+                                    <div class="circle-line num4"></div>
+                                    <div class="circle-line num5"></div>
+                                    <div class="circle-line num6"></div>
+                                    <div class="circle-line num7"></div>
+                                    <div class="circle-line num8"></div>
+                                    <div class="circle-line num9"></div>
+                                    <div class="circle-line num10"></div>
+                                    <div class="circle-line num11"></div>
+                                    <div class="circle-line num12"></div>
+                                    <div class="arrow-wrapper">
+                                        <div class="arrow"></div>
+                                    </div>
+                                    <div class="inner-circle">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <div class="batteryTimeBlock">
+                        <div class="batteryBlock block">
+                            <div class="batteryTitle">Battery</div>
+                            <div class="indicatorsRow">
+                                <div class="name">Supply voltage</div>
+                                <div class="indicators">
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator indicatorActive"></div>
+                                </div>
+                            </div>
+                            <div class="indicatorsRow">
+                                <div class="name">Voltage</div>
+                                <div class="indicators">
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator indicatorActive"></div>
+                                    <div class="indicator indicatorActive"></div>
+                                </div>
+                            </div>
+                            <div class="indicatorsRow">
+                                <div class="name">Current</div>
+                                <div class="indicators">
+                                    <div class="indicator indicatorActive"></div>
+                                    <div class="indicator indicatorActive"></div>
+                                    <div class="indicator indicatorActive"></div>
+                                    <div class="indicator indicatorActive"></div>
+                                    <div class="indicator indicatorActive"></div>
+                                </div>
+                            </div>
+                            <div class="indicatorsRow">
+                                <div class="name">Power</div>
+                                <div class="indicators">
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="onboardTimeBlock block">
+                            <div class="onboardTime">
+                                <div>Onboard <br> time</div>
+                                <div class="timer">
+                                    <div class="time">%ONBOARD_TIME%</div>
+                                    <div class="layer"><img src="" alt="clockImg"></div>
+                                </div>
+                            </div>
+                            <div class="chain">
+                                <div class="wifiWrapper">
+                                    <div class="wifi">WIFI</div>
+                                    <div class="wifiIndicators">
+                                        <div class="wifiIndicator ind1"></div>
+                                        <div class="wifiIndicator ind2"></div>
+                                        <div class="wifiIndicator ind3"></div>
+                                        <div class="wifiIndicator ind4"></div>
+                                    </div>
+                                </div>
+                                <div class="ip">
+                                    <div >Ip</div>
+                                    <div class="ipValue">%IP%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="cards">
-      <div class="card">
-        <p><i class="far fa-clock" style="color:#00add6;"></i> TIME</p><p><span class="reading"><span id="time_id">%TIME%</span> &percnt;</span></p>
-      </div>
-    </div>
-    <div class="cards">
-      <div class="card">
-        <p><i class="fas fa-arrow-right" style="color:#059e8a;"></i> A X</p><p><span class="reading"><span id="ax_id">%AX%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-down" style="color:#00add6;"></i> A Y</p><p><span class="reading"><span id="ay_id">%AY%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-up" style="color:#e1e437;"></i> A Z</p><p><span class="reading"><span id="az_id">%AZ%</span> </span></p>
-      </div>
-    </div>
-    <div class="cards">
-      <div class="card">
-        <p><i class="fas fa-arrow-right" style="color:#059e8a;"></i> G X</p><p><span class="reading"><span id="gx_id">%GX%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-down" style="color:#00add6;"></i> G Y</p><p><span class="reading"><span id="gy_id">%GY%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-up" style="color:#e1e437;"></i> G Z</p><p><span class="reading"><span id="gz_id">%GZ%</span> </span></p>
-      </div>
-    </div>
-    <div class="cards">
-      <div class="card">
-        <p><i class="fas fa-arrow-right" style="color:#059e8a;"></i> M X</p><p><span class="reading"><span id="mx_id">%MX%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-down" style="color:#00add6;"></i> M Y</p><p><span class="reading"><span id="my_id">%MY%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-arrow-up" style="color:#e1e437;"></i> M Z</p><p><span class="reading"><span id="mz_id">%MZ%</span> </span></p>
-      </div>
-    </div>
-    <div class="cards2">
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#059e8a;"></i> Ph1</p><p><span class="reading"><span id="ph1_id">%PH1%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#00add6;"></i> Ph2</p><p><span class="reading"><span id="ph2_id">%PH2%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#e1e437;"></i> Ph3</p><p><span class="reading"><span id="ph3_id">%PH3%</span> </span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#e1e437;"></i> Ph4</p><p><span class="reading"><span id="ph4_id">%PH4%</span> </span></p>
-      </div>
-    </div>
-    <div class="cards2">
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#059e8a;"></i> shuntvoltage</p><p><span class="reading"><span id="shuntvoltage_id">%SHUNTVOLTAGE%</span> V</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#00add6;"></i> busvoltage</p><p><span class="reading"><span id="busvoltage_id">%BUSVOLTAGE%</span> V</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#e1e437;"></i> current</p><p><span class="reading"><span id="current_id">%CURRENT%</span> mA</span></p>
-      </div>
-      <div class="card">
-        <p><i class="fas fa-sun" style="color:#e1e437;"></i> power</p><p><span class="reading"><span id="power_id">%POWER%</span> mW</span></p>
-      </div>
-    </div>
-  </div> 
+</div>
+
+
 <script type="text/javascript" src="telemetry_events_processing.js"></script>
 </body>
 </html>

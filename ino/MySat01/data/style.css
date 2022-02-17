@@ -1,40 +1,804 @@
-html {  font-family: Arial;  display: inline-block;  margin: 0px auto;  text-align: center;}
-h1{  color: #0F3376;  padding: 2vh;}
-p{  font-size: 1.5rem;}
-.button {
-  display: inline-block;
-  background-color: #008CBA;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  padding: 16px 40px;
-  text-decoration: none;
-  font-size: 30px;
-  margin: 2px;
-  cursor: pointer;
+body{
+    background-color:#008080; 
+    background-size: cover;
+    background-repeat: no-repeat;
+    font-family: "Lato", sans-serif;
+    padding: 0;
 }
-.button2 {  background-color: #f44336;}
-.topnav { overflow: hidden;
-  background-color: #50B8B4;
-  color: white;
-  font-size: 1rem; }
-.content { padding: 20px; }
-.card {
-  background-color: white;
-  box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
+
+.content{
+    margin-top: 10px;
+    font-style: normal;
+    font-weight: 200;
+    font-size: 64px;
+    line-height: 77px;
+    color: #FFFFFF;
+    text-align: center;
 }
-.cards {
-  max-width: 800px;
-  margin: 0 auto;
-  display: grid;
-  grid-gap: 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+.velocityBlock{
+    display: flex;
+    align-items: center;
 }
-.cards2 {
-  max-width: 800px;
-  margin: 0 auto;
-  display: grid;
-  grid-gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+.mainBlock .velocityBlock{
+    display: none;
 }
-.reading { font-size: 1.4rem; }
+
+.timer{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.time{
+    font-weight: 200;
+    font-size: 56px;
+    line-height: 67px;
+}
+
+
+.switcher{
+    width: 146px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 24px;
+    line-height: 29px;
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 56px;
+    height: 26.5px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 1px;
+    background-color: #3BB4BD;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+    background-color: #D1EDF0;
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+#On1,#Off2{
+    color: #009DAA;
+}
+
+
+.squareBlock{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60%;
+}
+
+.vector{
+    width: 25%;
+    height: 2px;
+    background-color: white;
+}
+#square{
+    width: 40%;
+    height: 100%;
+    border: 2px white solid;
+}
+
+.title{
+    font-style: normal;
+    font-weight: normal;
+    font-size: 24px;
+    line-height: 29px;
+    color: #FFFFFF;
+}
+
+
+.data{
+    display: flex;
+}
+
+.gyroscope,.accelerometer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+
+.gyroscopeBlock img{
+    width: 192px;
+    height: 174px;
+    border: 2px solid #000000;
+    box-sizing: border-box;
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+}
+
+
+#qualityRow{
+    display: flex;
+    justify-content: space-between;
+    height: 60%;
+}
+
+
+.quality-el{
+    width: 10%;
+    height: 100%;
+    background-color: black;
+}
+
+#qualityRow .el3 {
+    width: 35%;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    color: #009DAA;
+}
+
+
+
+.outer-circle {
+    border:3px solid #009DAA;
+    height:135px;
+    width:139px;
+    border-radius:50%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 10px;
+}
+
+
+.inner-circle {
+    width: 110px;
+    height: 110px;
+    position:absolute;
+    top:50%; left:50%;
+    transform: translate(-50%, -50%);
+    margin:0;
+    border:3px solid #009DAA;
+    border-radius:50%;
+}
+
+.circle-line{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    text-align: center;
+    z-index: 1;
+}
+.circle-line:after {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 2px;
+    background: white;
+}
+.sunImg{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 7%;
+    text-align: center;
+    transform: rotate(237deg);
+
+}
+.sunImg:after{
+    content: url("Sunlight.png");
+    position: absolute;
+}
+
+.num1{
+    transform: rotate(30deg)
+}
+.num2{
+    transform: rotate(60deg)
+}
+.num3{
+    transform: rotate(90deg)
+}
+.num4{
+    transform: rotate(120deg)
+}
+.num5{
+    transform: rotate(150deg)
+}
+.num6{
+    transform: rotate(180deg)
+}
+.num7{
+    transform: rotate(210deg);
+}
+.num8{
+    transform: rotate(240deg);
+}
+.num9{
+    transform: rotate(270deg);
+}
+.num10{
+    transform: rotate(300deg)
+}
+.num11{
+    transform: rotate(330deg)
+}
+.num12{
+    transform: rotate(0deg)
+}
+
+
+
+.arrow{
+    height: 65px;
+    width: 3px;
+    background: white;
+    left: 50%;
+    bottom: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+    border-radius:12px;
+}
+.arrow::after{
+    content: '';
+    transform: translateX(-50%);
+    position: absolute;
+    left: 50%;
+    top: -13%;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 13px solid white;
+}
+.arrow-wrapper{
+    transform: rotate(45deg);
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    position: absolute;
+    z-index: 1;
+}
+
+
+.name{
+    width: 40%;
+    font-style: normal;
+    font-weight: 300;
+    font-size: 100%;
+    line-height: 34px;
+    color: white;
+}
+.indicators{
+    width: 60%;
+    display: flex;
+    justify-content: space-between;
+}
+.indicator{
+    width: 15%;
+    background-color: #009DAA;
+}
+.indicatorsRow{
+    display: flex;
+    height: 15%;
+}
+.indicatorActive{
+    background: #D1EDF0;
+}
+
+.onboardTime {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-height: 50%;
+    height: 100%;
+}
+.onboardTime .time{
+    font-style: normal;
+    font-weight: 200;
+    font-size: 80px;
+    line-height: 96px;
+}
+.chain{
+    display: flex;
+    justify-content: space-between;
+    max-height: 50%;
+    height: 100%;
+}
+.wifiWrapper{
+    display: flex;
+    justify-content: space-between;
+    width: 31%;
+}
+.wifi{
+    align-self: end;
+}
+.wifiIndicators{
+    width: 60%;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+}
+.wifiIndicator{
+    background-color: #009DAA;
+    width: 19px;
+
+}
+.ind1{
+    height: 30%;
+}
+.ind2{
+    height: 60%;
+}
+.ind3{
+    height: 80%;
+    background-color: #D1EDF0;
+}
+.ind4{
+    height: 100%;
+    background-color: #D1EDF0;
+}
+
+.ip{
+    width: 30%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 24px;
+    line-height: 29px;
+    color: white;
+}
+.ipValue{
+    font-weight: 300;
+    font-size: 28px;
+    line-height: 34px;
+}
+
+
+.sunlightTrackerCircle{
+    position: relative;
+    margin: 0 auto;
+    border:2px solid white;
+    height:308px;
+    width:308px;
+    border-radius:50%;
+    display: flex;
+    align-items: center;
+}
+.sunlightTrackerCircle .circle-line:after{
+    height: 27px;
+    width: 2px;
+    background: #009DAA;
+
+}
+
+/*.sunlightTrackerCircle .num7:after,.sunlightTrackerCircle .num8:after,.sunlightTrackerCircle .num9:after{*/
+/*}*/
+
+.sunlightTrackerCircle .active:after{
+    background: white;
+}
+
+.inner-square{
+    width: 65px;
+    height: 65px;
+    border: 2px solid #FFFFFF;
+    margin: 0 auto;
+}
+
+.cross{
+    width: 50%;
+    height: 50%;
+    position: relative;
+
+}
+.vrt{
+    width: 3px;
+    height: 100%;
+    background-color: white;
+    margin: 0 auto;
+}
+.hrz{
+    width: 100%;
+    height: 2px;
+    background-color: white;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+
+.wrapper{
+    padding: 20px 90px;
+
+}
+.mainContainer{
+    width: 100%;
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    color: white;
+}
+.block{
+    background-color: rgba(90,122,133,.25);
+}
+.mainBlock{
+    width: 40%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.imageBlock{
+    width: 100%;
+    max-height: 70%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: 40px 30px 30px;
+}
+.imageBlock .image-wrapper{
+    width: 100%;
+    height: 75%;
+}
+.imageBlock .image-wrapper img{
+    width: 100%;
+    height: 100%;
+}
+.timeAndButtonBlock{
+    /*margin-top: 50px;*/
+    max-height: 30%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.shootingTimeBlock{
+    width: 40%;
+}
+.buttonBlock{
+    width: 50%;
+    display: flex;
+    justify-content: end;
+}
+.buttonBlock button{
+    align-self: center;
+    width: 70%;
+    height: 80%;
+    color:#009DAA;
+    font-size: larger;
+    background-color: #D1EDF0;
+    border-color:#D1EDF0 ;
+}
+.switcherBlock{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+}
+
+.separator1{
+    background-color: white;
+    height: 100%;
+    width: 2px;
+}
+.separator2{
+    background-color: white;
+    width: 2px;
+
+}
+.infoBlock{
+    width: 55%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.starSolarBlock{
+    height: 100%;
+    max-height: 25%;
+    display: flex;
+    justify-content: space-between;
+}
+.starBlock{
+    box-sizing: border-box;
+    padding: 15px 30px;
+    width: 45%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.starBlock .timer{
+    flex-direction: column;
+    align-items: end;
+}
+.solarBlock{
+    box-sizing: border-box;
+    padding: 15px 15px 30px;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.temperatureBlock{
+    display: flex;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: 10px 40px 5px;
+    max-height: 15%;
+    height: 100%;
+}
+.gyroscopeBlock{
+    max-height: 20%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 15px 40px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.anotherInfoBlock{
+    display: flex;
+    justify-content: space-between;
+    max-height: 60%;
+    height: 100%;
+}
+.airSunlightBlock{
+    width: 37%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.airBlock{
+    box-sizing: border-box;
+    padding: 15px 10px 55px;
+    max-height: 35%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.sunlightBlock{
+    box-sizing: border-box;
+    padding: 10px 20px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    max-height: 60%;
+    height: 100%;
+}
+
+.magnetometerBatteryTimeBlock{
+    width:60%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.batteryTimeBlock{
+    max-height: 60%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.magnetometerBlock{
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px 20px 10px;
+    max-height: 35%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.magnetometerCircles{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+.circle{
+    display: flex;
+    align-items: center;
+}
+.batteryBlock{
+    box-sizing: border-box;
+    padding: 10px 30px 20px;
+    max-height: 50%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.batteryTitle{
+    max-height: 10%;
+    height: 100%;
+}
+.onboardTimeBlock{
+    box-sizing: border-box;
+    padding: 10px 30px 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    max-height: 40%;
+    height: 100%;
+}
+
+.titleType1{
+    font-style: normal;
+    font-weight: normal;
+    font-size: 24px;
+    line-height: 29px;
+}
+
+
+@media screen and (max-width: 1910px),
+       screen and (max-height: 1070px){
+    .sunlightTrackerCircle{
+        width: 200px;
+        height: 200px;
+    }
+    .buttonBlock button{
+        font-size: inherit;
+    }
+    #qualityRow{
+        font-size: large;
+    }
+    .outer-circle{
+        width: 100px;
+        height: 100px;
+    }
+    .inner-circle{
+        width: 80px;
+        height: 80px;
+    }
+    .velocityBlock img{
+        width: 160px;
+        height: 150px;
+    }
+    .wrapper{
+        padding: 10px 20px;
+    }
+    .content,.time,.onboardTime .time{
+        font-size: 36px;
+        line-height: 43px;
+    }
+    .starBlock,.solarBlock,.sunlightBlock,.onboardTimeBlock{
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .wifiWrapper{
+        width: 40%;
+    }
+    .ip{
+        width: 40%;
+    }
+    .name{
+        font-size: 22px;
+    }
+    .sunImg{
+        transform: rotate(235deg);
+    }
+    .batteryBlock{
+        padding: 5px 20px;
+    }
+}
+@media screen and (max-height: 800px) {
+    .sunlightTrackerCircle{
+        width: 150px;
+        height: 150px;
+    }
+    .inner-square{
+        width: 45px;
+        height: 45px;
+    }
+    .batteryBlock{
+        padding-right: 0;
+        padding-left: 0;
+    }
+    .velocityBlock img{
+        width: 130px;
+        height: 110px;
+    }
+
+    .batteryBlock{
+        max-height: 55%;
+    }
+    .titleType1{
+        font-size: 20px;
+    }
+    .sunImg{
+        transform: rotate(230deg);
+    }
+}
+
+@media screen and (max-width: 1367px),
+       screen and (max-height: 780px){
+    .titleType1{
+        font-size: 18px;
+    }
+    .time,.onboardTime .time,.ipValue,.content{
+        font-size: 24px;
+    }
+    .name{
+        font-size: 15px;
+    }
+    #qualityRow{
+        font-size: smaller;
+    }
+
+}
+@media screen and (max-height: 700px){
+    .outer-circle{
+        width: 80px;
+        height: 80px;
+    }
+    .inner-circle{
+        width: 60px;
+        height: 60px;
+    }
+    .arrow{
+        height: 55px;
+    }
+    .circle-line:after{
+        height: 15px;
+    }
+    .onboardTimeBlock{
+        padding: 0;
+    }
+    .batteryBlock{
+        padding: 0;
+    }
+    .layer img{
+        width: 25px;
+        height: 25px;
+    }
+    .inner-square{
+        width: 40px;
+        height: 40px;
+    }
+}

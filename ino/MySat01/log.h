@@ -1,14 +1,22 @@
 #pragma once
 
+#include "Adafruit_INA219.h" //https://github.com/Makuna/Rtc
+#include <MPU9250_asukiaaa.h> // http://www.esp32learning.com/code/esp32-and-mpu-9250-sensor-example.php
+#include <Adafruit_BME280.h>
+#include <Adafruit_ADS1X15.h>
+#include <RtcDS3231.h>
+#include "WiFi.h"
+
+#define SEALEVELPRESSURE_HPA (1013.25)
+
 namespace Log
 {
-    void printValuesINA219()
+    void printValuesINA219(Adafruit_INA219 &ina219)
     {
-        shuntvoltage = ina219.getShuntVoltage_mV();
-        busvoltage = ina219.getBusVoltage_V();
-        current = ina219.getCurrent_mA();
-        power = ina219.getPower_mW();
-        //loadvoltage = busvoltage + (shuntvoltage / 1000);  твій пройоб подивися потім
+        float shuntvoltage = ina219.getShuntVoltage_mV();
+        float busvoltage = ina219.getBusVoltage_V();
+        float current = ina219.getCurrent_mA();
+        float power = ina219.getPower_mW();
 
         Serial.print("BV"); Serial.print("\t"); // Bus Voltage
         Serial.print("SV"); Serial.print("\t"); // Shunt Voltage
@@ -18,26 +26,24 @@ namespace Log
 
         Serial.print(busvoltage); Serial.print("\t"); 
         Serial.print(shuntvoltage); Serial.print("\t");
-        //Serial.print(loadvoltage); Serial.print("\t");
         Serial.print(current); Serial.print("\t");
         Serial.println(power);
-
     }
 
-    void printValues9250() 
+    void printValuesMPU9250(MPU9250_asukiaaa &MPU9250) 
     {
         uint8_t sensorId = 0x69;
-        if (mySensor.readId(&sensorId) == 0) 
+        if (MPU9250.readId(&sensorId) == 0) 
             Serial.println("sensorId: " + String(sensorId));
         else 
             Serial.println("Cannot read sensorId");
         
-        if (mySensor.accelUpdate() == 0) 
+        if (MPU9250.accelUpdate() == 0) 
         {
-            aX = mySensor.accelX();
-            aY = mySensor.accelY();
-            aZ = mySensor.accelZ();
-            aSqrt = mySensor.accelSqrt();
+            float aX = MPU9250.accelX();
+            float aY = MPU9250.accelY();
+            float aZ = MPU9250.accelZ();
+            float aSqrt = MPU9250.accelSqrt();
             Serial.println("accelX: " + String(aX));
             Serial.println("accelY: " + String(aY));
             Serial.println("accelZ: " + String(aZ));
@@ -46,11 +52,11 @@ namespace Log
         else
             Serial.println("Cannod read accel values");
 
-        if (mySensor.gyroUpdate() == 0) 
+        if (MPU9250.gyroUpdate() == 0) 
         {
-            gX = mySensor.gyroX();
-            gY = mySensor.gyroY();
-            gZ = mySensor.gyroZ();
+            float gX = MPU9250.gyroX();
+            float gY = MPU9250.gyroY();
+            float gZ = MPU9250.gyroZ();
             Serial.println("gyroX: " + String(gX));
             Serial.println("gyroY: " + String(gY));
             Serial.println("gyroZ: " + String(gZ));
@@ -58,13 +64,12 @@ namespace Log
         else 
             Serial.println("Cannot read gyro values");
 
-        
-        if (mySensor.magUpdate() == 0) 
+        if (MPU9250.magUpdate() == 0) 
         {
-            mX = mySensor.magX();
-            mY = mySensor.magY();
-            mZ = mySensor.magZ();
-            mDirection = mySensor.magHorizDirection();
+            float mX = MPU9250.magX();
+            float mY = MPU9250.magY();
+            float mZ = MPU9250.magZ();
+            float mDirection = MPU9250.magHorizDirection();
             Serial.println("magX: " + String(mX));
             Serial.println("maxY: " + String(mY));
             Serial.println("magZ: " + String(mZ));
@@ -72,10 +77,9 @@ namespace Log
         } 
         else 
             Serial.println("Cannot read mag values");
-
     }
 
-    void printValuesBME() 
+    void printValuesBME(Adafruit_BME280 &bme) 
     {
         Serial.print("Temperature = ");
         Serial.print(bme.readTemperature());
@@ -95,6 +99,23 @@ namespace Log
         Serial.println(" %");
 
         Serial.println();
+    }
+
+    void printValuesADS(Adafruit_ADS1015 &ads) 
+    {
+        Serial.print("ph1 = ");
+        Serial.println(ads.readADC_SingleEnded(0));
+
+        Serial.print("ph2 = ");
+        Serial.println(ads.readADC_SingleEnded(1));
+        
+        Serial.print("ph3 = ");
+        Serial.println(ads.readADC_SingleEnded(2));
+        
+        Serial.print("ph4 = ");
+        Serial.println(ads.readADC_SingleEnded(3));
+        Serial.println();
+        
     }
 
     void printDateTimeS(const RtcDateTime& dt)
@@ -121,38 +142,13 @@ namespace Log
         else
             Serial.println(" Fail");
     }
-
-    void printPeriferiaInfo()
+ 
+    void printWiFiInfo()
     {
-        Serial.println("");
-        Serial.println("Loop begin");
-        Log::printDateTimeS(currentTime);
-        Serial.println();
-        rtcTemperature.Print(Serial);
-        Serial.println("C");
-
-        Log::printValuesBME();
-        Log::printValues9250();
-        Log::printValuesINA219();
-        Serial.printf("Temperature = %.2f ºC \n", temperature);
-        Serial.printf("Humidity = %.2f \n", humidity);
-        Serial.printf("Pressure = %.2f hPa \n", pressure);
-        Serial.printf("Time: ", sTime);
-        Serial.println();
-
+        // Print ESP32 Local IP Address
         Serial.println();    
         Serial.print("RSSI:");
         Serial.println(WiFi.RSSI());  
-        Serial.print("IP Address: http://");
-        Serial.println(WiFi.localIP());
-
-        Serial.println("Loop End");  // Power
-        Serial.println("");
-    }
-
-    void printSetupInfo()
-    {
-        // Print ESP32 Local IP Address
         Serial.print("IP Address: http://");
         Serial.println(WiFi.localIP());
         Serial.println("End Init");
