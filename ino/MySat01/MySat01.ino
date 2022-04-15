@@ -66,6 +66,8 @@ int led = 14;
 
 String commandToLightLED = "";
 
+String nameProbe = "";
+
 // Photo File Name to save in SPIFFS
 //https://randomnerdtutorials.com/esp32-cam-take-photo-display-web-server/
 #define FILE_PHOTO "/photo.jpg" 
@@ -102,6 +104,9 @@ String processor(const String& var)
   Serial.println(var);
   if(var == "TEMPERATURE"){
     return String(temperature);
+  }
+  else if(var == "NAME"){
+    return nameProbe;
   }
   else if(var == "HUMIDITY"){
     return String(humidity);
@@ -175,8 +180,6 @@ void connectWiFI()
 {
   String logn, pas;
   readConfig(SPIFFS, logn, pas);
-  Serial.println(logn.length());
-  Serial.println(pas.length());
   WiFi.begin(logn.c_str(), pas.c_str());
   while (WiFi.status() != WL_CONNECTED) 
   {
@@ -223,13 +226,16 @@ void switchStar()
 }*/
 void writeConfig(fs::FS &fs){
   myFile = fs.open("/config.txt", FILE_WRITE);
-  myFile.print("Tenda_C000C0,12345678");
+  myFile.print("Tenda_C000C0,12345678\n");
+  myFile.println(nameProbe);
   myFile.close();
   }
 
 void writeNewConfig(fs::FS &fs, String wifiInf){
   myFile = fs.open("/config.txt", FILE_WRITE);
   myFile.print(wifiInf);
+  myFile.print('\n');
+  myFile.println(nameProbe);
   myFile.close();
   
   }
@@ -278,17 +284,92 @@ bool readUART(){
   }
   }
 
+void readUARTName(String& nameProbe){
+  nameProbe = "";
+  Serial.print("Hello! And am your personal satellite. Please enter my name: ");
+  while(nameProbe == ""){
+  while (Serial.available() > 0) {
+    int inChar = Serial.read();
+    inString += (char)inChar;
+    if (inChar == '\n') {
+      Serial.print("String: ");
+      Serial.println(inString);
+      nameProbe = inString.substring(0,inString.length()-1);
+    }
+  }
+  }
+}
+
+void writeUARTNameToConfig(fs::FS &fs, String& nameProbe, String text_file){
+    int countLine = 1;
+    String write_text = "";
+    bool flag_write = true;
+    for(int i =0; i < text_file.length(); i++){
+    if(text_file[i] == '\n'){
+      countLine++;
+      }
+    if(countLine == 2 && flag_write){
+     write_text+= "\n";
+     write_text+= nameProbe;
+     flag_write = false;
+      }
+    write_text+= text_file[i];
+  }
+  myFile = myFile = fs.open("/config.txt", FILE_WRITE);
+  myFile.print(write_text);
+  myFile.close();
+}
+void readConfigName(fs::FS &fs, String& nameProbe){
+  nameProbe = "";
+  int countLine = 1;
+  myFile = fs.open("/config.txt", FILE_READ);
+  String textFile = myFile.readString();
+  
+  Serial.println(textFile);
+  if(!myFile){
+    readUARTName(nameProbe);
+    Serial.println("NOT MY FILE");
+    writeConfig(SPIFFS);
+    }
+  
+  for(int i =0; i < textFile.length(); i++){
+      if (textFile[i] == '\n'){
+        countLine++;
+        }
+    if (countLine == 2){
+      if(textFile[i]!='\n' && textFile[i] != '\r'){
+        nameProbe += textFile[i];
+        }
+      }
+    }
+    if (countLine < 2){
+      readUARTName(nameProbe);
+      Serial.println("NOT 2 LINE");
+      }
+     if(nameProbe == "" || nameProbe == "\n" || nameProbe == "\r"){
+      readUARTName(nameProbe);
+      writeUARTNameToConfig(SPIFFS, nameProbe, textFile);
+      Serial.println("NOT NAME");
+      }
+  myFile.close();
+  }
+
 void readConfig(fs::FS &fs, String& logn, String&  pas){
    logn = "";
    pas = "";
    bool flag = true;
+   int countLine = 1;
    myFile = fs.open("/config.txt", FILE_READ);
    if(!myFile){
     writeConfig(SPIFFS);
     }
    String textFile = myFile.readString();
-   Serial.println(textFile);
+   
    for(int i = 0; i < textFile.length(); i++){
+       if (textFile[i] == '\n'){
+          countLine++;
+        }
+       if (countLine == 1){
        if (textFile[i] == ','){
           flag = false; 
        }else{
@@ -297,19 +378,21 @@ void readConfig(fs::FS &fs, String& logn, String&  pas){
                    logn +=textFile[i];
                }else{
                     writeConfig(SPIFFS);
+                    Serial.println("NOT CORRECT PASSWORD");
                 }
            }else{
-               if(textFile[i] != ' ' || textFile[i]!='\n'){
+               if(textFile[i] != ' ' && textFile[i]!='\n' && textFile[i]!= '\r'){
                    pas+=textFile[i];
-               }else{
-                    writeConfig(SPIFFS);
-                }
+               }
            }
        }
        
    }
+   
+   }
    if(flag){
     writeConfig(SPIFFS);
+    Serial.println("NOT CORRECT FLAG");
     }
    myFile.close();
 }
@@ -327,6 +410,8 @@ void setup()
   
   i2cInit();  // Init I2C
   initSPIFFS();
+  readConfigName(SPIFFS, nameProbe);
+  
   connectWiFI();
   initCamera();
   initServer();
@@ -350,6 +435,8 @@ void loop()
   Serial.println("");
   Serial.println("Loop Start");  
   Serial.println("");
+  Serial.print("Your personal satellite: ");
+  Serial.println(nameProbe);
   Log::printDateTimeS(rtcGetTime());
   Serial.println();
   rtcGetTemperature().Print(Serial);

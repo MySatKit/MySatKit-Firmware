@@ -5,7 +5,7 @@ static AsyncWebServer server(80);
 // Create an Event Source on /events
 static AsyncEventSource events("/events"); //https://randomnerdtutorials.com/esp32-web-server-sent-events-sse/
 
-
+void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){}
 void initServer()
 {
   server.on("/switch", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -17,10 +17,16 @@ void initServer()
     isPhotoNeeded = true;
     request->send_P(200, "text/plain", "Taking Photo");
   });
+  
+  server.on("/renew", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Serial.println("RENEW!!!");
+    request->send(200, "OK","RENEW");
+  }, onUpload);
 
   server.on("/saved-photo", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, FILE_PHOTO, "image/jpg", false);
   });
+  
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -30,8 +36,7 @@ void initServer()
   // Route to load style.css file
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(SPIFFS, "/style.css", "text/css");
-  });
-  
+  });  
 
     // Handle Web Server Events
   events.onConnect([](AsyncEventSourceClient *client){
@@ -50,6 +55,7 @@ void initServer()
 void sendEvents()
 {
   events.send("ping",NULL,millis());
+  events.send(String(nameProbe).c_str(),"name_probe",millis());
   events.send(String(temperature).c_str(),"temperature",millis());
   Serial.print("Send event: ");
   Serial.println(String(temperature).c_str());

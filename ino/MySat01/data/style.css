@@ -1,5 +1,5 @@
 body{
-    background-color:#008080; 
+    background-color: #008080;
     background-size: cover;
     background-repeat: no-repeat;
     font-family: "Lato", sans-serif;
@@ -224,7 +224,7 @@ input:checked + .slider:before {
 
 }
 .sunImg:after{
-    content: url("Sunlight.png");
+    content: url("https://drive.google.com/uc?export=view&id=11nA7oXbiK2EPbl3l0JvQjmJnouCp5MCM");
     position: absolute;
 }
 
