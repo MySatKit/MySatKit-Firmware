@@ -1,5 +1,5 @@
 # MySatKit-Firmware
-ino folder - for Arduino Studio based project
-libraries.zip - folder with all libs
+<p>ino folder - for Arduino Studio based project
+<p>libraries.zip - folder with all libs
 
-Update WiFi login and password before upload the sketch!
+<p>Update WiFi login and password before upload the sketch!
