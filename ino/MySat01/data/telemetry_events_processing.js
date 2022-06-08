@@ -1,4 +1,4 @@
-if (!!window.EventSource) {
+function renew(){
  var source = new EventSource('/events');
   source.addEventListener('open', function(e) {
   console.log("Events Connected");
@@ -10,6 +10,10 @@ if (!!window.EventSource) {
  }, false);
  source.addEventListener('message', function(e) {
   console.log("message", e.data);
+ }, false);
+ source.addEventListener('name_probe', function(e) {
+  console.log("name_probe", e.data);
+  document.getElementById("name_probe").innerHTML = e.data;
  }, false);
  source.addEventListener('temperature', function(e) {
   console.log("temperature", e.data);
@@ -95,9 +99,17 @@ if (!!window.EventSource) {
   console.log("power", e.data);
   document.getElementById("power_id").innerHTML = e.data;
  }, false);
- function capturePhoto() {
+ 
+}
+
+function capturePhoto() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', "/capture", true);
     xhr.send();
  }
-}
+ function switchLED() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "/switch", true);
+    xhr.send();
+ }
+ 
