@@ -30,7 +30,8 @@
 //Adafruit_INA219 ina219;
 #include "INA219.h"
 #include "log.h"
-#include <analogWrite.h>
+#include "ADS.h"
+//#include <analogWrite.h>
 
 float temperature;
 float humidity;
@@ -51,12 +52,21 @@ float power = 0;
 String sTime;
 float aX, aY, aZ, aSqrt, gX, gY, gZ, mDirection, mX, mY, mZ;
 #define SEALEVELPRESSURE_HPA (1013.25)
-int ph1,ph2,ph3,ph4;
+float ph1,ph2,ph3,ph4;
 // Replace with your network credentials
 //const char* ssid = "LUNAR_WIFI";
 //const char* password = "ElonMars2024?";
-const char* ssid = "Tenda_C000C0";
-const char* password = "12345678";
+const char* ssid = "MERCUSYS_478C";
+const char* password = "zaq12wsx";
+
+bool flag = true;
+
+String inString;
+int led = 14;
+
+String commandToLightLED = "";
+
+String nameProbe = "";
 
 // Photo File Name to save in SPIFFS
 //https://randomnerdtutorials.com/esp32-cam-take-photo-display-web-server/
@@ -82,17 +92,21 @@ const char* password = "12345678";
 
 // star pin
 #define STAR_GIPIO 16
-
+File myFile;
 String processor(const String& var)
 {
   getSensorReadings(temperature, humidity, pressure);
   Log::printDateTimeS(rtcGetTime());
   Log::printValuesBME(getBME280());
+  Log::printValuesADS(getADS1015());
   Log::printValuesMPU9250(getMPU9250());
   Log::printValuesINA219(getINA219());
   Serial.println(var);
   if(var == "TEMPERATURE"){
     return String(temperature);
+  }
+  else if(var == "NAME"){
+    return nameProbe;
   }
   else if(var == "HUMIDITY"){
     return String(humidity);
@@ -164,11 +178,16 @@ boolean isLedLight = false;
 
 void connectWiFI()
 {
-  WiFi.begin(ssid, password);
+  String logn, pas;
+  readConfig(SPIFFS, logn, pas);
+  WiFi.begin(logn.c_str(), pas.c_str());
   while (WiFi.status() != WL_CONNECTED) 
   {
     delay(1000);
     Serial.println("Connecting to WiFi...");
+    Serial.println(logn);
+    Serial.println(pas);
+    readUART();
   }
 }
 
@@ -195,31 +214,209 @@ void takePhoto()
   }
 }
 
+
+/*
 void switchStar()
 {
     if(!isLedLight)
-    analogWrite(STAR_GIPIO, 0);
+    //analogWrite(STAR_GIPIO, 0);
   else
-    analogWrite(STAR_GIPIO, 255);
+    //analogWrite(STAR_GIPIO, 255);
+    Serial.println("else");
+}*/
+void writeConfig(fs::FS &fs){
+  myFile = fs.open("/config.txt", FILE_WRITE);
+  myFile.print("Tenda_C000C0,12345678\n");
+  myFile.println(nameProbe);
+  myFile.close();
+  }
+
+void writeNewConfig(fs::FS &fs, String wifiInf){
+  myFile = fs.open("/config.txt", FILE_WRITE);
+  myFile.print(wifiInf);
+  myFile.print('\n');
+  myFile.println(nameProbe);
+  myFile.close();
+  
+  }
+
+void switchStar(String com){
+  
+  if(com == "ON"){
+     digitalWrite(led, HIGH);
+  } else if(com == "OFF"){
+     digitalWrite(led, LOW);
+  }
+  if(isLedLight){
+     Serial.println("LED ON");
+     digitalWrite(led, HIGH);
+  } else{
+     Serial.println("LED OFF");
+     digitalWrite(led, LOW);
+  }
+}
+bool readUART(){
+  while (Serial.available() > 0) {
+    int inChar = Serial.read();
+    inString += (char)inChar;
+    if (inChar == '\n') {
+      Serial.print("String: ");
+      Serial.println(inString);
+      if (inString.startsWith("U")){
+        String login;
+        login = inString.substring(2,inString.length()-1);
+        Serial.print("Password, login: ");
+        Serial.println(login);
+        //writeNewConfig(SPIFFS, login);
+        inString = "";
+        return false;
+      } else if (inString.startsWith("S")){
+        String command;
+        command = inString.substring(2,inString.length()-1);
+        Serial.println("Comanda");
+        Serial.println(command);
+        switchStar(command);
+        inString = "";
+        return false;
+      }
+    
+    }
+  }
+  }
+
+void readUARTName(String& nameProbe){
+  nameProbe = "";
+  Serial.print("Hello! And am your personal satellite. Please enter my name: ");
+  while(nameProbe == ""){
+  while (Serial.available() > 0) {
+    int inChar = Serial.read();
+    inString += (char)inChar;
+    if (inChar == '\n') {
+      Serial.print("String: ");
+      Serial.println(inString);
+      nameProbe = inString.substring(0,inString.length()-1);
+    }
+  }
+  }
 }
 
+void writeUARTNameToConfig(fs::FS &fs, String& nameProbe, String text_file){
+    int countLine = 1;
+    String write_text = "";
+    bool flag_write = true;
+    for(int i =0; i < text_file.length(); i++){
+    if(text_file[i] == '\n'){
+      countLine++;
+      }
+    if(countLine == 2 && flag_write){
+     write_text+= "\n";
+     write_text+= nameProbe;
+     flag_write = false;
+      }
+    write_text+= text_file[i];
+  }
+  myFile = myFile = fs.open("/config.txt", FILE_WRITE);
+  myFile.print(write_text);
+  myFile.close();
+}
+void readConfigName(fs::FS &fs, String& nameProbe){
+  nameProbe = "";
+  int countLine = 1;
+  myFile = fs.open("/config.txt", FILE_READ);
+  String textFile = myFile.readString();
+  
+  Serial.println(textFile);
+  if(!myFile){
+    readUARTName(nameProbe);
+    Serial.println("NOT MY FILE");
+    writeConfig(SPIFFS);
+    }
+  
+  for(int i =0; i < textFile.length(); i++){
+      if (textFile[i] == '\n'){
+        countLine++;
+        }
+    if (countLine == 2){
+      if(textFile[i]!='\n' && textFile[i] != '\r'){
+        nameProbe += textFile[i];
+        }
+      }
+    }
+    if (countLine < 2){
+      readUARTName(nameProbe);
+      Serial.println("NOT 2 LINE");
+      }
+     if(nameProbe == "" || nameProbe == "\n" || nameProbe == "\r"){
+      readUARTName(nameProbe);
+      writeUARTNameToConfig(SPIFFS, nameProbe, textFile);
+      Serial.println("NOT NAME");
+      }
+  myFile.close();
+  }
+
+void readConfig(fs::FS &fs, String& logn, String&  pas){
+   logn = "";
+   pas = "";
+   bool flag = true;
+   int countLine = 1;
+   myFile = fs.open("/config.txt", FILE_READ);
+   if(!myFile){
+    writeConfig(SPIFFS);
+    }
+   String textFile = myFile.readString();
+   
+   for(int i = 0; i < textFile.length(); i++){
+       if (textFile[i] == '\n'){
+          countLine++;
+        }
+       if (countLine == 1){
+       if (textFile[i] == ','){
+          flag = false; 
+       }else{
+           if (flag){
+               if (isalnum(textFile[i]) || textFile[i] == '_'){
+                   logn +=textFile[i];
+               }else{
+                    writeConfig(SPIFFS);
+                    Serial.println("NOT CORRECT PASSWORD");
+                }
+           }else{
+               if(textFile[i] != ' ' && textFile[i]!='\n' && textFile[i]!= '\r'){
+                   pas+=textFile[i];
+               }
+           }
+       }
+       
+   }
+   
+   }
+   if(flag){
+    writeConfig(SPIFFS);
+    Serial.println("NOT CORRECT FLAG");
+    }
+   myFile.close();
+}
 void setup() 
 {
   pinMode(STAR_GIPIO, OUTPUT);    
   Serial.begin(115200);
+  pinMode(led, OUTPUT);
   delay(100);
   // Turn-off the 'brownout detector'
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
 
   Serial.println("");
   Serial.println("Start Init");
-
+  
   i2cInit();  // Init I2C
-  connectWiFI();
   initSPIFFS();
+  readConfigName(SPIFFS, nameProbe);
+  
+  connectWiFI();
   initCamera();
   initServer();
   initBME();
+  initADS();
   initMPU9250();
   initINA219();
   initRTC();
@@ -228,23 +425,31 @@ void setup()
 
 void loop() 
 {
-  switchStar();
+  switchStar("");
   takePhoto();
   getSensorReadings(temperature, humidity, pressure);
+  getLightSensorReadings(ph1,ph2,ph3,ph4);
   sendEvents();// Send Events to the Web Server with the Sensor Readings
-  
+  bool flag = readUART();
+  if (flag){
   Serial.println("");
   Serial.println("Loop Start");  
   Serial.println("");
+  Serial.print("Your personal satellite: ");
+  Serial.println(nameProbe);
   Log::printDateTimeS(rtcGetTime());
   Serial.println();
   rtcGetTemperature().Print(Serial);
   Serial.println("C");
   Log::printValuesBME(getBME280());
+  Log::printValuesADS(getADS1015());
   Log::printValuesMPU9250(getMPU9250());
   Log::printValuesINA219(getINA219());
   Log::printWiFiInfo();
   Serial.println("Loop End");  
   Serial.println("");
-  delay(1000); 
+  } else{
+      Serial.println("Enter new Wifi Name and Password: ");
+  }
+  delay(1000);
 }

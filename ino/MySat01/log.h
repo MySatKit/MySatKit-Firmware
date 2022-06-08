@@ -3,6 +3,7 @@
 #include "Adafruit_INA219.h" //https://github.com/Makuna/Rtc
 #include <MPU9250_asukiaaa.h> // http://www.esp32learning.com/code/esp32-and-mpu-9250-sensor-example.php
 #include <Adafruit_BME280.h>
+#include <Adafruit_ADS1X15.h>
 #include <RtcDS3231.h>
 #include "WiFi.h"
 
@@ -98,6 +99,23 @@ namespace Log
         Serial.println(" %");
 
         Serial.println();
+    }
+
+    void printValuesADS(Adafruit_ADS1015 &ads) 
+    {
+        Serial.print("ph1 = ");
+        Serial.println(ads.readADC_SingleEnded(0));
+
+        Serial.print("ph2 = ");
+        Serial.println(ads.readADC_SingleEnded(1));
+        
+        Serial.print("ph3 = ");
+        Serial.println(ads.readADC_SingleEnded(2));
+        
+        Serial.print("ph4 = ");
+        Serial.println(ads.readADC_SingleEnded(3));
+        Serial.println();
+        
     }
 
     void printDateTimeS(const RtcDateTime& dt)
