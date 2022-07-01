@@ -53,6 +53,7 @@ String sTime;
 float aX, aY, aZ, aSqrt, gX, gY, gZ, mDirection, mX, mY, mZ;
 #define SEALEVELPRESSURE_HPA (1013.25)
 float ph1,ph2,ph3,ph4;
+int numPosition;
 // Replace with your network credentials
 //const char* ssid = "LUNAR_WIFI";
 //const char* password = "ElonMars2024?";
@@ -105,6 +106,9 @@ String processor(const String& var)
   if(var == "TEMPERATURE"){
     return String(temperature);
   }
+  else if(var == "SUN_POSITION"){
+    return String(numPosition);
+    }
   else if(var == "NAME"){
     return nameProbe;
   }
@@ -224,6 +228,24 @@ void switchStar()
     //analogWrite(STAR_GIPIO, 255);
     Serial.println("else");
 }*/
+
+int sunPosition(){
+  if (ph1 < ph2 && ph1 < ph3 && ph1 < ph4){ 
+    return 1;
+  } 
+  else if(ph2 < ph1 && ph2 < ph3 && ph2 < ph4)
+  {
+    return 2;
+  }
+  else if(ph3 < ph1 && ph3 < ph2 && ph3 < ph4)
+  {
+    return 3;
+  }
+  else if(ph4 < ph1 && ph4 < ph2 && ph4 < ph3)
+  {
+    return 4;
+  }
+}
 void writeConfig(fs::FS &fs){
   myFile = fs.open("/config.txt", FILE_WRITE);
   myFile.print("Tenda_C000C0,12345678\n");
@@ -279,6 +301,33 @@ bool readUART(){
         inString = "";
         return false;
       }
+      else if(inString.startsWith ("T")){
+        String setTime;
+        setTime = inString.substring(2,inString.length()-1);
+        Serial.println("Time:");
+        Serial.println(setTime);
+        int setYear, setMonth, setDay, setHour, setMinute, setSecond;
+        setYear = setTime.substring(0,4).toInt();
+        setMonth = setTime.substring(5,7).toInt();
+        setDay = setTime.substring(8,10).toInt();
+        setHour = setTime.substring(11,13).toInt();
+        setMinute = setTime.substring(14,16).toInt();
+        setSecond = setTime.substring(17,19).toInt();
+        Serial.println("Year:");
+        Serial.println(setYear);
+        Serial.println("Month:");
+        Serial.println(setMonth);
+        Serial.println("Dat:");
+        Serial.println(setDay);
+        Serial.println("Hour:");
+        Serial.println(setHour);
+        Serial.println("Minute:");
+        Serial.println(setMinute);
+        Serial.println("Second:");
+        Serial.println(setSecond);
+        rtcSetTime(setYear, setMonth, setDay, setHour, setMinute, setSecond);
+        inString = "";
+        }
     
     }
   }
@@ -374,7 +423,7 @@ void readConfig(fs::FS &fs, String& logn, String&  pas){
           flag = false; 
        }else{
            if (flag){
-               if (isalnum(textFile[i]) || textFile[i] == '_'){
+               if (isalnum(textFile[i]) || textFile[i] == '_' || textFile[i] == '.'){
                    logn +=textFile[i];
                }else{
                     writeConfig(SPIFFS);
@@ -441,12 +490,15 @@ void loop()
   Serial.println();
   rtcGetTemperature().Print(Serial);
   Serial.println("C");
+  numPosition = sunPosition();
+  
   Log::printValuesBME(getBME280());
   Log::printValuesADS(getADS1015());
   Log::printValuesMPU9250(getMPU9250());
   Log::printValuesINA219(getINA219());
   Log::printWiFiInfo();
-  Serial.println("Loop End");  
+  Serial.println("Loop End");
+  Serial.println(numPosition);  
   Serial.println("");
   } else{
       Serial.println("Enter new Wifi Name and Password: ");
