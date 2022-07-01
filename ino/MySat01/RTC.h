@@ -15,7 +15,10 @@ RtcDateTime rtcGetTime()
 {
     return Rtc.GetDateTime();
 }
-
+void rtcSetTime(int setYear, int setMonth, int setDay, int setHour, int setMinute, int setSecond){
+  Rtc.SetDateTime(RtcDateTime(setYear, setMonth, setDay, setHour, setMinute, setSecond));
+  
+  }
 RtcTemperature rtcGetTemperature()
 {
     return Rtc.GetTemperature();
