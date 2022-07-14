@@ -231,19 +231,87 @@ void switchStar()
 
 int sunPosition(){
   if (ph1 < ph2 && ph1 < ph3 && ph1 < ph4){ 
-    return 1;
+    if (ph2 < ph4){
+        coef = ((ph2 - ph1)/ ph2) * 100
+        if (coef < 10){
+          return 2;
+          }
+        else{
+          return 1;
+          }
+      }
+    else if(ph2 > ph4){
+        coef = ((ph4 - ph1)/ ph4) * 100
+        if (coef < 10){
+          return 12;
+          }
+        else{
+          return 1;
+          }
+      }
   } 
   else if(ph2 < ph1 && ph2 < ph3 && ph2 < ph4)
   {
-    return 2;
+    if (ph1 < ph3){
+        coef = ((ph1 - ph2)/ ph1) * 100
+        if (coef < 10){
+          return 3;
+          }
+        else{
+          return 4;
+          }
+      }
+    else if(ph1 > ph3){
+        coef = ((ph3 - ph2)/ ph3) * 100
+        if (coef < 10){
+          return 5;
+          }
+        else{
+          return 4;
+          }
+      }
   }
   else if(ph3 < ph1 && ph3 < ph2 && ph3 < ph4)
   {
-    return 3;
+    if (ph2 < ph4){
+        coef = ((ph2 - ph3)/ ph2) * 100
+        if (coef < 10){
+          return 6;
+          }
+        else{
+          return 7;
+          }
+      }
+    else if(ph2 > ph4){
+        coef = ((ph4 - ph3)/ ph4) * 100
+        if (coef < 10){
+          return 8;
+          }
+        else{
+          return 7;
+          }
+      }
   }
   else if(ph4 < ph1 && ph4 < ph2 && ph4 < ph3)
   {
-    return 4;
+    if (ph1 < ph3){
+        coef = ((ph1 - ph4)/ ph1) * 100
+        if (coef < 10){
+          return 11;
+          }
+        else{
+          return 10;
+          }
+      }
+    else if(ph1 > ph3){
+        coef = ((ph3 - ph4)/ ph3) * 100
+        if (coef < 10){
+          return 9;
+          }
+        else{
+          return 10;
+          }
+      }
   }
 }
 void writeConfig(fs::FS &fs){
