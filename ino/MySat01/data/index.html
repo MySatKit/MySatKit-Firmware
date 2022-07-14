@@ -12,9 +12,6 @@ function capturePhoto() {
     xhr.send();
  }
 </script>
-<script>
-	
-	</script>
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -28,6 +25,7 @@ function capturePhoto() {
 
 
 <div class="wrapper">
+	<div class = "title" id = "num_position" style = "display:none;">%SUN_POSITION%</div>
 	<div class = "title" id = "name_probe">Your personal satellite %NAME%</div>
     <div class="title">MySat Mission Control v.2.01</div>
     <div class="mainContainer titleType1">
@@ -190,7 +188,7 @@ function capturePhoto() {
                             <div class="circle-line num6"></div>
                             <div class="circle-line num7 active"></div>
                             <div class="circle-line num8 active"></div>
-                            <div class="sunImg"></div>
+                            <div id="sunImg"></div>
                             <div class="circle-line num9 active"></div>
                             <div class="circle-line num10 "></div>
                             <div class="circle-line num11"></div>
@@ -364,5 +362,61 @@ function capturePhoto() {
 
 
 <script type="text/javascript" src="telemetry_events_processing.js"></script>
+<script defer>
+	//var num_pos = document.getElementById("num_position").textContent;
+	 var num_pos = 12;
+	if(num_pos == 1){
+	  document.getElementById('sunImg').style.left = "18px";
+	  document.getElementById('sunImg').style.top = "-125px";
+	}
+	else if(num_pos == 2){
+		document.getElementById('sunImg').style.left = "45px";
+		document.getElementById('sunImg').style.top = "-125px";
+	}
+	else if(num_pos == 3){
+		document.getElementById('sunImg').style.left = "60px";
+		document.getElementById('sunImg').style.top = "-100px";
+	}
+	else if(num_pos == 4){
+	  document.getElementById('sunImg').style.left = "70px";
+	  document.getElementById('sunImg').style.top = "-78px";  
+	}
+	else if(num_pos == 5){
+	  document.getElementById('sunImg').style.left = "60px";
+	  document.getElementById('sunImg').style.top = "-50px";  
+	}
+	else if(num_pos == 6){
+	  document.getElementById('sunImg').style.left = "40px";
+	  document.getElementById('sunImg').style.top = "-35px";  
+	}
+	else if(num_pos == 7){
+	  document.getElementById('sunImg').style.left = "15px";
+	  document.getElementById('sunImg').style.top = "-30px";
+	}
+	else if(num_pos == 8){
+	  document.getElementById('sunImg').style.left = "-10px";
+	  document.getElementById('sunImg').style.top = "-35px";
+	}
+	else if(num_pos == 9){
+	  document.getElementById('sunImg').style.left = "-30px";
+	  document.getElementById('sunImg').style.top = "-52px";
+	}
+	else if(num_pos == 10){
+	  document.getElementById('sunImg').style.left = "-35px";
+	  document.getElementById('sunImg').style.top = "-78px";
+	}
+	else if(num_pos == 11){
+	  document.getElementById('sunImg').style.left = "-25px";
+	  document.getElementById('sunImg').style.top = "-102px";
+	}
+	else if(num_pos == 12){
+	  document.getElementById('sunImg').style.left = "-7px";
+	  document.getElementById('sunImg').style.top = "-115px";
+	}
+	else{
+	  document.getElementById('sunImg').style.left = "15px";
+	  document.getElementById('sunImg').style.top = "-35px";
+	}
+</script>
 </body>
 </html>
