@@ -99,7 +99,10 @@ function renew(){
   console.log("power", e.data);
   document.getElementById("power_id").innerHTML = e.data;
  }, false);
- 
+ source.addEventListener('num_position', function(e) {
+  console.log("num_position", e.data);
+  document.getElementById("num_position").innerHTML = e.data;
+  }, false);
 }
 
 function capturePhoto() {

@@ -25,6 +25,7 @@ function capturePhoto() {
 
 
 <div class="wrapper">
+	<div class = "title" id = "wifi_rssi" style = "display:none;">%WIFI_RSSI%</div>
 	<div class = "title" id = "num_position" style = "display:none;">%SUN_POSITION%</div>
 	<div class = "title" id = "name_probe">Your personal satellite %NAME%</div>
     <div class="title">MySat Mission Control v.2.01</div>
@@ -339,11 +340,12 @@ function capturePhoto() {
                             <div class="chain">
                                 <div class="wifiWrapper">
                                     <div class="wifi">WIFI</div>
+									
                                     <div class="wifiIndicators">
-                                        <div class="wifiIndicator ind1"></div>
-                                        <div class="wifiIndicator ind2"></div>
-                                        <div class="wifiIndicator ind3"></div>
-                                        <div class="wifiIndicator ind4"></div>
+                                        <div id="ind1" class = "wifiIndicator"></div>
+                                        <div id="ind2" class = "wifiIndicator"></div>
+                                        <div id="ind3" class = "wifiIndicator"></div>
+                                        <div id="ind4" class = "wifiIndicator"></div>
                                     </div>
                                 </div>
                                 <div class="ip">
@@ -363,8 +365,7 @@ function capturePhoto() {
 
 <script type="text/javascript" src="telemetry_events_processing.js"></script>
 <script defer>
-	//var num_pos = document.getElementById("num_position").textContent;
-	 var num_pos = 12;
+	var num_pos = document.getElementById("num_position").textContent;
 	if(num_pos == 1){
 	  document.getElementById('sunImg').style.left = "18px";
 	  document.getElementById('sunImg').style.top = "-125px";
@@ -417,6 +418,38 @@ function capturePhoto() {
 	  document.getElementById('sunImg').style.left = "15px";
 	  document.getElementById('sunImg').style.top = "-35px";
 	}
+	var rssi = document.getElementById("wifi_rssi").textContent;
+	if (rssi >= -50){
+		document.getElementById('ind1').style.background = "#009DAA";
+		document.getElementById('ind2').style.background = "#009DAA";
+		document.getElementById('ind3').style.background = "#009DAA";
+		document.getElementById('ind4').style.background = "#009DAA";
+	}
+	else if (rssi>= -60 && rssi < -50){
+		document.getElementById('ind1').style.background = "#009DAA";
+		document.getElementById('ind2').style.background = "#009DAA";
+		document.getElementById('ind3').style.background = "#009DAA";
+		document.getElementById('ind4').style.background = "#D1EDF0";
+	}
+	else if (rssi>= -70 && rssi < -60){
+		document.getElementById('ind1').style.background = "#009DAA";
+		document.getElementById('ind2').style.background = "#009DAA";
+		document.getElementById('ind3').style.background = "#D1EDF0";
+		document.getElementById('ind4').style.background = "#D1EDF0";
+	}
+	else if (rssi >= -90 && rssi < -70){
+		document.getElementById('ind1').style.background = "#009DAA";
+		document.getElementById('ind2').style.background = "#D1EDF0";
+		document.getElementById('ind3').style.background = "#D1EDF0";
+		document.getElementById('ind4').style.background = "#D1EDF0";
+	}
+	else{
+		document.getElementById('ind1').style.background = "#D1EDF0";
+		document.getElementById('ind2').style.background = "#D1EDF0";
+		document.getElementById('ind3').style.background = "#D1EDF0";
+		document.getElementById('ind4').style.background = "#D1EDF0";
+	}
+	
 </script>
 </body>
 </html>

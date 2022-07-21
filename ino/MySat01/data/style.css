@@ -214,18 +214,18 @@ input:checked + .slider:before {
     width: 2px;
     background: white;
 }
-.sunImg{
+#sunImg{
     position: absolute;
     width: 100%;
     height: 100%;
-    left: 7%;
-    text-align: center;
+    /*left: 7%;
+    top: 10%;*/
     transform: rotate(237deg);
-
 }
-.sunImg:after{
+
+#sunImg:after{
     content: url("https://drive.google.com/uc?export=view&id=11nA7oXbiK2EPbl3l0JvQjmJnouCp5MCM");
-    position: absolute;
+	position: absolute;
 }
 
 .num1{
@@ -357,23 +357,22 @@ input:checked + .slider:before {
     align-items: end;
 }
 .wifiIndicator{
-    background-color: #009DAA;
+    background-color: #D1EDF0;
     width: 19px;
 
 }
-.ind1{
+#ind1{
     height: 30%;
 }
-.ind2{
+#ind2{
     height: 60%;
 }
-.ind3{
+#ind3{
     height: 80%;
-    background-color: #D1EDF0;
+    
 }
-.ind4{
+#ind4{
     height: 100%;
-    background-color: #D1EDF0;
 }
 
 .ip{
