@@ -55,6 +55,7 @@ void initServer()
 void sendEvents()
 {
   events.send("ping",NULL,millis());
+  events.send(String(WiFi.RSSI()).c_str(), "wifi_rssi",millis());
   events.send(String(nameProbe).c_str(),"name_probe",millis());
   events.send(String(temperature).c_str(),"temperature",millis());
   Serial.print("Send event: ");
@@ -85,4 +86,5 @@ void sendEvents()
   events.send(String(current).c_str(),"current_id",millis());
   events.send(String(power).c_str(),"power_id",millis());
   events.send(String(numPosition).c_str(),"num_position",millis());
+  
 }

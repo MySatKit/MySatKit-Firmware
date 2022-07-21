@@ -109,6 +109,9 @@ String processor(const String& var)
   else if(var == "SUN_POSITION"){
     return String(numPosition);
     }
+   else if(var == "WIFI_RSSI"){
+    return String(WiFi.RSSI());
+   }
   else if(var == "NAME"){
     return nameProbe;
   }
@@ -230,9 +233,10 @@ void switchStar()
 }*/
 
 int sunPosition(){
+  int coef;
   if (ph1 < ph2 && ph1 < ph3 && ph1 < ph4){ 
     if (ph2 < ph4){
-        coef = ((ph2 - ph1)/ ph2) * 100
+        coef = ((ph2 - ph1)/ ph2) * 100;
         if (coef < 10){
           return 2;
           }
@@ -241,7 +245,7 @@ int sunPosition(){
           }
       }
     else if(ph2 > ph4){
-        coef = ((ph4 - ph1)/ ph4) * 100
+        coef = ((ph4 - ph1)/ ph4) * 100;
         if (coef < 10){
           return 12;
           }
@@ -253,7 +257,7 @@ int sunPosition(){
   else if(ph2 < ph1 && ph2 < ph3 && ph2 < ph4)
   {
     if (ph1 < ph3){
-        coef = ((ph1 - ph2)/ ph1) * 100
+        coef = ((ph1 - ph2)/ ph1) * 100;
         if (coef < 10){
           return 3;
           }
@@ -262,7 +266,7 @@ int sunPosition(){
           }
       }
     else if(ph1 > ph3){
-        coef = ((ph3 - ph2)/ ph3) * 100
+        coef = ((ph3 - ph2)/ ph3) * 100;
         if (coef < 10){
           return 5;
           }
@@ -274,7 +278,7 @@ int sunPosition(){
   else if(ph3 < ph1 && ph3 < ph2 && ph3 < ph4)
   {
     if (ph2 < ph4){
-        coef = ((ph2 - ph3)/ ph2) * 100
+        coef = ((ph2 - ph3)/ ph2) * 100;
         if (coef < 10){
           return 6;
           }
@@ -283,7 +287,7 @@ int sunPosition(){
           }
       }
     else if(ph2 > ph4){
-        coef = ((ph4 - ph3)/ ph4) * 100
+        coef = ((ph4 - ph3)/ ph4) * 100;
         if (coef < 10){
           return 8;
           }
@@ -295,7 +299,7 @@ int sunPosition(){
   else if(ph4 < ph1 && ph4 < ph2 && ph4 < ph3)
   {
     if (ph1 < ph3){
-        coef = ((ph1 - ph4)/ ph1) * 100
+        coef = ((ph1 - ph4)/ ph1) * 100;
         if (coef < 10){
           return 11;
           }
@@ -304,7 +308,7 @@ int sunPosition(){
           }
       }
     else if(ph1 > ph3){
-        coef = ((ph3 - ph4)/ ph3) * 100
+        coef = ((ph3 - ph4)/ ph3) * 100;
         if (coef < 10){
           return 9;
           }
