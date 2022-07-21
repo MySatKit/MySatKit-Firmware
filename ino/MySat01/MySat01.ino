@@ -175,6 +175,9 @@ String processor(const String& var)
    else if(var == "POWER"){
     return String(power);
   }
+  else if(var == "ONBOARD_TIME"){
+    return String(rtcGetTime());
+  }
   return String("No data");
 }
 
