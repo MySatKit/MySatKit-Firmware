@@ -8,6 +8,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 
 #include "WiFi.h"
+
 #include "esp_camera.h"
 #include "esp_timer.h"
 #include "img_converters.h"
@@ -36,6 +37,8 @@
 float temperature;
 float humidity;
 float pressure;
+
+#include <ESP32Servo.h>
 
 // File system with html and css
 // https://randomnerdtutorials.com/esp32-web-server-spiffs-spi-flash-file-system/
@@ -68,6 +71,10 @@ int led = 14;
 String commandToLightLED = "";
 
 String nameProbe = "";
+
+Servo myservo;
+int potpin = 0;
+int vall;
 
 // Photo File Name to save in SPIFFS
 //https://randomnerdtutorials.com/esp32-cam-take-photo-display-web-server/
@@ -337,6 +344,17 @@ void writeNewConfig(fs::FS &fs, String wifiInf){
   
   }
 
+
+void switchPanel(String pos){
+  if(pos == "ON"){
+    myservo.write(90);
+    Serial.println("Panel On");
+  }
+  else if(pos == "OFF"){
+    myservo.write(0);
+    Serial.println("Panel Off");
+    }
+}
 void switchStar(String com){
   
   if(com == "ON"){
@@ -403,7 +421,14 @@ bool readUART(){
         rtcSetTime(setYear, setMonth, setDay, setHour, setMinute, setSecond);
         inString = "";
         }
-    
+       else if(inString.startsWith("P")){
+        String command;
+        command = inString.substring(2,inString.length()-1);
+        Serial.println("Comanda panel");
+        Serial.println(command);
+        switchPanel(command);
+        inString = "";
+        }
     }
   }
   }
@@ -522,7 +547,8 @@ void readConfig(fs::FS &fs, String& logn, String&  pas){
 }
 void setup() 
 {
-  pinMode(STAR_GIPIO, OUTPUT);    
+  pinMode(STAR_GIPIO, OUTPUT);
+  myservo.attach(12);
   Serial.begin(115200);
   pinMode(led, OUTPUT);
   delay(100);
