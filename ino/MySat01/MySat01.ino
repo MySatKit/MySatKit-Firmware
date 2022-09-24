@@ -59,9 +59,9 @@ float ph1,ph2,ph3,ph4;
 int numPosition;
 // Replace with your network credentials
 //const char* ssid = "LUNAR_WIFI";
-//const char* password = "ElonMars2024?";
-const char* ssid = "MERCUSYS_478C";
-const char* password = "zaq12wsx";
+//const char* password = "ElonMars2024";
+const char* ssid = "Lunar2024";
+const char* password = "ElonMars2@";
 
 bool flag = true;
 
