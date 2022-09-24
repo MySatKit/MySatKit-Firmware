@@ -8,6 +8,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 
 #include "WiFi.h"
+
 #include "esp_camera.h"
 #include "esp_timer.h"
 #include "img_converters.h"
@@ -36,6 +37,8 @@
 float temperature;
 float humidity;
 float pressure;
+
+#include <ESP32Servo.h>
 
 // File system with html and css
 // https://randomnerdtutorials.com/esp32-web-server-spiffs-spi-flash-file-system/
@@ -68,6 +71,9 @@ int led = 14;
 String commandToLightLED = "";
 
 String nameProbe = "";
+
+int potpin = 0;
+int vall;
 
 // Photo File Name to save in SPIFFS
 //https://randomnerdtutorials.com/esp32-cam-take-photo-display-web-server/
@@ -109,6 +115,9 @@ String processor(const String& var)
   else if(var == "SUN_POSITION"){
     return String(numPosition);
     }
+   else if(var == "WIFI_RSSI"){
+    return String(WiFi.RSSI());
+   }
   else if(var == "NAME"){
     return nameProbe;
   }
@@ -172,6 +181,9 @@ String processor(const String& var)
    else if(var == "POWER"){
     return String(power);
   }
+  else if(var == "ONBOARD_TIME"){
+    return String(rtcGetTime());
+  }
   return String("No data");
 }
 
@@ -230,20 +242,89 @@ void switchStar()
 }*/
 
 int sunPosition(){
+  int coef;
   if (ph1 < ph2 && ph1 < ph3 && ph1 < ph4){ 
-    return 1;
+    if (ph2 < ph4){
+        coef = ((ph2 - ph1)/ ph2) * 100;
+        if (coef < 10){
+          return 2;
+          }
+        else{
+          return 1;
+          }
+      }
+    else if(ph2 > ph4){
+        coef = ((ph4 - ph1)/ ph4) * 100;
+        if (coef < 10){
+          return 12;
+          }
+        else{
+          return 1;
+          }
+      }
   } 
   else if(ph2 < ph1 && ph2 < ph3 && ph2 < ph4)
   {
-    return 2;
+    if (ph1 < ph3){
+        coef = ((ph1 - ph2)/ ph1) * 100;
+        if (coef < 10){
+          return 3;
+          }
+        else{
+          return 4;
+          }
+      }
+    else if(ph1 > ph3){
+        coef = ((ph3 - ph2)/ ph3) * 100;
+        if (coef < 10){
+          return 5;
+          }
+        else{
+          return 4;
+          }
+      }
   }
   else if(ph3 < ph1 && ph3 < ph2 && ph3 < ph4)
   {
-    return 3;
+    if (ph2 < ph4){
+        coef = ((ph2 - ph3)/ ph2) * 100;
+        if (coef < 10){
+          return 6;
+          }
+        else{
+          return 7;
+          }
+      }
+    else if(ph2 > ph4){
+        coef = ((ph4 - ph3)/ ph4) * 100;
+        if (coef < 10){
+          return 8;
+          }
+        else{
+          return 7;
+          }
+      }
   }
   else if(ph4 < ph1 && ph4 < ph2 && ph4 < ph3)
   {
-    return 4;
+    if (ph1 < ph3){
+        coef = ((ph1 - ph4)/ ph1) * 100;
+        if (coef < 10){
+          return 11;
+          }
+        else{
+          return 10;
+          }
+      }
+    else if(ph1 > ph3){
+        coef = ((ph3 - ph4)/ ph3) * 100;
+        if (coef < 10){
+          return 9;
+          }
+        else{
+          return 10;
+          }
+      }
   }
 }
 void writeConfig(fs::FS &fs){
@@ -261,6 +342,7 @@ void writeNewConfig(fs::FS &fs, String wifiInf){
   myFile.close();
   
   }
+
 
 void switchStar(String com){
   
@@ -328,7 +410,6 @@ bool readUART(){
         rtcSetTime(setYear, setMonth, setDay, setHour, setMinute, setSecond);
         inString = "";
         }
-    
     }
   }
   }
@@ -368,6 +449,7 @@ void writeUARTNameToConfig(fs::FS &fs, String& nameProbe, String text_file){
   myFile.print(write_text);
   myFile.close();
 }
+
 void readConfigName(fs::FS &fs, String& nameProbe){
   nameProbe = "";
   int countLine = 1;
@@ -447,7 +529,7 @@ void readConfig(fs::FS &fs, String& logn, String&  pas){
 }
 void setup() 
 {
-  pinMode(STAR_GIPIO, OUTPUT);    
+  pinMode(STAR_GIPIO, OUTPUT);
   Serial.begin(115200);
   pinMode(led, OUTPUT);
   delay(100);
