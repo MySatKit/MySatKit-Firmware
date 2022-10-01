@@ -5,6 +5,7 @@ function capturePhoto() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', "/capture", true);
     xhr.send();
+    location.reload()
  }
  function switchLED() {
     var xhr = new XMLHttpRequest();
@@ -340,7 +341,7 @@ function capturePhoto() {
                             <div class="chain">
                                 <div class="wifiWrapper">
                                     <div class="wifi">WIFI</div>
-									
+				    <div class = "titleType3" id = "wifi_rssi">%WIFI_RSSI%</div>				
                                     <div class="wifiIndicators">
                                         <div id="ind1" class = "wifiIndicator"></div>
                                         <div id="ind2" class = "wifiIndicator"></div>

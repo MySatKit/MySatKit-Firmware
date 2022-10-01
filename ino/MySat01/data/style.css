@@ -674,6 +674,12 @@ input:checked + .slider:before {
     line-height: 29px;
 }
 
+.titleType3{
+    font-size: 18px;
+    margin-left: 7px;
+    margin-right: 20px;
+    align-self: end;
+}
 
 @media screen and (max-width: 1910px),
        screen and (max-height: 1070px){
