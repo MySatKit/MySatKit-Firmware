@@ -39,10 +39,10 @@ void print_data(bme_struct * bme680){
     Serial.println(" hPa");
 
     Serial.print("Humidity = ");
-    Serial.print(bme680->gas_resistance);
+    Serial.print(bme680->humidity);
     Serial.println(" %");
 
     Serial.print("Gas = ");
-    Serial.print(bme680->humidity);
+    Serial.print(bme680->gas_resistance);
     Serial.println(" KOhms");
 }
