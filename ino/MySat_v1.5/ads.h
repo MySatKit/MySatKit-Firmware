@@ -11,7 +11,7 @@ struct ads_struct{
 } ads_data;
 
 void initADS(){
-  setup_ = ads.begin(0x40, &Wire);
+  setup_ = ads.begin(0x48, &Wire);
   
 }
 

@@ -5,13 +5,12 @@
 #include "control.h"
 #include "base64.h"
 
-const char* ssid = "login_wifi";
-const char* password = "password_wifi";
-
+const char* ssid = "Lunar2024";
+const char* password = "ElonMars2@";
 int count_press_light = 0;
 
 const char* htmlContent = R"###(
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
@@ -81,8 +80,8 @@ const char* htmlContent = R"###(
     width:100%;
   height:50%;
   padding-top: 100%;
-    border:2px solid white;
-    border-radius:50%;
+   border:2px solid white;
+   border-radius:50%;
   position: relative;
 }
 
@@ -93,12 +92,16 @@ const char* htmlContent = R"###(
   height: 40px; 
   position: absolute; 
   top: 50%; 
-  left: 50%; 
+  left: 155%;
+  border: 0;
   transform: translate(-370%, -50%);
 }
 
 .text-data-sunLight{
   text-align: center;
+}
+.datetime_font{
+  font-size: 20px;
 }
     </style>
 
@@ -111,6 +114,7 @@ const char* htmlContent = R"###(
     <div class="row">
       <div class="col-lg-5">
         <img src="https://drive.google.com/uc?export=view&id=1xLf68tAq_4pVbiCJX7BJBvbc4YO6bEee" alt="" id = "photoFromESP">
+  <span id = "date_time_mysat" class = "datetime_font">Date and time: </span>
       </div>
       <div class = "col-lg-7">
         <div class="container-fluid">
@@ -158,7 +162,7 @@ const char* htmlContent = R"###(
               <div class="sunlightBlock block text-data-sunLight">
                 <h3>Sunlight trackers</h3>
                 <div class="sunlightTrackerCircle">
-                  <img class="sunImg">
+                  <div class="sunImg" id = "sun_img"></div>
                 </div>
               </div>
             </div>
@@ -235,18 +239,54 @@ const char* htmlContent = R"###(
                     document.getElementById("ay").textContent = "aY: " + responseData.ay;
                     document.getElementById("az").textContent = "aZ: " + responseData.az;
           
-          document.getElementById("gx").textContent = "gX: " + responseData.mx;
+                    document.getElementById("gx").textContent = "gX: " + responseData.mx;
                     document.getElementById("gy").textContent = "gY: " + responseData.my;
                     document.getElementById("gz").textContent = "gZ: " + responseData.mz;
           
-          document.getElementById("mx").textContent = "mX: " + responseData.mx;
+                    document.getElementById("mx").textContent = "mX: " + responseData.mx;
                     document.getElementById("my").textContent = "mY: " + responseData.my;
                     document.getElementById("mz").textContent = "mZ: " + responseData.mz;
-          
-          document.getElementById("ph1").textContent = "Ph1: " + responseData.ph1;
-                    document.getElementById("ph2").textContent = "Ph2: " + responseData.ph2;
-                    document.getElementById("ph3").textContent = "Ph3: " + responseData.ph3;
-                    document.getElementById("ph4").textContent = "Ph4: " + responseData.ph4;
+
+                    let ph1 = responseData.ph1;
+                    let ph2 = responseData.ph2;
+                    let ph3 = responseData.ph3;
+                    let ph4 = responseData.ph4;
+                    
+                    let phs = [ph1, ph2, ph3, ph4];
+                    let min_ph = phs[0]
+                     for(let i = 0;i < phs.length; i++){
+                        if(min_ph > phs[i]){
+                          min_ph = phs[i]; 
+                         } 
+                     }
+                    let direction_ = phs.indexOf(min_ph);
+        if(direction_ == 0){
+      document.getElementById("sun_img").style.left = "55%";
+      document.getElementById("sun_img").style.top = "50%";
+        }
+        if(direction_ == 3){
+      document.getElementById("sun_img").style.left = "105%";
+      document.getElementById("sun_img").style.top = "0%";
+        }
+        if(direction_ == 2){
+      document.getElementById("sun_img").style.left = "155%";
+      document.getElementById("sun_img").style.top = "50%";
+        }
+        if(direction_ == 3){
+      document.getElementById("sun_img").style.left = "105%";
+      document.getElementById("sun_img").style.top = "100%";
+        }
+                
+    let year = responseData.year_;
+    let month = responseData.month_;
+    let day = responseData.day_; 
+    let hour = responseData.hour_;    
+    let minute = responseData.minute_;
+    let second = responseData.second_;      
+    date_time_string = new Date(year, month, day, hour, minute, second);
+    document.getElementById("date_time_mysat").textContent = 'Date and time: ' + date_time_string.toISOString().replace('T',' ').replace('.000Z', '');
+    console.log(date_time_string);
+
                 } else {
                     console.error('Error fetching data');
                 }
@@ -256,7 +296,7 @@ const char* htmlContent = R"###(
         xhttp.send();
     }, 2000);
 }
-
+    
 
 fetchDataPeriodically();
 xhttp.send();
@@ -265,10 +305,9 @@ xhttp.send();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 </body>
-</html>  
+</html>
 )###";
-//const char* ssid = "TP-Link_B581";
-//const char* password = "zaq12wsx";
+
 
 WebServer server(80);
 
