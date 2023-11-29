@@ -77,12 +77,12 @@ const char* htmlContent = R"###(
 }
 
 .sunlightTrackerCircle{
-    width:100%;
-  height:50%;
-  padding-top: 100%;
+   width:80%;
+   padding-top: 80%;
    border:2px solid white;
-   border-radius:50%;
-  position: relative;
+   border-radius:100%;
+   position: relative;
+   margin-left:10%;
 }
 
 .sunImg{
@@ -91,8 +91,8 @@ const char* htmlContent = R"###(
   width: 40px; 
   height: 40px; 
   position: absolute; 
-  top: 50%; 
-  left: 155%;
+  top: 0%; 
+  left: 120%;
   border: 0;
   transform: translate(-370%, -50%);
 }
@@ -102,6 +102,19 @@ const char* htmlContent = R"###(
 }
 .datetime_font{
   font-size: 20px;
+}
+.gas-res-border{
+  border: 15px solid red;
+  border-radius:50%;
+  //padding-top: 45%;
+  margin-left:10%;
+  margin-right:10%;
+
+}
+.gas-res-text{
+  padding-top:35%;
+  padding-bottom:35%;
+  margin:0;
 }
     </style>
 
@@ -158,15 +171,24 @@ const char* htmlContent = R"###(
             
           </div>
           <div class = "row">
-            <div class = "col-lg-4">
-              <div class="sunlightBlock block text-data-sunLight">
+            <div class = "col-lg-4 text-data m-2">
+              <div class="text-data-sunLight">
                 <h3>Sunlight trackers</h3>
                 <div class="sunlightTrackerCircle">
                   <div class="sunImg" id = "sun_img"></div>
                 </div>
-              </div>
+        </div>
             </div>
+      <div class = "col-lg-4 text-data m-2">
+    <div>
+        <h3>Gas resistanse</h3>
+        <div class = "gas-res-border" id = "gas-res-border">
+      <h2 class = "gas-res-text" id ="gas-res-text">47.5%</h2>
+                    </div>
+    </div>
+      </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -247,6 +269,34 @@ const char* htmlContent = R"###(
                     document.getElementById("my").textContent = "mY: " + responseData.my;
                     document.getElementById("mz").textContent = "mZ: " + responseData.mz;
 
+        let gas_res = responseData.gas_resistance;
+        let gas_res_percent = (gas_res/6).toFixed(1);
+        document.getElementById("gas-res-text").textContent = gas_res_percent + "%";
+        
+                    if(gas_res > 250){
+                  document.getElementById("gas-res-border").style.border = "15px solid #00b910";
+        }
+
+        if(gas_res >= 150 && gas_res <= 250){
+                  document.getElementById("gas-res-border").style.border = "15px solid #9dff55";
+        }
+
+        if(gas_res >= 80 && gas_res <= 150){
+                  document.getElementById("gas-res-border").style.border = "15px solid #edff00";
+        }
+      
+        if(gas_res >= 30 && gas_res <= 80){
+                  document.getElementById("gas-res-border").style.border = "15px solid #ffb300";
+        }
+
+        if(gas_res >= 20 && gas_res <= 30){
+                  document.getElementById("gas-res-border").style.border = "15px solid #ff0000";
+        }
+
+        if(gas_res < 20){
+                  document.getElementById("gas-res-border").style.border = "15px solid #000000";
+        }
+      
                     let ph1 = responseData.ph1;
                     let ph2 = responseData.ph2;
                     let ph3 = responseData.ph3;
@@ -261,19 +311,19 @@ const char* htmlContent = R"###(
                      }
                     let direction_ = phs.indexOf(min_ph);
         if(direction_ == 0){
-      document.getElementById("sun_img").style.left = "55%";
+      document.getElementById("sun_img").style.left = "72%";
       document.getElementById("sun_img").style.top = "50%";
         }
         if(direction_ == 3){
-      document.getElementById("sun_img").style.left = "105%";
+      document.getElementById("sun_img").style.left = "120%";
       document.getElementById("sun_img").style.top = "0%";
         }
         if(direction_ == 2){
-      document.getElementById("sun_img").style.left = "155%";
+      document.getElementById("sun_img").style.left = "172%";
       document.getElementById("sun_img").style.top = "50%";
         }
         if(direction_ == 3){
-      document.getElementById("sun_img").style.left = "105%";
+      document.getElementById("sun_img").style.left = "120%";
       document.getElementById("sun_img").style.top = "100%";
         }
                 
@@ -295,6 +345,8 @@ const char* htmlContent = R"###(
         xhttp.open('GET', '/get_data', true);
         xhttp.send();
     }, 2000);
+
+       
 }
     
 
@@ -330,11 +382,12 @@ void handleGetPhoto() {
         break;
       }
     }  
-  Serial.print("Get photo: ");
+  Serial.print("Get photo length: ");
   Serial.println(fb->len);
   String base64String = base64::encode(fb->buf, fb->len);
-  Serial.println(base64String);
+  //Serial.println(base64String);
   server.send(200, "text/plain", base64String);
+  Serial.print("Photo sended");
   esp_camera_fb_return(fb);
 }
 
