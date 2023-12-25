@@ -10,9 +10,14 @@ struct ads_struct{
    float ph4;
 } ads_data;
 
-void initADS(){
-  setup_ = ads.begin(0x48, &Wire);
-  
+bool initADS(){
+  int setup_ = ads.begin(0x48, &Wire);
+  Serial.print("ADS status: ");
+  if(!setup_){
+    return false;
+  } else{
+    return true;
+  }
 }
 
 ads_struct * get_ads_data(){
@@ -20,7 +25,6 @@ ads_struct * get_ads_data(){
   ads_data.ph2 = ads.readADC_SingleEnded(1); 
   ads_data.ph3 = ads.readADC_SingleEnded(2); 
   ads_data.ph4 = ads.readADC_SingleEnded(3);
-  //Serial.println(ads_data.ph1);
   return &ads_data;
 }
 

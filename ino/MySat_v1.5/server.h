@@ -163,7 +163,7 @@ const char* htmlContent = R"###(
               <h4 id = "gz">gZ: 0</h3>
             </div>
             <div class = "col-lg-3 text-data m-2">
-              <h3 id = "text_data">Magnetometer:</h3>
+              <h3 id = "text_data">Magnetom.:</h3>
               <h4 id = "mx">mX: 0</h3>
               <h4 id = "my">mY: 0</h3>
               <h4 id = "mz">mZ: 0</h3>
@@ -253,7 +253,7 @@ const char* htmlContent = R"###(
                 if (xhttp.status === 200) {
                     var responseData = JSON.parse(xhttp.responseText);
                     console.log('Received JSON data:', responseData);
-                    document.getElementById("temperature").textContent = responseData.temperature.toFixed(2)+ ' °C';
+                    document.getElementById("temperature").textContent = responseData.temperature.toFixed(2)+ ' C';
                     document.getElementById("pressure").textContent = responseData.pressure.toFixed(2)+ ' Pa';
                     document.getElementById("humidity").textContent = responseData.humidity.toFixed(2);
                     

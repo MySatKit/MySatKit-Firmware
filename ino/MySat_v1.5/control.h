@@ -1,4 +1,5 @@
- const int LED = 14;
+ const int LED = 1000;
+ 
  void control_light(int open){
  if(open % 2 == 1){
   digitalWrite(LED, HIGH);

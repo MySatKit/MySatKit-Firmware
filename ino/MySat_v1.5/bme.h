@@ -9,16 +9,17 @@ struct bme_struct{
    float pressure;
 } bme_data;
 
-void initBME(){
+bool initBME(){
   if (!bme.begin()) {
     Serial.println(F("Could not find a valid BME680 sensor, check wiring!"));
-    while (1);
+    return false;
   }
   bme.setTemperatureOversampling(BME680_OS_8X);
   bme.setHumidityOversampling(BME680_OS_2X);
   bme.setPressureOversampling(BME680_OS_4X);
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
   bme.setGasHeater(320, 150);  
+  return true;
 }
 
 bme_struct * get_bme_data(){

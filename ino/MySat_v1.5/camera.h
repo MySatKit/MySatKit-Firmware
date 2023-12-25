@@ -2,7 +2,7 @@
 #define CAMERA_MODEL_AI_THINKER
 #include "camera_pins.h"
 
-void init_camera() {
+bool init_camera() {
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -31,8 +31,9 @@ void init_camera() {
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
     Serial.printf("Camera init failed with error 0x%x", err);
-    return;
+    return false;
   }
+  return true;
 }
 
 void get_photo(){

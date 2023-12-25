@@ -11,8 +11,9 @@ struct rtc_struct{
   int second_;  
 } rtc_data;
 
-void initRTC(){
+bool initRTC(){
   Rtc.Begin();
+  return Rtc.GetIsRunning();
 }
 
 rtc_struct * get_rtc(){

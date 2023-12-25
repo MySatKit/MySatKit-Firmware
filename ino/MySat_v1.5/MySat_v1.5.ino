@@ -21,20 +21,12 @@ struct sensors_structure{
   int minute_;
   int second_; 
 } sensors_data;
-/*
-const size_t bufferSize = JSON_OBJECT_SIZE(14);
-
-DynamicJsonDocument json_sensors(bufferSize);
-String json_string;
-
-*/
 
 void setup() {
   Serial.begin(115200);
   Wire.begin(def_SDA, def_SCL);
   initSensors();
   initServer();
-  //init_camera();
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
 }
@@ -42,13 +34,8 @@ void loop() {
   
   Serial.println("Start loop");
   
-  //NO String * json_ = get_all_sensor_data(bme_temp, mpu_temp, ads_temp, rtc_temp);
-  
   print_sensors_data(get_sensors_data());
-  
-  
   server.handleClient();
-  
   Serial.println(WiFi.localIP());
    
   delay(1000);

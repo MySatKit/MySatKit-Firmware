@@ -1,7 +1,7 @@
 #include <MPU9250_asukiaaa.h>
 
 MPU9250_asukiaaa mpu_sensor(0x69);
-int status_;
+
 
 struct mpu{
   float aX;
@@ -15,12 +15,13 @@ struct mpu{
   float mZ;
   } mpu_data;
 
-void initMPU(){
-  //status_ = mpu.begin();
+bool initMPU(){
+  uint8_t sensorId;
   mpu_sensor.setWire(&Wire);
   mpu_sensor.beginAccel();
   mpu_sensor.beginGyro();
   mpu_sensor.beginMag();
+  return true;
 }
 
 mpu * get_mpu_data(){
