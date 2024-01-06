@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <style>
+        body {
+      background-color: #008080;
+      color: white;
+        }
+        button{
+     background-color:#0a0a23;
+       color: white;
+       border-radius:10px;
+           width: 100px;
+           height: 30px;
+      }
+      img {
+        max-width: 100%;
+      }
+      .text-border{
+       margin-bottom: 40px; 
+       }
+	   * {
+    margin: 0;
+    padding: 0;
+}
+
+
+.stars, .twinkling {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+.stars {
+  background:#000 url(https://i.postimg.cc/hhFD7Nkf/apps-47636-13819498107583324-fb06b53a-4974-4acb-85e6-f6f363f85ab6-edec48d0-ec35-4a1f-8bf5-c455987b4a.png) repeat top center;
+  z-index: 0;
+}
+
+.twinkling {
+  background-image: url(https://i.postimg.cc/CLpNr4PF/twinkling.png);
+  animation: 3s twinkle infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes twinkle {
+  from {backrgound-position: 0}
+  to {background-position: -100px 0}
+}
+
+
+.text-data{
+	border: 2px solid white;
+	border-radius:20px;
+	background:#ffffff42;
+	text-align: center;
+}
+.text-height{
+	height: 100px;
+}
+
+.sunlightTrackerCircle{
+    width:100%;
+	height:50%;
+	padding-top: 100%;
+    border:2px solid white;
+    border-radius:50%;
+	position: relative;
+}
+
+.sunImg{
+	background-image: url("https://drive.google.com/uc?export=view&id=11nA7oXbiK2EPbl3l0JvQjmJnouCp5MCM");
+	background-size: cover;
+	width: 40px; 
+	height: 40px; 
+	position: absolute; 
+	top: 50%; 
+	left: 50%; 
+	transform: translate(-370%, -50%);
+}
+
+.text-data-sunLight{
+	text-align: center;
+}
+    </style>
+
+</head>
+<body>
+	<div class="stars"></div>
+	<div class="twinkling">
+		<h1>MySat</h1>
+		<div class="container-fluid">
+		<div class="row">
+			<div class="col-lg-5">
+				<img src="https://drive.google.com/uc?export=view&id=1xLf68tAq_4pVbiCJX7BJBvbc4YO6bEee" alt="" id = "photoFromESP">
+			</div>
+			<div class = "col-lg-7">
+				<div class="container-fluid">
+					<div class = "row">
+						<div class="col-lg-4 text-data  m-2">
+							<h3 id = "text_data">Temperature:</h3>
+							 <h4 id = "temperature">0.0</h4>
+						</div>	
+						<div class="col-lg-4 text-data  m-2">
+							<h3 id = "text_data">Pressure:</h3>
+							<h3 id = "pressure">0</h3>
+						</div>
+						<div class="col-lg-3 text-data  m-2">
+							<h3 id = "text_data">Humidity:</h3>
+							<h3 id = "humidity">0</h3>
+						</div>
+					   <!-- <div class="col-lg-2">
+							<h3 id = "text_data">Gas resistance:</h3>
+							<h3 id = "gas_resistance">0</h3>
+						</div>  -->
+					</div>
+					<div class = "row">
+						<div class = "col-lg-4 text-data m-2">
+							<h3 id = "text_data">Accelerometer:</h3>
+							<h4 id = "ax">aX: 0</h3>
+							<h4 id = "ay">aY: 0</h3>
+							<h4 id = "az">aZ: 0</h3>
+						</div>
+						<div class = "col-lg-4 text-data m-2">
+							<h3 id = "text_data">Gyroscope:</h3>
+							<h4 id = "gx">gX: 0</h3>
+							<h4 id = "gy">gY: 0</h3>
+							<h4 id = "gz">gZ: 0</h3>
+						</div>
+						<div class = "col-lg-3 text-data m-2">
+							<h3 id = "text_data">Magnetometer:</h3>
+							<h4 id = "mx">mX: 0</h3>
+							<h4 id = "my">mY: 0</h3>
+							<h4 id = "mz">mZ: 0</h3>
+						</div>
+						
+					</div>
+					<div class = "row">
+						<div class = "col-lg-4">
+							<div class="sunlightBlock block text-data-sunLight">
+								<h3>Sunlight trackers</h3>
+								<div class="sunlightTrackerCircle">
+									<img class="sunImg">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+    <div class="row">
+    <div class="col-lg-4">
+            Turn:
+            <button onclick='toggleLED()'>Turn LED</button>
+            <button onclick='toggleMotor()'>Turn Motor</button>
+            <button onclick='getPhoto()'>Get Photo</button>
+    </div>
+        
+    </div>    
+    </div>
+    </div>
+    
+    <script>
+
+        function arrayBufferToBase64(buff) {
+          var binary = '';
+          var bytes = new Uint8Array(buff);
+          var len = bytes.byteLength;
+
+          for (var i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+
+          return btoa(binary);
+        }
+        function toggleLED() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open('GET', '/light_on', true);
+            xhttp.send();
+        }
+        function getPhoto() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+          if (xhttp.readyState === 4) {
+            if (xhttp.status === 200) {
+              
+              var base64Data = xhttp.responseText;
+              var img = document.getElementById('photoFromESP');
+              img.src = 'data:image/jpeg;base64,' + base64Data;
+            } else {
+              console.error('Error fetching photo');
+              }
+            }
+          };
+          xhttp.open('GET', '/get_photo', true);
+          xhttp.send();
+      }
+        function toggleMotor() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open('GET', '/motor_on', true);
+            xhttp.send();
+        }
+  function fetchDataPeriodically() {
+      setInterval(function() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+            if (xhttp.readyState === 4) {
+                if (xhttp.status === 200) {
+                    var responseData = JSON.parse(xhttp.responseText);
+                    console.log('Received JSON data:', responseData);
+                    document.getElementById("temperature").textContent = responseData.temperature.toFixed(2)+ ' °C';
+                    document.getElementById("pressure").textContent = responseData.pressure.toFixed(2)+ ' Pa';
+                    document.getElementById("humidity").textContent = responseData.humidity.toFixed(2);
+                    document.getElementById("gas_resistance").textContent = responseData.gas_resistance.toFixed(2);
+                    
+                    document.getElementById("ax").textContent = "aX: " + responseData.ax;
+                    document.getElementById("ay").textContent = "aY: " + responseData.ay;
+                    document.getElementById("az").textContent = "aZ: " + responseData.az;
+					
+					document.getElementById("gx").textContent = "gX: " + responseData.mx;
+                    document.getElementById("gy").textContent = "gY: " + responseData.my;
+                    document.getElementById("gz").textContent = "gZ: " + responseData.mz;
+					
+					document.getElementById("mx").textContent = "mX: " + responseData.mx;
+                    document.getElementById("my").textContent = "mY: " + responseData.my;
+                    document.getElementById("mz").textContent = "mZ: " + responseData.mz;
+					
+					document.getElementById("ph1").textContent = "Ph1: " + responseData.ph1;
+                    document.getElementById("ph2").textContent = "Ph2: " + responseData.ph2;
+                    document.getElementById("ph3").textContent = "Ph3: " + responseData.ph3;
+                    document.getElementById("ph4").textContent = "Ph4: " + responseData.ph4;
+                } else {
+                    console.error('Error fetching data');
+                }
+            }
+        };
+        xhttp.open('GET', '/get_data', true);
+        xhttp.send();
+    }, 2000);
+}
+
+
+fetchDataPeriodically();
+xhttp.send();
+
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</body>
+</html> 
