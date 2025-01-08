@@ -1,9 +1,11 @@
+//collects data from all sensors
+
 #include <Adafruit_Sensor.h>
 //#include "Adafruit_BME680.h"
-#include "bme.h"
-#include "mpu.h"
-#include "ads.h"
-#include "rtc.h"
+#include "environment_sensor.h"
+#include "position_sensor.h"
+#include "ADC.h"
+#include "RTC.h"
 #include "camera.h"
 #include <ArduinoJson.h>
 
@@ -124,23 +126,23 @@ void print_sensors_data(pointer_of_sensors * data_){
   if (init_status.bme_){
     print_data(data_->bme_); 
   } else{
-   Serial.println("BME not found"); 
+   Serial.println("▲ BME680 (environmental sensor) not found!"); 
    }
   if (init_status.mpu_){
     print_data(data_->mpu_);
   } else{
-   Serial.println("MPU not found"); 
+   Serial.println("▲ MPU9250 module (position sensor) not found!"); 
   }
   if (init_status.ads_){
     print_data(data_->ads_);
   }
   else{
-    Serial.println("ADS not found"); 
+    Serial.println("▲ ADS1015 module (analog-to-digital convertor) not found!"); 
   }
   if (init_status.rtc_){
     print_data(data_->rtc_);
   } else{
-    Serial.println("RTC not found"); 
+    Serial.println("▲ DS3231 module (real time clock) not found!"); 
   }
   get_all_sensor_data(data_);
 }

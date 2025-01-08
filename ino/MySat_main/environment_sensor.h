@@ -1,3 +1,7 @@
+//for BME680 - MySat environment (pressure, temperature etc.) sensor
+
+//used for external observations and control of the internal state of the satellite
+
 #include "Adafruit_BME680.h"
 
 Adafruit_BME680 bme;  //BME create
@@ -11,7 +15,7 @@ struct bme_struct{
 
 bool initBME(){
   if (!bme.begin()) {
-    Serial.println(F("Could not find a valid BME680 sensor, check wiring!"));
+    Serial.println(F("▲ Could not find a valid BME680 sensor, check wiring!"));
     return false;
   }
   bme.setTemperatureOversampling(BME680_OS_8X);
@@ -31,6 +35,7 @@ bme_struct * get_bme_data(){
 }
 
 void print_data(bme_struct * bme680){
+    Serial.println("═══ENVIRONMENT:══════════════════");
     Serial.print("Temperature = ");
     Serial.print(bme680->temperature);
     Serial.println(F(" *C"));
@@ -43,7 +48,8 @@ void print_data(bme_struct * bme680){
     Serial.print(bme680->humidity);
     Serial.println(" %");
 
-    Serial.print("Gas = ");
+    Serial.print("Gas resistance = ");
     Serial.print(bme680->gas_resistance);
     Serial.println(" KOhms");
+    Serial.println("════════════════════════════════");
 }

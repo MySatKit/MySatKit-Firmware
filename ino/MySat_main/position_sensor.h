@@ -1,3 +1,7 @@
+//for MPU9250 - MySat accelerometer, compass, gyroscope
+
+//used to determine the position of a satellite relative to the Earth's gravitational field
+
 #include <MPU9250_asukiaaa.h>
 
 MPU9250_asukiaaa mpu_sensor(0x69);
@@ -50,6 +54,7 @@ void print_data(mpu * data_){
     else 
         Serial.println("Cannot read sensorId");
     */
+    Serial.println("═══POSITION:═════════════════════");
     Serial.print("aX = ");
     Serial.print(data_->aX);
     Serial.print(" | ");
@@ -80,4 +85,5 @@ void print_data(mpu * data_){
     Serial.print(" | ");
     Serial.print("mZ = ");
     Serial.println(data_->mZ);
+    Serial.println("════════════════════════════════");
 }

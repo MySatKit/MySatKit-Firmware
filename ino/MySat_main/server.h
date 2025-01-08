@@ -1,7 +1,9 @@
+//ensures the operation of the MySat main console (web-interface)
+
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
-#include "sensor.h"
+#include "sensors_data.h"
 #include "control.h"
 #include "base64.h"
 
@@ -18,6 +20,7 @@ const char* htmlContent = R"###(
         body {
       background-color: #008080;
       color: white;
+	  overflow-x: hidden;
         }
         button{
      background-color:#0a0a23;
@@ -86,7 +89,7 @@ const char* htmlContent = R"###(
 }
 
 .sunImg{
-  background-image: url("https://drive.google.com/uc?export=view&id=11nA7oXbiK2EPbl3l0JvQjmJnouCp5MCM");
+  background-image: url("https://i.ibb.co/gz12c7t/Sunlight.png");
   background-size: cover;
   width: 40px; 
   height: 40px; 
@@ -106,9 +109,12 @@ const char* htmlContent = R"###(
 .gas-res-border{
   border: 15px solid red;
   border-radius:50%;
-  //padding-top: 45%;
-  margin-left:10%;
-  margin-right:10%;
+  width:100%;
+  position:absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
 
 }
 .gas-res-text{
@@ -116,17 +122,141 @@ const char* htmlContent = R"###(
   padding-bottom:35%;
   margin:0;
 }
+
+.box {	
+  position: relative;
+  width: 85%; /* ширина элемента */
+  padding-top: 85%;
+  margin: 0 auto 0 auto;
+  top: 7%;
+}
+
+.content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+
+
+
+
+		.satelite-box {
+			position: absolute;
+			top: 10%;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			margin:auto;
+		}
+		
+		.satelite {
+			transform-style: preserve-3d;
+			transform: rotateY(199.8deg) rotateX(187.2deg) rotateZ(178.2deg);
+			animation: cubeRotation 30s linear infinite;
+			width: 100px;
+			height: 100px;
+			position: relative;
+			margin:auto;
+		}
+		
+		@keyframes cubeRotation {
+			0% {transform: rotateY(0deg) rotateX(187.2deg) rotateZ(178.2deg);}
+			100% {transform: rotateY(359.9deg) rotateX(187.2deg) rotateZ(178.2deg);}
+		}
+	
+		.side  {
+			width: 100px;
+			height: 100px;
+			position: absolute;
+		}
+		
+		.front {
+			background: blue;
+			transform: translateZ(50px);
+			background-image:url(https://i.ibb.co/wWJpx5h/front.png);
+		}
+		
+		.left {
+			background: yellow;
+			transform: rotateY(-90deg) translateZ(50px);
+			background-image:url(https://i.ibb.co/jkf6TK6/side.png);
+		}
+		
+		.right {
+			background: orange;
+			transform: rotateY(90deg) translateZ(50px);
+			background-image:url(https://i.ibb.co/jkf6TK6/side.png);
+		}
+		
+		.top {
+			background: green;
+			transform: rotateX(90deg) translateZ(50px);
+			background-image:url(https://i.ibb.co/4ZZ0FJS/plate.png);
+		}
+		
+		.bottom {
+			background: black;
+			transform: rotateX(-90deg) translateZ(50px);
+			background-image:url(https://i.ibb.co/4ZZ0FJS/plate.png);
+		}
+		
+		.back {
+			background: brown;
+			transform: rotateY(180deg) translateZ(50px);
+			background-image:url(https://i.ibb.co/FDfxmRm/shield.png);
+		}
+		
+		.rightwing {
+			background: LightGreen;
+			transform-origin: 50% 0%;
+			transform: rotateY(90deg) translateZ(60px) rotateX(3deg);
+			background-image:url(https://i.ibb.co/MsrKsLG/solar.png);
+			width: 80px;
+		}
+		.leftwing {
+			background: LightGreen;
+			transform-origin: 50% 0%;
+			transform: rotateY(-90deg) translateZ(40px) rotateX(3deg);
+			background-image:url(https://i.ibb.co/MsrKsLG/solar.png);
+			width: 80px;
+		}
+		.leftwingback { /*днище левого крыла*/
+			background: gray;
+			transform-origin: 50% 0%;
+			transform: rotateY(-90deg) translateZ(40px) rotateX(3deg);
+			width: 80px;
+		}
+		.rightwingback { /*днище правого крыла*/
+			background: gray;
+			transform-origin: 50% 0%;
+			transform: rotateY(90deg) translateZ(50px) rotateX(3deg);
+			width: 80px;
+		}
+
+
     </style>
 
 </head>
 <body>
   <div class="stars"></div>
   <div class="twinkling">
-    <h1>MySat</h1>
+	<table>
+		<tr>
+			<td>
+				<h1>MySat</h1>
+			</td>
+			<td>
+				<h6 style="padding-left: 20px; vertical-align:bottom;"></h6>
+			</td>
+		</tr>
+	</table>
     <div class="container-fluid">
     <div class="row">
       <div class="col-lg-5">
-        <img src="https://drive.google.com/uc?export=view&id=1xLf68tAq_4pVbiCJX7BJBvbc4YO6bEee" alt="" id = "photoFromESP">
+        <img src="https://i.ibb.co/5RrGwm5/photo.png" alt="" id = "photoFromESP">
   <span id = "date_time_mysat" class = "datetime_font">Date and time: </span>
       </div>
       <div class = "col-lg-7">
@@ -163,10 +293,10 @@ const char* htmlContent = R"###(
               <h4 id = "gz">gZ: 0</h3>
             </div>
             <div class = "col-lg-3 text-data m-2">
-              <h3 id = "text_data">Magnetom.:</h3>
-              <h4 id = "mx">mX: 0</h3>
-              <h4 id = "my">mY: 0</h3>
-              <h4 id = "mz">mZ: 0</h3>
+              <h3 id = "text_data">Compass:</h3>
+              <h4 id = "mx"></h3>
+              <h5 id = "my">( magnetometer </h3>
+              <h5 id = "mz">is off )</h3>
             </div>
             
           </div>
@@ -180,12 +310,42 @@ const char* htmlContent = R"###(
         </div>
             </div>
       <div class = "col-lg-4 text-data m-2">
-    <div>
-        <h3>Gas resistanse</h3>
-        <div class = "gas-res-border" id = "gas-res-border">
-      <h2 class = "gas-res-text" id ="gas-res-text">47.5%</h2>
-                    </div>
-    </div>
+	  <h3>Status</h3>
+		<div class="box">
+			<div class="satelite-box">
+				<div class="satelite">
+					<div class="side front">
+					</div>
+					<div class="side left">
+					</div>
+					<div class="side right">
+					</div>
+					<div class="side top">
+					</div>
+					<div class="side bottom">
+					</div>
+					<div class="side back">
+					</div>
+					<div class="side leftwing">
+					</div>
+					<div class="side leftwingback">
+					</div>
+					<div class="side rightwing">
+					</div>
+					<div class="side rightwingback">
+					</div>
+				</div>
+			</div>
+		</div>
+      </div>
+	  <div class = "col-lg-3 text-data m-2">
+			<h3>Air quality</h3>
+            <div class="box">
+				<div class = "gas-res-border" id = "gas-res-border">
+					<h3 class = "gas-res-text" id ="gas-res-text">47.5%</h3>
+                </div>
+			</div>
+        </div>
       </div>
           </div>
 
@@ -205,6 +365,9 @@ const char* htmlContent = R"###(
     </div>
     
     <script>
+	
+		var wing_angle = 3; //крылья изначально открыты на 3 градуса
+		var motor_direction = 1;
 
         function arrayBufferToBase64(buff) {
           var binary = '';
@@ -239,11 +402,36 @@ const char* htmlContent = R"###(
           xhttp.open('GET', '/get_photo', true);
           xhttp.send();
       }
-        function toggleMotor() {
+        function toggleMotor() { //TURN WING
             var xhttp = new XMLHttpRequest();
             xhttp.open('GET', '/motor_on', true);
             xhttp.send();
+			
+			
+			if (wing_angle==75) { 
+				motor_direction = -1;
+			}
+			else {
+				motor_direction = 1;
+			}
+			turning();	
         }
+		
+		
+	function turning() { 
+		
+		if (( (motor_direction==1) && (wing_angle<75)  || ((motor_direction==-1) && (wing_angle > 3)) )) { 
+			wing_angle+=motor_direction;
+			document.querySelector('.rightwing').style.transform = 'rotateY(90deg) translateZ(60px) rotateX(' + wing_angle + 'deg)';
+			document.querySelector('.leftwing').style.transform = 'rotateY(-90deg) translateZ(40px) rotateX(' + wing_angle + 'deg)';
+			document.querySelector('.rightwingback').style.transform = 'rotateY(90deg) translateZ(60px) translateY(1px) rotateX(' + wing_angle + 'deg)';
+			document.querySelector('.leftwingback').style.transform = 'rotateY(-90deg) translateZ(40px) translateY(1px) rotateX(' + wing_angle + 'deg)';
+			
+			setTimeout(turning, 20);
+		}
+	}		
+		
+		
   function fetchDataPeriodically() {
       setInterval(function() {
         var xhttp = new XMLHttpRequest();
@@ -253,21 +441,17 @@ const char* htmlContent = R"###(
                 if (xhttp.status === 200) {
                     var responseData = JSON.parse(xhttp.responseText);
                     console.log('Received JSON data:', responseData);
-                    document.getElementById("temperature").textContent = responseData.temperature.toFixed(2)+ ' C';
+                    document.getElementById("temperature").textContent = responseData.temperature.toFixed(2) + ' C';
                     document.getElementById("pressure").textContent = responseData.pressure.toFixed(2)+ ' Pa';
-                    document.getElementById("humidity").textContent = responseData.humidity.toFixed(2);
+                    document.getElementById("humidity").textContent = responseData.humidity.toFixed(2) + ' %';
                     
-                    document.getElementById("ax").textContent = "aX: " + responseData.ax;
-                    document.getElementById("ay").textContent = "aY: " + responseData.ay;
-                    document.getElementById("az").textContent = "aZ: " + responseData.az;
+                    document.getElementById("ax").textContent = "aX: " + Math.round((responseData.ax)*100)/100;
+                    document.getElementById("ay").textContent = "aY: " + Math.round((responseData.ay)*100)/100;
+                    document.getElementById("az").textContent = "aZ: " + Math.round((responseData.az)*100)/100;
           
-                    document.getElementById("gx").textContent = "gX: " + responseData.mx;
-                    document.getElementById("gy").textContent = "gY: " + responseData.my;
-                    document.getElementById("gz").textContent = "gZ: " + responseData.mz;
-          
-                    document.getElementById("mx").textContent = "mX: " + responseData.mx;
-                    document.getElementById("my").textContent = "mY: " + responseData.my;
-                    document.getElementById("mz").textContent = "mZ: " + responseData.mz;
+                    document.getElementById("gx").textContent = "gX: " + Math.round((responseData.gx)*100)/100;
+                    document.getElementById("gy").textContent = "gY: " + Math.round((responseData.gy)*100)/100;
+                    document.getElementById("gz").textContent = "gZ: " + Math.round((responseData.gz)*100)/100;
 
         let gas_res = responseData.gas_resistance;
         let gas_res_percent = (gas_res/6).toFixed(1);
@@ -407,7 +591,9 @@ void initServer(){
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Connecting to WiFi...");
+    Serial.print("Trying to connect to '");
+    Serial.print((char*)ssid);
+    Serial.println("' WiFi-network ...");
   }
   Serial.println("Connected to WiFi");
   server.on("/", handleRoot);

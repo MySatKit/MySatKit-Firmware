@@ -1,3 +1,7 @@
+//for DS3231 - Real Time Clock (RTC) on MySat
+
+//used to control the actual time during power off of the main microcontroller
+
 #include <RtcDS3231.h>
 #include <Wire.h>
 RtcDS3231<TwoWire> Rtc(Wire);

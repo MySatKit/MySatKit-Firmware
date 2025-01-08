@@ -1,3 +1,5 @@
+//updated 06.10.2024
+
 #include <Wire.h>
 #include "server.h"
 
@@ -36,7 +38,10 @@ void loop() {
   
   print_sensors_data(get_sensors_data());
   server.handleClient();
+  Serial.println("════════════════════════════════");
+  Serial.println("СONNECT TO SATELLITE CONSOLE AT: ");
   Serial.println(WiFi.localIP());
+  Serial.println("════════════════════════════════\n\n\n");
    
   delay(1000);
 }
