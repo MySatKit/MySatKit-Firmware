@@ -91,9 +91,9 @@ void connectToWiFi(){
     saveWiFiConfig(ssid, password);
   }
 
-  Serial.println("Connecting to WiFi...");
-  Serial.println("Ssid: " + ssid);
-  Serial.println("Password: " + password);
+  Serial.print("Trying to connect to WiFi: ");
+  Serial.print("ssid: " + ssid + " ,");
+  Serial.println("password: " + password + "  ...");
 
   tryConnectWiFi();
 }
