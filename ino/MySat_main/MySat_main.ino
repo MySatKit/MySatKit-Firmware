@@ -2,7 +2,116 @@
 
 #include <Wire.h>
 #include "server.h"
+#include <SPIFFS.h>
 
+String ssid = "";
+String password = "";
+
+bool loadWiFiConfig(String& ssid, String& password){  
+  if(!SPIFFS.begin(true)){
+    Serial.println("SPIFFS mount failed!");
+    return false;
+  }
+
+  File file = SPIFFS.open("/config.txt", "r");
+  if(!file){
+    Serial.println("No config.txt found");
+    return false;
+  }
+
+  ssid = file.readStringUntil('\n'); ssid.trim();
+  password = file.readStringUntil('\n'); password.trim();
+  file.close();
+  return true;
+}
+
+void saveWiFiConfig(const String& ssid, const String& password){
+  File file = SPIFFS.open("/config.txt", "w");
+  if(!file){
+    Serial.println("Can`t write config.txt");
+    return;
+  }
+  file.println(ssid);
+  file.println(password);
+  file.close();
+}
+
+void promptUserForWiFi(String& ssid, String& password){
+  Serial.println("Please enter WiFi ssid: ");
+  while(ssid.length() == 0){
+    if(Serial.available()){
+      ssid = Serial.readStringUntil('\n'); ssid.trim();
+    }
+  }
+  Serial.println("Please enter WiFi password: ");
+  while(password.length() == 0){
+    if(Serial.available()){
+      password = Serial.readStringUntil('\n'); password.trim();
+    }
+  }
+}
+
+void tryConnectWiFi(){                                      //щоб не було дублювання коду, адже цю функцію я також використовую і в changeWiFiData()
+  WiFi.begin(ssid.c_str(), password.c_str());
+
+  int retry = 0;
+  while(WiFi.status() != WL_CONNECTED && retry < 20){
+    delay(500);
+    Serial.print(".");
+    retry++;
+  }
+
+  if(WiFi.status() != WL_CONNECTED){
+    Serial.println("Failed to connect! Please enter a new data:");
+    promptUserForWiFi(ssid, password);
+    saveWiFiConfig(ssid, password);
+
+    WiFi.begin(ssid.c_str(), password.c_str());
+    retry = 0;
+    while(WiFi.status() != WL_CONNECTED && retry < 20){
+      delay(500);
+      Serial.print(".");
+      retry++;
+    }
+
+    if(WiFi.status() == WL_CONNECTED){
+      Serial.println("WiFi connected successfully!");
+    }else{
+      Serial.println("Please check your WiFi settings!!!");
+    }
+  }else{
+    Serial.println("Connected successfully!");
+  }
+}
+
+void connectToWiFi(){
+  if(!loadWiFiConfig(ssid, password)){
+    Serial.println("No WiFi config. Enter correct data");
+    promptUserForWiFi(ssid, password);
+    saveWiFiConfig(ssid, password);
+  }
+
+  Serial.println("Connecting to WiFi...");
+  Serial.println("Ssid: " + ssid);
+  Serial.println("Password: " + password);
+
+  tryConnectWiFi();
+}
+
+void changeWiFiData(){
+  String command = "ChangeWiFiData";
+    if(Serial.available()){
+      String input = Serial.readStringUntil('\n'); input.trim();
+      if(input == command){
+        ssid = "";
+        password = "";
+        promptUserForWiFi(ssid, password);
+        saveWiFiConfig(ssid, password);
+        Serial.println("WiFi data update!");
+        tryConnectWiFi();
+      }
+    }
+}
 
 const int def_SDA(15);
 const int def_SCL(13);
@@ -26,20 +135,21 @@ struct sensors_structure{
 
 void setup() {
   Serial.begin(115200);
+  connectToWiFi();
   Wire.begin(def_SDA, def_SCL);
   initSensors();
   initServer();
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
+  Serial.println("If you want to change WiFi data use command: ChangeWiFiData");
 }
 void loop() {
-  
+  changeWiFiData();
   Serial.println("Start loop");
-  
   print_sensors_data(get_sensors_data());
   server.handleClient();
   Serial.println("════════════════════════════════");
-  Serial.println("СONNECT TO SATELLITE CONSOLE AT: ");
+  Serial.println("CONNECT TO SATELLITE CONSOLE AT: ");
   Serial.println(WiFi.localIP());
   Serial.println("════════════════════════════════\n\n\n");
    

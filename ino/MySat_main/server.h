@@ -7,9 +7,10 @@
 #include "control.h"
 #include "base64.h"
 
-const char* ssid = "Lunar2024";
-const char* password = "ElonMars2@";
+extern String ssid;
+extern String password;
 int count_press_light = 0;
+
 
 const char* htmlContent = R"###(
 <!DOCTYPE html>
@@ -558,14 +559,14 @@ void handleGetData() {
 
 void handleGetPhoto() {
   Serial.println("Create Photo");
-  camera_fb_t * fb = esp_camera_fb_get();
-  
-  while(!fb) {
-      fb = esp_camera_fb_get();
-      if (fb) {
-        break;
-      }
-    }  
+  camera_fb_t* fb = esp_camera_fb_get();
+
+  while (!fb) {
+    fb = esp_camera_fb_get();
+    if (fb) {
+      break;
+    }
+  }
   Serial.print("Get photo length: ");
   Serial.println(fb->len);
   String base64String = base64::encode(fb->buf, fb->len);
@@ -575,27 +576,19 @@ void handleGetPhoto() {
   esp_camera_fb_return(fb);
 }
 
-void light_on(){
+void light_on() {
   count_press_light++;
   control_light(count_press_light);
- }
+}
 
- int count_press_motor = 0;
+int count_press_motor = 0;
 
- void motor_on(){
+void motor_on() {
   count_press_motor++;
   control_motor(count_press_motor);
- }
+}
 
-void initServer(){
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print("Trying to connect to '");
-    Serial.print((char*)ssid);
-    Serial.println("' WiFi-network ...");
-  }
-  Serial.println("Connected to WiFi");
+void initServer() {
   server.on("/", handleRoot);
   server.on("/get_data", handleGetData);
   server.on("/light_on", HTTP_GET, light_on);
