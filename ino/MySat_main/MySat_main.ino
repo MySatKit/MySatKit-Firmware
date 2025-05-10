@@ -63,6 +63,8 @@ void tryConnectWiFi(){                                      //щоб не бул
 
   if(WiFi.status() != WL_CONNECTED){
     Serial.println("Failed to connect! Please enter a new data:");
+    ssid = "";
+    password = "";
     promptUserForWiFi(ssid, password);
     saveWiFiConfig(ssid, password);
 
@@ -77,7 +79,7 @@ void tryConnectWiFi(){                                      //щоб не бул
     if(WiFi.status() == WL_CONNECTED){
       Serial.println("WiFi connected successfully!");
     }else{
-      Serial.println("Please check your WiFi settings!!!");
+      Serial.println("Please check and change your WiFi data!!!");
     }
   }else{
     Serial.println("Connected successfully!");
@@ -86,31 +88,41 @@ void tryConnectWiFi(){                                      //щоб не бул
 
 void connectToWiFi(){
   if(!loadWiFiConfig(ssid, password)){
-    Serial.println("No WiFi config. Enter correct data");
+    Serial.println("No WiFi config. Enter data for WiFi");
     promptUserForWiFi(ssid, password);
     saveWiFiConfig(ssid, password);
   }
 
-  Serial.print("Trying to connect to WiFi: ");
-  Serial.print("ssid: " + ssid + " ,");
-  Serial.println("password: " + password + "  ...");
+  Serial.print("Connecting to WiFi: ");
+  Serial.print(ssid + " ...");
 
   tryConnectWiFi();
 }
 
-void changeWiFiData(){
-  String command = "ChangeWiFiData";
-    if(Serial.available()){
-      String input = Serial.readStringUntil('\n'); input.trim();
-      if(input == command){
+void useCommandForChanging() {
+  static String inputBuffer = "";
+
+  while (Serial.available() > 0) {
+    char inChar = Serial.read();
+    if (inChar == '\r') continue;
+    if (inChar == '\n') {
+      inputBuffer.trim();
+      if (inputBuffer.equalsIgnoreCase("WIFI")) {
         ssid = "";
         password = "";
         promptUserForWiFi(ssid, password);
         saveWiFiConfig(ssid, password);
-        Serial.println("WiFi data update!");
+        Serial.println("WiFi data updated!");
         tryConnectWiFi();
       }
+      else if (inputBuffer.equalsIgnoreCase("TIME")) {
+        readUARTTime();
+      }
+      inputBuffer = "";
+    } else {
+      inputBuffer += inChar;
     }
+  }
 }
 
 const int def_SDA(15);
@@ -136,15 +148,17 @@ struct sensors_structure{
 void setup() {
   Serial.begin(115200);
   connectToWiFi();
+  setTime();
   Wire.begin(def_SDA, def_SCL);
   initSensors();
   initServer();
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
-  Serial.println("If you want to change WiFi data use command: ChangeWiFiData");
+  Serial.println("If you want to change WiFi data use command: WIFI ");
+  delay(2000);
 }
 void loop() {
-  changeWiFiData();
+  useCommandForChanging();
   Serial.println("Start loop");
   print_sensors_data(get_sensors_data());
   server.handleClient();
