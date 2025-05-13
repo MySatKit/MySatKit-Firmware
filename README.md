@@ -1,4 +1,4 @@
-# MySatKit-Firmware V.1.0.0
+# MySatKit-Firmware
 <p>ino folder - for Arduino Studio based project
 <p>MySat_main - folder with firmware for ESP32
 <p>ServoArduino - folder with firmware for Arduino - don't need any update 
