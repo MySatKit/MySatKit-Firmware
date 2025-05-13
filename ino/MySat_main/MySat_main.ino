@@ -1,4 +1,5 @@
-//updated 06.10.2024
+// MySatKit-Firmware V.1.0.1
+// Release date: 2025/05/13
 
 #include <Wire.h>
 #include "server.h"
