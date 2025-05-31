@@ -9,6 +9,7 @@
 
 extern String ssid;
 extern String password;
+int count_press_light = 0;
 
 const char* htmlContent = R"###(
 <!DOCTYPE html>
@@ -557,9 +558,9 @@ void handleGetData() {
 
 void handleGetPhoto() {
   Serial.println("Create Photo");
-  camera_fb_t * fb = esp_camera_fb_get();
+  camera_fb_t* fb = esp_camera_fb_get();
 
-  while(!fb) {
+  while (!fb) {
     fb = esp_camera_fb_get();
     if (fb) {
       break;
@@ -574,18 +575,16 @@ void handleGetPhoto() {
   esp_camera_fb_return(fb);
 }
 
-bool stateLight = false;
-
 void light_on() {
-  stateLight = !stateLight;
-  control_light(stateLight);
+  count_press_light++;
+  control_light(count_press_light);
 }
 
-bool stateMotor = false;
+int count_press_motor = 0;
 
 void motor_on() {
-  stateMotor = !stateMotor;
-  control_motor(stateMotor);
+  count_press_motor++;
+  control_motor(count_press_motor);
 }
 
 void initServer() {

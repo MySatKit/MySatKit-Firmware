@@ -209,17 +209,7 @@ void useCommandForChanging() {  // читаємо команди для змін
       } else if (inputBuffer.equalsIgnoreCase("SetWIFI")) {
         setWiFi();
 
-      } else if (inputBuffer.equalsIgnoreCase("TurnLed")) {
-        light_on();
-
-      } else if (inputBuffer.equalsIgnoreCase("SolarDeploy")) {
-        stateMotor = true;
-        control_motor(stateMotor);
-
-      } else if (inputBuffer.equalsIgnoreCase("SolarRetract")) {
-        stateMotor = false;
-        control_motor(stateMotor);
-      }
+      } 
       inputBuffer = "";
     } else {
       inputBuffer += inChar;
@@ -266,7 +256,6 @@ void loop() {
   useCommandForChanging();
   Serial.println("Start loop");
   print_sensors_data(get_sensors_data());
-  Serial.println(stateMotor ? "Solar panels deployed" : "Solar panels retracted");
 
   if (useWiFi.equalsIgnoreCase("Yes")) {
     server.handleClient();
