@@ -145,9 +145,9 @@ void setWiFi() {
 
   Serial.println("Do you want to use WiFi? Yes/No");
   while (!Serial.available()) {
-    if (millis() - lastRepeat >= 10000) {                   //використовуємо millis() щоб рахувати секунди для введення 
-    Serial.println("Do you want to use WiFi? Yes/No");      // і виведення повідомлення знову,якщо лишаємось без відповіді
-    lastRepeat = millis();
+    if (millis() - lastRepeat >= 10000) {
+      Serial.println("Do you want to use WiFi? Yes/No");
+      lastRepeat = millis();
     }
     delay(50);
   }
@@ -155,9 +155,21 @@ void setWiFi() {
   useWiFi.trim();
 
   if (useWiFi.equalsIgnoreCase("Yes")) {
+    ssid = "";
+    password = "";
     promptUserForWiFi(ssid, password);
+
+    if (ssid.length() > 0 && password.length() > 0) {
+      saveWiFiConfig(ssid, password, useWiFi);
+      tryConnectWiFi();
+    } else {
+      Serial.println("SSID or password is empty. Config not saved.");
+    }
+
+  } else {
+    saveWiFiConfig("none", "none", useWiFi);
+    Serial.println("WiFi disabled by user.");
   }
-  saveWiFiConfig(ssid, password, useWiFi);
 }
 
 void connectToWiFi() {
@@ -170,7 +182,7 @@ void connectToWiFi() {
     Serial.print(ssid + " ...");
 
     tryConnectWiFi();
-  }else{
+  } else {
     Serial.println("WiFi disabled by user.");
   }
 }
@@ -191,12 +203,22 @@ void useCommandForChanging() {  // читаємо команди для змін
         Serial.println("WiFi data updated!");
         tryConnectWiFi();
 
-      } else if (inputBuffer.equalsIgnoreCase("Time")) {
+      } else if (inputBuffer.equalsIgnoreCase("ChangeTime")) {
         readUARTTime();
 
       } else if (inputBuffer.equalsIgnoreCase("SetWIFI")) {
         setWiFi();
-        tryConnectWiFi();
+
+      } else if (inputBuffer.equalsIgnoreCase("TurnLed")) {
+        light_on();
+
+      } else if (inputBuffer.equalsIgnoreCase("SolarDeploy")) {
+        stateMotor = true;
+        control_motor(stateMotor);
+
+      } else if (inputBuffer.equalsIgnoreCase("SolarRetract")) {
+        stateMotor = false;
+        control_motor(stateMotor);
       }
       inputBuffer = "";
     } else {
@@ -232,16 +254,19 @@ void setup() {
   setTime();
   Wire.begin(def_SDA, def_SCL);
   initSensors();
-  initServer();
+  if (useWiFi.equalsIgnoreCase("Yes")) {
+    initServer();
+  }
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
-  Serial.println("If you want to change WiFi data use command: WIFI ");
+  Serial.println("If you want to change WiFi data use command: ChangeWIFI ");
   delay(2000);
 }
 void loop() {
   useCommandForChanging();
   Serial.println("Start loop");
   print_sensors_data(get_sensors_data());
+  Serial.println(stateMotor ? "Solar panels deployed" : "Solar panels retracted");
 
   if (useWiFi.equalsIgnoreCase("Yes")) {
     server.handleClient();
@@ -251,7 +276,7 @@ void loop() {
     Serial.println("════════════════════════════════\n\n\n");
   } else {
     Serial.println("════════════════════════════════");
-    Serial.println("WiFi not configured. Use command: SETWIFI");
+    Serial.println("WiFi not configured. Use command: SetWIFI");
   }
 
   delay(1000);

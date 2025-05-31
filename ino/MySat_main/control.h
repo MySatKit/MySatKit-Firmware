@@ -4,30 +4,28 @@
 //Arduino Nano is used for the operation of subsystems - control of the MySat solar panels movement and other tasks
 
 
-const int LED = 14; //MySat STAR LED
- 
-void control_light(int open) {
- if(open % 2 == 1){
-  digitalWrite(LED, HIGH);
+const int LED = 14;  //MySat STAR LED
+
+void control_light(bool state_light) {
+  if (state_light) {
+    digitalWrite(LED, HIGH);
+  } else {
+    digitalWrite(LED, LOW);
   }
- else{
-  digitalWrite(LED, LOW);
-  }
- }
+}
 
 
 
-void control_motor(int open_motor) {
-  if (open_motor % 2 == 1){
+void control_motor(bool state_motor) {
+  if (state_motor) {
     Wire.beginTransmission(8);
     Wire.write(byte(0));
     Wire.endTransmission();
     Serial.println("Open motor");
-  }
- else {
+  } else {
     Wire.beginTransmission(8);
     Wire.write(byte(1));
     Wire.endTransmission();
     Serial.println("Close motor");
   }
- }
+}

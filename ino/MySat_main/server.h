@@ -9,8 +9,6 @@
 
 extern String ssid;
 extern String password;
-int count_press_light = 0;
-
 
 const char* htmlContent = R"###(
 <!DOCTYPE html>
@@ -576,16 +574,18 @@ void handleGetPhoto() {
   esp_camera_fb_return(fb);
 }
 
+bool stateLight = false;
+
 void light_on() {
-  count_press_light++;
-  control_light(count_press_light);
+  stateLight = !stateLight;
+  control_light(stateLight);
 }
 
-int count_press_motor = 0;
+bool stateMotor = false;
 
 void motor_on() {
-  count_press_motor++;
-  control_motor(count_press_motor);
+  stateMotor = !stateMotor;
+  control_motor(stateMotor);
 }
 
 void initServer() {

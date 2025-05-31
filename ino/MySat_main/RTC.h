@@ -25,35 +25,41 @@ void setRTC(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t min
   Rtc.SetDateTime(dt);
 }
 
-void readUARTTime(){
+void readUARTTime(){                      //читаємо дані про дату і час від користувача
   Serial.println("Please set time. Enter data only in numbers!");
 
   uint16_t year;
   uint8_t month, day, hour, minute, second;
 
-  Serial.println("Enter year:");
+  Serial.print("Enter year:");
   while (!Serial.available()) {}
   year = Serial.readStringUntil('\n').toInt();
+  Serial.println(year);
 
-  Serial.println("Enter month:");
+  Serial.print("Enter month:");
   while (!Serial.available()) {}
   month = Serial.readStringUntil('\n').toInt();
+  Serial.println(month);
 
-  Serial.println("Enter day:");
+  Serial.print("Enter day:");
   while (!Serial.available()) {}
   day = Serial.readStringUntil('\n').toInt();
+  Serial.println(day);
 
-  Serial.println("Enter hour:");
+  Serial.print("Enter hour:");
   while (!Serial.available()) {}
   hour = Serial.readStringUntil('\n').toInt();
+  Serial.println(hour);
 
-  Serial.println("Enter minute:");
+  Serial.print("Enter minute:");
   while (!Serial.available()) {}
   minute = Serial.readStringUntil('\n').toInt();
+  Serial.println(minute);
 
-  Serial.println("Enter second:");
+  Serial.print("Enter second:");
   while (!Serial.available()) {}
   second = Serial.readStringUntil('\n').toInt();
+  Serial.println(second);
 
   if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31 ||
       hour > 23 || minute > 59 || second > 59) {
@@ -72,7 +78,7 @@ void setTime(){
     Serial.println("RTC time is invalid. Please set time.");
     readUARTTime();
   } else {
-    Serial.println("If you want to change the time, use the command: TIME ");
+    Serial.println("If you want to change the time, use the command: ChangeTime ");
   }
 }
 
