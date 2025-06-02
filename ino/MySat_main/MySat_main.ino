@@ -51,7 +51,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   return true;
 }
 
-void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi) {  //записуємо дані в файл
+void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi) {  //write data to a file
   File file = SPIFFS.open("/config.txt", "w");
   if (!file) {
     Serial.println("Can`t write config.txt");
@@ -63,21 +63,21 @@ void saveWiFiConfig(const String& ssid, const String& password, const String& us
   file.close();
 }
 
-void promptUserForWiFi(String& ssid, String& password) {  //отримуємо від користувача дані
+void promptUserForWiFi(String& ssid, String& password) {  //receive data from the user
   unsigned long startTime = millis();
   unsigned long lastRepeat = startTime;
 
-  Serial.println("Please enter WiFi ssid: ");
+  Serial.print("Please enter WiFi ssid: ");
   while (ssid.length() == 0) {
     if (Serial.available()) {
       ssid = Serial.readStringUntil('\n');
       ssid.trim();
-      Serial.println("Entered ssid: " + ssid);
+      Serial.println(ssid);
       break;
     }
 
     if (millis() - lastRepeat >= 10000) {
-      Serial.println("Please enter WiFi ssid: ");
+      Serial.print("\nPlease enter WiFi ssid: ");
       lastRepeat = millis();
     }
     delay(50);
@@ -86,17 +86,17 @@ void promptUserForWiFi(String& ssid, String& password) {  //отримуємо �
   startTime = millis();
   lastRepeat = startTime;
 
-  Serial.println("Please enter WiFi password: ");
+  Serial.print("Please enter WiFi password: ");
   while (password.length() == 0) {
     if (Serial.available()) {
       password = Serial.readStringUntil('\n');
       password.trim();
-      Serial.println("Entered password: " + password);
+      Serial.println(password);
       break;
     }
 
     if (millis() - lastRepeat >= 10000) {
-      Serial.println("Please enter WiFi password: ");
+      Serial.print("\nPlease enter WiFi password: ");
       lastRepeat = millis();
     }
     delay(50);
@@ -115,7 +115,7 @@ void tryConnectWiFi() {
   }
 
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Failed to connect! Please enter a new data:");
+    Serial.println("\nFailed to connect! Please enter new data:");
     ssid = "";
     password = "";
     promptUserForWiFi(ssid, password);
@@ -130,12 +130,12 @@ void tryConnectWiFi() {
     }
 
     if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("WiFi connected successfully!");
+      Serial.println("\nWiFi connected successfully!");
     } else {
-      Serial.println("Please check and change your WiFi data!!!");
+      Serial.println("\nWiFi connection failed. Please check and update your WiFi data!!!");
     }
   } else {
-    Serial.println("Connected successfully!");
+    Serial.println("\nWiFi connected successfully!");
   }
 }
 
@@ -187,7 +187,7 @@ void connectToWiFi() {
   }
 }
 
-void useCommandForChanging() {  // читаємо команди для зміни даних
+void useCommandForChanging() {  // reading commands for changing data
   static String inputBuffer = "";
 
   while (Serial.available() > 0) {
@@ -195,15 +195,7 @@ void useCommandForChanging() {  // читаємо команди для змін
     if (inChar == '\r') continue;
     if (inChar == '\n') {
       inputBuffer.trim();
-      if (inputBuffer.equalsIgnoreCase("ChangeWIFI")) {
-        ssid = "";
-        password = "";
-        promptUserForWiFi(ssid, password);
-        saveWiFiConfig(ssid, password, useWiFi);
-        Serial.println("WiFi data updated!");
-        tryConnectWiFi();
-
-      } else if (inputBuffer.equalsIgnoreCase("ChangeTime")) {
+      if (inputBuffer.equalsIgnoreCase("ChangeTime")) {
         readUARTTime();
 
       } else if (inputBuffer.equalsIgnoreCase("SetWIFI")) {
@@ -249,23 +241,24 @@ void setup() {
   }
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
-  Serial.println("If you want to change WiFi data use command: ChangeWIFI ");
+  Serial.println("If you want to change WiFi data use the command: SetWIFI ");
   delay(2000);
 }
 void loop() {
   useCommandForChanging();
-  Serial.println("Start loop");
-  print_sensors_data(get_sensors_data());
 
+  Serial.println("\n\n\nStart loop");
+
+  print_sensors_data(get_sensors_data());
   if (useWiFi.equalsIgnoreCase("Yes")) {
     server.handleClient();
     Serial.println("════════════════════════════════");
     Serial.println("CONNECT TO SATELLITE CONSOLE AT: ");
     Serial.println(WiFi.localIP());
-    Serial.println("════════════════════════════════\n\n\n");
+    Serial.println("════════════════════════════════");
   } else {
     Serial.println("════════════════════════════════");
-    Serial.println("WiFi not configured. Use command: SetWIFI");
+    Serial.println("WiFi not configured. Use the command: SetWIFI");
   }
 
   delay(1000);

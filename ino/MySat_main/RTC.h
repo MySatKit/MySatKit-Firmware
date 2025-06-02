@@ -25,7 +25,7 @@ void setRTC(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t min
   Rtc.SetDateTime(dt);
 }
 
-void readUARTTime(){                      //читаємо дані про дату і час від користувача
+void readUARTTime(){                      //read date and time data from the user
   Serial.println("Please set time. Enter data only in numbers!");
 
   uint16_t year;
@@ -78,7 +78,7 @@ void setTime(){
     Serial.println("RTC time is invalid. Please set time.");
     readUARTTime();
   } else {
-    Serial.println("If you want to change the time, use the command: ChangeTime ");
+    Serial.println("If you want to change the time use the command: ChangeTime ");
   }
 }
 
