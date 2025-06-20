@@ -9,7 +9,6 @@
 
 extern String ssid;
 extern String password;
-int count_press_light = 0;
 
 const char* htmlContent = R"###(
 <!DOCTYPE html>
@@ -547,6 +546,8 @@ xhttp.send();
 
 WebServer server(80);
 
+bool stateMotor = false;
+
 void handleRoot() {
   Serial.println(json_string);
   server.send(200, "text/html", htmlContent);
@@ -575,16 +576,16 @@ void handleGetPhoto() {
   esp_camera_fb_return(fb);
 }
 
+bool stateLight = false;
+
 void light_on() {
-  count_press_light++;
-  control_light(count_press_light);
+  stateLight = !stateLight;
+  control_light(stateLight);
 }
 
-int count_press_motor = 0;
-
 void motor_on() {
-  count_press_motor++;
-  control_motor(count_press_motor);
+  stateMotor = !stateMotor;
+  control_motor(stateMotor);
 }
 
 void initServer() {

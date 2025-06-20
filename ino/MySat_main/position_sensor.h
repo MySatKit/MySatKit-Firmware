@@ -17,11 +17,14 @@ struct mpu{
   float mX;
   float mY;
   float mZ;
-  } mpu_data;
+} mpu_data;
 
 bool initMPU(){
   uint8_t sensorId;
   mpu_sensor.setWire(&Wire);
+  if(mpu_sensor.readId(&sensorId) != 0){
+    return false;
+  }
   mpu_sensor.beginAccel();
   mpu_sensor.beginGyro();
   mpu_sensor.beginMag();
