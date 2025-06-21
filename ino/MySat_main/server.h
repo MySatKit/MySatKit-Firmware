@@ -9,6 +9,7 @@
 
 extern String ssid;
 extern String password;
+bool stateMotor = false;
 
 const char* htmlContent = R"###(
 <!DOCTYPE html>
@@ -405,17 +406,8 @@ const char* htmlContent = R"###(
             var xhttp = new XMLHttpRequest();
             xhttp.open('GET', '/motor_on', true);
             xhttp.send();
+      }
 			
-			
-			if (wing_angle==75) { 
-				motor_direction = -1;
-			}
-			else {
-				motor_direction = 1;
-			}
-			turning();	
-        }
-		
 		
 	function turning() { 
 		
@@ -439,6 +431,13 @@ const char* htmlContent = R"###(
             if (xhttp.readyState === 4) {
                 if (xhttp.status === 200) {
                     var responseData = JSON.parse(xhttp.responseText);
+                    let target = responseData.motor_state ? 75 : 3;
+
+                    if (wing_angle !== target) {
+                      motor_direction = wing_angle < target ? 1 : -1;
+                      turning();
+                    }
+                    
                     console.log('Received JSON data:', responseData);
                     document.getElementById("temperature").textContent = responseData.temperature.toFixed(2) + ' C';
                     document.getElementById("pressure").textContent = responseData.pressure.toFixed(2)+ ' Pa';
@@ -546,14 +545,14 @@ xhttp.send();
 
 WebServer server(80);
 
-bool stateMotor = false;
-
 void handleRoot() {
   Serial.println(json_string);
   server.send(200, "text/html", htmlContent);
 }
 
 void handleGetData() {
+  pointer_of_sensors* data = get_sensors_data();
+  get_all_sensor_data(data, stateMotor);
   server.send(200, "text/plain", json_string);
 }
 

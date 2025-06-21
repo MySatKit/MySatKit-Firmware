@@ -12,7 +12,7 @@
 
 String json_string = "";
 
-const size_t bufferSize = JSON_OBJECT_SIZE(23);
+const size_t bufferSize = JSON_OBJECT_SIZE(35);
 
 DynamicJsonDocument json_sensors(bufferSize);
 
@@ -63,7 +63,7 @@ pointer_of_sensors * get_sensors_data(){
   return &pointers;
 }
 
-String * get_all_sensor_data(pointer_of_sensors * data_){
+String * get_all_sensor_data(pointer_of_sensors * data_, bool motor_state){
   json_string = "";
   if (init_status.ads_){
     json_sensors["ph1"] = data_->ads_->ph1;
@@ -122,14 +122,15 @@ String * get_all_sensor_data(pointer_of_sensors * data_){
     json_sensors["mx"] = 0;
     json_sensors["my"] = 0;
     json_sensors["mz"] = 0;
-    }
+  }
+  json_sensors["motor_state"] = motor_state;
   serializeJson(json_sensors, json_string);
   //Serial.println(json_string);
   return &json_string;
 }
 
 
-void print_sensors_data(pointer_of_sensors * data_){
+void print_sensors_data(pointer_of_sensors * data_, bool motor_state){
   if (init_status.bme_){
     print_data(data_->bme_); 
   } else{
@@ -156,5 +157,5 @@ void print_sensors_data(pointer_of_sensors * data_){
   } else{
     Serial.println("▲ DS3231 module (real time clock) not found!"); 
   }
-  get_all_sensor_data(data_);
+  get_all_sensor_data(data_, motor_state);
 }

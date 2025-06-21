@@ -239,14 +239,13 @@ void setup() {
   Serial.begin(115200);
   connectToWiFi();
   initSignalLed();
+  initStarLed();
   setTime();
   Wire.begin(def_SDA, def_SCL);
   initSensors();
   if (useWiFi.equalsIgnoreCase("Yes")) {
     initServer();
   }
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, LOW);
   Serial.println("If you want to change WiFi data use the command: SetWIFI ");
   delay(2000);
 }
@@ -255,10 +254,15 @@ unsigned long lastSystemCheck = 0;
 
 void loop() {
   useCommandForChanging();
-  Serial.println("\n\n\nStart loop ("FIRMWARE_VERSION")");
-  print_sensors_data(get_sensors_data());
+  Serial.println("\n\n\nStart loop (" FIRMWARE_VERSION ")");
+  pointer_of_sensors* data = get_sensors_data();
+  get_all_sensor_data(data, stateMotor);  
+  print_sensors_data(data, stateMotor);
   Serial.println(stateMotor ? "Solar panels deployed" : "Solar panels retracted");
-  if(millis() - lastSystemCheck > 5000){
+  Serial.println("════════════════════════════════");
+  Serial.print("StarLED status: ");
+  Serial.println(stateLight ? "ON" : "OFF");
+  if (millis() - lastSystemCheck > 5000) {
     evaluateSystemState();
     lastSystemCheck = millis();
   }

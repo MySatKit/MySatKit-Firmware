@@ -4,7 +4,8 @@
 //Arduino Nano is used for the operation of subsystems - control of the MySat solar panels movement and other tasks
 #include <Adafruit_NeoPixel.h>
 #define SIGNALLED_BRIGHTNESS 20
-
+#define STARLED_BRIGHTNESS 65
+#define STARLED_PWM_CHANNEL 0
 
 
 const int LED = 14;   //MySat STAR LED
@@ -76,13 +77,18 @@ void evaluateSystemState(){
   setSignalLed(0, 0, 255, LED_SOLID);
 }
 
-
 void control_light(bool state_light) {
   if (state_light) {
-    digitalWrite(LED, HIGH);
+    ledcWrite(STARLED_PWM_CHANNEL, STARLED_BRIGHTNESS);
   } else {
-    digitalWrite(LED, LOW);
+    ledcWrite(STARLED_PWM_CHANNEL, 0);
   }
+}
+
+void initStarLed(){
+  ledcSetup(STARLED_PWM_CHANNEL, 5000, 8);
+  ledcAttachPin(LED, STARLED_PWM_CHANNEL);
+  control_light(false);
 }
 
 void control_motor(bool state_motor) {
