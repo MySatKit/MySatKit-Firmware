@@ -1,7 +1,6 @@
-// MySatKit-Firmware V.1.0.1
-// Release date: 2025/05/13
+// MySatKit-Firmware V.1.0.2
 
-#define FIRMWARE_VERSION "v.1.0.5"
+#define FIRMWARE_VERSION "v.1.0.2"
 #include <Wire.h>
 #include "server.h"
 #include <SPIFFS.h>
@@ -13,12 +12,14 @@ String useWiFi = "";
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   if (!SPIFFS.begin(true)) {
     Serial.println("SPIFFS mount failed!");
+    pauseToRead();
     return false;
   }
 
   File file = SPIFFS.open("/config.txt", "r");
   if (!file) {
     Serial.println("No config.txt found");
+    pauseToRead();
     return false;
   }
 
@@ -31,6 +32,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
 
   if (lineCount < 3) {
     Serial.println("Invalid config.txt: less than 3 lines");
+    pauseToRead();
     SPIFFS.remove("/config.txt");
     return false;
   }
@@ -46,6 +48,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
 
   if (useWiFi.length() == 0 || ssid.length() == 0 || password.length() == 0) {
     Serial.println("Invalid config: empty fields");
+    pauseToRead();
     return false;
   }
 
@@ -56,6 +59,7 @@ void saveWiFiConfig(const String& ssid, const String& password, const String& us
   File file = SPIFFS.open("/config.txt", "w");
   if (!file) {
     Serial.println("Can`t write config.txt");
+    pauseToRead();
     return;
   }
   file.println(useWiFi);
@@ -104,7 +108,7 @@ void promptUserForWiFi(String& ssid, String& password) {  //receive data from th
   }
 }
 
-void tryConnectWiFi() {
+void tryConnectWiFi() {            //used for connecting to Wi-Fi within other functions
   while (true) {
     Serial.print("Connecting to WiFi: ");
     Serial.println(ssid);
@@ -121,9 +125,11 @@ void tryConnectWiFi() {
 
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println("\nWiFi connected successfully!");
+      pauseToRead();
       return;
     } else {
       Serial.println("\nFailed to connect!");
+      pauseToRead();
       setWiFi();
       if (!useWiFi.equalsIgnoreCase("Yes")) {
         return;
@@ -132,7 +138,7 @@ void tryConnectWiFi() {
   }
 }
 
-void setWiFi() {
+void setWiFi() {                //Handles enabling or disabling Wi-Fi based on user input
   unsigned long startTime = millis();
   unsigned long lastRepeat = startTime;
 
@@ -156,28 +162,30 @@ void setWiFi() {
       saveWiFiConfig(ssid, password, useWiFi);
     } else {
       Serial.println("SSID or password is empty. Config not saved.");
+      pauseToRead();
     }
 
   } else {
+
     saveWiFiConfig("none", "none", useWiFi);
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
     Serial.println("WiFi disabled by user.");
+    pauseToRead();
   }
 }
 
 void connectToWiFi() {
   if (!loadWiFiConfig(ssid, password, useWiFi)) {
     Serial.println("No WiFi config. Enter data for WiFi");
+    pauseToRead();
     setWiFi();
   }
   if (useWiFi.equalsIgnoreCase("Yes")) {
-    Serial.print("Connecting to WiFi: ");
-    Serial.print(ssid + " ...");
-
     tryConnectWiFi();
   } else {
     Serial.println("WiFi disabled by user.");
+    pauseToRead();
   }
 }
 
@@ -194,7 +202,9 @@ void useCommandForChanging() {  // read commands for changing data
 
       } else if (inputBuffer.equalsIgnoreCase("SetWIFI")) {
         setWiFi();
-        tryConnectWiFi();
+        if (useWiFi.equalsIgnoreCase("Yes")) {
+          tryConnectWiFi();
+        }
 
       } else if (inputBuffer.equalsIgnoreCase("TurnLed")) {
         light_on();
@@ -202,10 +212,17 @@ void useCommandForChanging() {  // read commands for changing data
       } else if (inputBuffer.equalsIgnoreCase("SolarDeploy")) {
         stateMotor = true;
         control_motor(stateMotor);
+        pauseToRead();
 
       } else if (inputBuffer.equalsIgnoreCase("SolarRetract")) {
         stateMotor = false;
         control_motor(stateMotor);
+        pauseToRead();
+        
+      } else if (inputBuffer.equalsIgnoreCase("SolarMove")) {
+        stateMotor = !stateMotor;
+        control_motor(stateMotor);
+        pauseToRead();
       }
       inputBuffer = "";
     } else {
@@ -247,7 +264,7 @@ void setup() {
     initServer();
   }
   Serial.println("If you want to change WiFi data use the command: SetWIFI ");
-  delay(2000);
+  delay(3000);
 }
 
 unsigned long lastSystemCheck = 0;
@@ -256,7 +273,7 @@ void loop() {
   useCommandForChanging();
   Serial.println("\n\n\nStart loop (" FIRMWARE_VERSION ")");
   pointer_of_sensors* data = get_sensors_data();
-  get_all_sensor_data(data, stateMotor);  
+  get_all_sensor_data(data, stateMotor);
   print_sensors_data(data, stateMotor);
   Serial.println(stateMotor ? "Solar panels deployed" : "Solar panels retracted");
   Serial.println("════════════════════════════════");

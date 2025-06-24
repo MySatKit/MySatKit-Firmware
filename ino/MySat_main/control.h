@@ -8,13 +8,15 @@
 #define STARLED_PWM_CHANNEL 0
 
 
-const int LED = 14;   //MySat STAR LED
+const int LED = 14;         //MySat STAR LED
 const int SIGNAL_LED = 16;  //MySat SIGNAL LED
 const int NUM_LEDS = 1;
 
 Adafruit_NeoPixel signalStrip(NUM_LEDS, SIGNAL_LED, NEO_GRB + NEO_KHZ800);
 
-enum LedMode { LED_OFF, LED_SOLID, LED_BLINK };
+enum LedMode { LED_OFF,
+               LED_SOLID,
+               LED_BLINK };
 
 struct SignalLedState {
   uint8_t r, g, b;
@@ -27,14 +29,14 @@ struct SignalLedState {
 
 SignalLedState signalLed;
 
-void initSignalLed() {
+void initSignalLed() {   //initializes the SIGNAL LED; used in setup()
   signalStrip.begin();
-  signalStrip.setBrightness(SIGNALLED_BRIGHTNESS); 
+  signalStrip.setBrightness(SIGNALLED_BRIGHTNESS);
   signalStrip.show();
-  signalLed = {0, 0, 0, LED_OFF, SIGNALLED_BRIGHTNESS, 500, millis(), false};
+  signalLed = { 0, 0, 0, LED_OFF, SIGNALLED_BRIGHTNESS, 500, millis(), false };
 }
 
-void setSignalLed(uint8_t r, uint8_t g, uint8_t b, LedMode mode,
+void setSignalLed(uint8_t r, uint8_t g, uint8_t b, LedMode mode,        //configures the SIGNAL LED settings
                   uint8_t brightness = SIGNALLED_BRIGHTNESS, uint16_t interval = 500) {
   signalLed.r = r;
   signalLed.g = g;
@@ -43,11 +45,11 @@ void setSignalLed(uint8_t r, uint8_t g, uint8_t b, LedMode mode,
   signalLed.brightness = brightness;
   signalLed.interval = interval;
   signalLed.lastUpdate = millis();
-  signalLed.state = true;
+  signalLed.state = true;  //used within LED_BLINK mode to create the blinking effect
   signalStrip.setBrightness(brightness);
 }
 
-void updateSignalLed() {
+void updateSignalLed() {      //tracks which LED mode should be used; called in the loop() function
   unsigned long now = millis();
   switch (signalLed.mode) {
     case LED_OFF:
@@ -61,15 +63,14 @@ void updateSignalLed() {
         signalLed.state = !signalLed.state;
         signalLed.lastUpdate = now;
       }
-      signalStrip.setPixelColor(0, signalLed.state ?
-        signalStrip.Color(signalLed.r, signalLed.g, signalLed.b) : 0);
+      signalStrip.setPixelColor(0, signalLed.state ? signalStrip.Color(signalLed.r, signalLed.g, signalLed.b) : 0);
       break;
   }
   signalStrip.show();
 }
 
-void evaluateSystemState(){
-  if(WiFi.status() != WL_CONNECTED){
+void evaluateSystemState() {     //monitors the system state and triggers appropriate LED indication; called in loop()
+  if (WiFi.status() != WL_CONNECTED) {
     setSignalLed(255, 255, 0, LED_BLINK, SIGNALLED_BRIGHTNESS, 200);
     return;
   }
@@ -77,7 +78,7 @@ void evaluateSystemState(){
   setSignalLed(0, 0, 255, LED_SOLID);
 }
 
-void control_light(bool state_light) {
+void control_light(bool state_light) {  //turns the STAR LED on or off based on the input parameter (true/false)
   if (state_light) {
     ledcWrite(STARLED_PWM_CHANNEL, STARLED_BRIGHTNESS);
   } else {
@@ -85,13 +86,13 @@ void control_light(bool state_light) {
   }
 }
 
-void initStarLed(){
+void initStarLed() {   //initializes the STAR LED; used in setup()
   ledcSetup(STARLED_PWM_CHANNEL, 5000, 8);
   ledcAttachPin(LED, STARLED_PWM_CHANNEL);
   control_light(false);
 }
 
-void control_motor(bool state_motor) {
+void control_motor(bool state_motor) {  //deploys or retracts the solar panels depending on the input parameter (true/false)
   if (state_motor) {
     Wire.beginTransmission(8);
     Wire.write(byte(0));

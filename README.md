@@ -8,6 +8,15 @@
 <p>Instuction for MySat Fan Kit assembly: https://github.com/MySatKit/MySatKit-Instructions/blob/main/FAN%20Kit%20ENG%20v.0.1.pdf
 
 # Release notes
+# MySatKit-Firmware V.1.0.2
+Release date: 
+Hardware version: 1.5.2
+Add console commands for:
+  1. Move solar panels
+  2. Turn the STAR LED
+Add SIGNAL LED control.
+Add INA sensor support (triple-channel current and voltage monitoring).
+
 # MySatKit-Firmware V.1.0.1
 Release date: 2025/05/13
 Hardware version: 1.5.2
@@ -20,3 +29,4 @@ Add console commands for:
 Release date: 2025/01/08
 Hardware version: 1.5.2
 Basic functional.
+
