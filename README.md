@@ -13,7 +13,7 @@ Release date:
 Hardware version: 1.5.2
 Add console commands for:
   1. Move solar panels
-  2. Turn the STAR LED
+  2. Turn the STAR LED.
 Add SIGNAL LED control.
 Add INA sensor support (triple-channel current and voltage monitoring).
 
