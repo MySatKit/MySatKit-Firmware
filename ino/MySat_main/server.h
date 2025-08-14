@@ -7,10 +7,6 @@
 #include "control.h"
 #include "base64.h"
 
-extern String ssid;
-extern String password;
-bool stateMotor = false;
-
 const char* htmlContent = R"###(
 <!DOCTYPE html>
 <html>
@@ -64,7 +60,7 @@ const char* htmlContent = R"###(
 }
 
 @keyframes twinkle {
-  from {backrgound-position: 0}
+  from {background-position: 0}
   to {background-position: -100px 0}
 }
 
@@ -77,27 +73,6 @@ const char* htmlContent = R"###(
 }
 .text-height{
   height: 100px;
-}
-
-.sunlightTrackerCircle{
-   width:80%;
-   padding-top: 80%;
-   border:2px solid white;
-   border-radius:100%;
-   position: relative;
-   margin-left:10%;
-}
-
-.sunImg{
-  background-image: url("https://i.ibb.co/gz12c7t/Sunlight.png");
-  background-size: cover;
-  width: 40px; 
-  height: 40px; 
-  position: absolute; 
-  top: 0%; 
-  left: 120%;
-  border: 0;
-  transform: translate(-370%, -50%);
 }
 
 .text-data-sunLight{
@@ -303,11 +278,35 @@ const char* htmlContent = R"###(
           <div class = "row">
             <div class = "col-lg-4 text-data m-2">
               <div class="text-data-sunLight">
-                <h3>Sunlight trackers</h3>
-                <div class="sunlightTrackerCircle">
-                  <div class="sunImg" id = "sun_img"></div>
-                </div>
-        </div>
+  <h3>Sunlight trackers</h3>
+
+
+  <svg id="sunSvg" viewBox="-120 -120 240 240" style="width:80%;margin-left:10%;display:block;">
+    <defs>
+ 
+      <radialGradient id="g1"><stop offset="0%" stop-color="white"/><stop id="g1s" offset="100%" stop-color="gray"/></radialGradient>
+      <radialGradient id="g2"><stop offset="0%" stop-color="white"/><stop id="g2s" offset="100%" stop-color="gray"/></radialGradient>
+      <radialGradient id="g3"><stop offset="0%" stop-color="white"/><stop id="g3s" offset="100%" stop-color="gray"/></radialGradient>
+      <radialGradient id="g4"><stop offset="0%" stop-color="white"/><stop id="g4s" offset="100%" stop-color="gray"/></radialGradient>
+   
+      <radialGradient id="sunGrad"><stop offset="0%" stop-color="yellow"/><stop offset="100%" stop-color="gold"/></radialGradient>
+    </defs>
+ 
+    <circle r="110" fill="none" stroke="rgba(255,255,255,0.2)" />
+    <circle r="80"  fill="none" stroke="rgba(255,255,255,0.15)" />
+    <circle r="50"  fill="none" stroke="rgba(255,255,255,0.1)" />
+
+    <path id="sec1" fill="url(#g1)"></path>
+    <path id="sec2" fill="url(#g2)"></path>
+    <path id="sec3" fill="url(#g3)"></path>
+    <path id="sec4" fill="url(#g4)"></path>
+
+    <circle r="112" fill="none" stroke="white" stroke-width="2" />
+
+   
+    <circle id="sunDot" r="9" fill="url(#sunGrad)" visibility="hidden"></circle>
+  </svg>
+</div>
             </div>
       <div class = "col-lg-4 text-data m-2">
 	  <h3>Status</h3>
@@ -406,8 +405,7 @@ const char* htmlContent = R"###(
             var xhttp = new XMLHttpRequest();
             xhttp.open('GET', '/motor_on', true);
             xhttp.send();
-      }
-			
+        }
 		
 	function turning() { 
 		
@@ -421,6 +419,74 @@ const char* htmlContent = R"###(
 			setTimeout(turning, 20);
 		}
 	}		
+
+ const R_MIN = 20;    
+ const R_MAX = 100;    
+ const SUN_DOT_R = 112; 
+ const HIDE_THRESHOLD = 0.18; 
+
+ function brightnessFromRaw(raw) {
+  return (1023 - Math.max(0, Math.min(1023, raw))) / 1023;
+ }
+
+ function polarToCartesian(r, angleDeg) {
+  const a = (angleDeg - 90) * Math.PI / 180;
+  return { x: r * Math.cos(a), y: r * Math.sin(a) };
+ }
+
+ function sectorPath(r, startAngle, endAngle) {
+  const start = polarToCartesian(r, startAngle % 360);
+  const end = polarToCartesian(r, endAngle % 360);
+  let sweepFlag = 1;
+  let largeArc = ((endAngle - startAngle + 360) % 360) > 180 ? 1 : 0;
+  return `M 0 0 L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} ${sweepFlag} ${end.x} ${end.y} Z`;
+ }
+
+ function updateLightChart(ph1, ph2, ph3, ph4) {
+  const b = [
+    brightnessFromRaw(ph1), 
+    brightnessFromRaw(ph2), 
+    brightnessFromRaw(ph3), 
+    brightnessFromRaw(ph4)  
+  ];
+
+  const sectors = [
+    { id: "sec1", gStop: "g1s", a0: 225, a1: 315 },
+    { id: "sec2", gStop: "g2s", a0: 135, a1: 225 },
+    { id: "sec3", gStop: "g3s", a0: 45,  a1: 135 },
+    { id: "sec4", gStop: "g4s", a0: 315, a1: 45 } 
+  ];
+
+  sectors.forEach((s, i) => {
+    const r = R_MIN + b[i] * (R_MAX - R_MIN);
+    document.getElementById(s.id).setAttribute("d", sectorPath(r, s.a0, s.a1));
+
+    const c = Math.round(100 + 155 * b[i]);
+    document.getElementById(s.gStop).setAttribute("stop-color", `rgb(${c},${c},${c})`);
+  });
+
+  const angles = [270, 180, 90, 0]; 
+  let vx = 0, vy = 0;
+  b.forEach((val, i) => {
+    const rad = angles[i] * Math.PI / 180;
+    vx += val * Math.cos(rad);
+    vy += val * Math.sin(rad);
+  });
+
+  const mag = Math.sqrt(vx*vx + vy*vy);
+  const normalized = mag / 4;
+  const sun = document.getElementById("sunDot");
+
+  if (normalized > HIDE_THRESHOLD) {
+    const angle = Math.atan2(vy, vx) * 180 / Math.PI;
+    const pos = polarToCartesian(SUN_DOT_R, angle);
+    sun.setAttribute("cx", pos.x);
+    sun.setAttribute("cy", pos.y);
+    sun.setAttribute("visibility", "visible");
+  } else {
+    sun.setAttribute("visibility", "hidden");
+  }
+ }
 		
 		
   function fetchDataPeriodically() {
@@ -437,7 +503,6 @@ const char* htmlContent = R"###(
                       motor_direction = wing_angle < target ? 1 : -1;
                       turning();
                     }
-                    
                     console.log('Received JSON data:', responseData);
                     document.getElementById("temperature").textContent = responseData.temperature.toFixed(2) + ' C';
                     document.getElementById("pressure").textContent = responseData.pressure.toFixed(2)+ ' Pa';
@@ -479,35 +544,12 @@ const char* htmlContent = R"###(
                   document.getElementById("gas-res-border").style.border = "15px solid #000000";
         }
       
-                    let ph1 = responseData.ph1;
-                    let ph2 = responseData.ph2;
-                    let ph3 = responseData.ph3;
-                    let ph4 = responseData.ph4;
-                    
-                    let phs = [ph1, ph2, ph3, ph4];
-                    let min_ph = phs[0]
-                     for(let i = 0;i < phs.length; i++){
-                        if(min_ph > phs[i]){
-                          min_ph = phs[i]; 
-                         } 
-                     }
-                    let direction_ = phs.indexOf(min_ph);
-        if(direction_ == 0){
-      document.getElementById("sun_img").style.left = "72%";
-      document.getElementById("sun_img").style.top = "50%";
-        }
-        if(direction_ == 3){
-      document.getElementById("sun_img").style.left = "120%";
-      document.getElementById("sun_img").style.top = "0%";
-        }
-        if(direction_ == 2){
-      document.getElementById("sun_img").style.left = "172%";
-      document.getElementById("sun_img").style.top = "50%";
-        }
-        if(direction_ == 3){
-      document.getElementById("sun_img").style.left = "120%";
-      document.getElementById("sun_img").style.top = "100%";
-        }
+                  updateLightChart(
+  responseData.ph1,
+  responseData.ph2,
+  responseData.ph3,
+  responseData.ph4
+);
                 
     let year = responseData.year_;
     let month = responseData.month_;
@@ -545,6 +587,78 @@ xhttp.send();
 
 WebServer server(80);
 
+String json_string = "";
+
+const size_t bufferSize = JSON_OBJECT_SIZE(35);
+
+DynamicJsonDocument json_sensors(bufferSize);
+
+String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
+  json_string = "";
+  if (init_status.ads_) {
+    json_sensors["ph1"] = data_->ads_->ph1;
+    json_sensors["ph2"] = data_->ads_->ph2;
+    json_sensors["ph3"] = data_->ads_->ph3;
+    json_sensors["ph4"] = data_->ads_->ph4;
+  } else {
+    json_sensors["ph1"] = 0;
+    json_sensors["ph2"] = 0;
+    json_sensors["ph3"] = 0;
+    json_sensors["ph4"] = 0;
+  }
+  if (init_status.bme_) {
+    json_sensors["temperature"] = data_->bme_->temperature;
+    json_sensors["humidity"] = data_->bme_->humidity;
+    json_sensors["gas_resistance"] = data_->bme_->gas_resistance;
+    json_sensors["pressure"] = data_->bme_->pressure;
+  } else {
+    json_sensors["temperature"] = 0;
+    json_sensors["humidity"] = 0;
+    json_sensors["gas_resistance"] = 0;
+    json_sensors["pressure"] = 0;
+  }
+  if (init_status.rtc_) {
+    json_sensors["year_"] = data_->rtc_->year_;
+    json_sensors["month_"] = data_->rtc_->month_;
+    json_sensors["day_"] = data_->rtc_->day_;
+    json_sensors["hour_"] = data_->rtc_->hour_;
+    json_sensors["minute_"] = data_->rtc_->minute_;
+    json_sensors["second_"] = data_->rtc_->second_;
+  } else {
+    json_sensors["year_"] = 0;
+    json_sensors["month_"] = 0;
+    json_sensors["day_"] = 0;
+    json_sensors["hour_"] = 0;
+    json_sensors["minute_"] = 0;
+    json_sensors["second_"] = 0;
+  }
+  if (init_status.mpu_) {
+    json_sensors["ax"] = data_->mpu_->aX;
+    json_sensors["ay"] = data_->mpu_->aY;
+    json_sensors["az"] = data_->mpu_->aZ;
+    json_sensors["gx"] = data_->mpu_->gX;
+    json_sensors["gy"] = data_->mpu_->gY;
+    json_sensors["gz"] = data_->mpu_->gZ;
+    json_sensors["mx"] = data_->mpu_->mX;
+    json_sensors["my"] = data_->mpu_->mY;
+    json_sensors["mz"] = data_->mpu_->mZ;
+  } else {
+    json_sensors["ax"] = 0;
+    json_sensors["ay"] = 0;
+    json_sensors["az"] = 0;
+    json_sensors["gx"] = 0;
+    json_sensors["gy"] = 0;
+    json_sensors["gz"] = 0;
+    json_sensors["mx"] = 0;
+    json_sensors["my"] = 0;
+    json_sensors["mz"] = 0;
+  }
+  json_sensors["motor_state"] = motor_state;
+  serializeJson(json_sensors, json_string);
+  //Serial.println(json_string);
+  return &json_string;
+}
+
 void handleRoot() {
   Serial.println(json_string);
   server.send(200, "text/html", htmlContent);
@@ -552,7 +666,7 @@ void handleRoot() {
 
 void handleGetData() {
   pointer_of_sensors* data = get_sensors_data();
-  get_all_sensor_data(data, stateMotor);
+  generateSensorsDataJson(data, stateMotor);
   server.send(200, "text/plain", json_string);
 }
 
@@ -583,8 +697,7 @@ void light_on() {
 }
 
 void motor_on() {
-  stateMotor = !stateMotor;
-  control_motor(stateMotor);
+  setStateMotor(!stateMotor);
 }
 
 void initServer() {
