@@ -32,12 +32,12 @@ void control_motor(bool state_motor) {  //deploys or retracts the solar panels d
     Wire.beginTransmission(8);
     Wire.write(byte(0));
     Wire.endTransmission();
-    Serial.println("Close motor");
+    Serial.println("Open motor");
   } else {
     Wire.beginTransmission(8);
     Wire.write(byte(1));
     Wire.endTransmission();
-    Serial.println("Open motor");
+    Serial.println("Close motor");
   }
 }
 
