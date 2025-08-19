@@ -33,14 +33,10 @@ ads_struct * get_ads_data(){
 }
 
 void print_data(ads_struct * data_){
-    Serial.println("═══SUN TRACKER:══════════════════");
-    Serial.print("ph1 ( left) = ");
-    Serial.println(data_->ph1);
-    Serial.print("ph2 ( back) = ");
-    Serial.println(data_->ph2);
-    Serial.print("ph3 (right) = ");
-    Serial.println(data_->ph3);
-    Serial.print("ph4 (front) = ");
-    Serial.println(data_->ph4);
-    Serial.println("════════════════════════════════");
+    Serial.println("===SUN TRACKER:==================");
+    Serial.print("  ph1 ( left) = "); Serial.print(data_->ph1); 
+    Serial.print("  |  ph2 ( back) = "); Serial.println(data_->ph2);
+
+    Serial.print("  ph3 (right) = "); Serial.print(data_->ph3);
+    Serial.print("  |  ph4 (front) = "); Serial.println(data_->ph4);
 }

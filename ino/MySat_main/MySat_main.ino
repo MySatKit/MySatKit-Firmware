@@ -11,14 +11,14 @@ String useWiFi = "";
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   if (!SPIFFS.begin(true)) {
-    Serial.println("SPIFFS mount failed!");
+    Serial.println("▲ SPIFFS mount failed!");
     pauseToRead();
     return false;
   }
 
   File file = SPIFFS.open("/config.txt", "r");
   if (!file) {
-    Serial.println("No config.txt found");
+    Serial.println("▲ No config.txt found");
     pauseToRead();
     return false;
   }
@@ -31,7 +31,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   file.close();
 
   if (lineCount < 3) {
-    Serial.println("Invalid config.txt: less than 3 lines");
+    Serial.println("▲ Invalid config.txt: less than 3 lines");
     pauseToRead();
     SPIFFS.remove("/config.txt");
     return false;
@@ -47,7 +47,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   file.close();
 
   if (useWiFi.length() == 0 || ssid.length() == 0 || password.length() == 0) {
-    Serial.println("Invalid config: empty fields");
+    Serial.println("▲ Invalid config: empty fields");
     pauseToRead();
     return false;
   }
@@ -58,7 +58,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
 void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi) {  //write data to a file
   File file = SPIFFS.open("/config.txt", "w");
   if (!file) {
-    Serial.println("Can`t write config.txt");
+    Serial.println("▲ Can`t write config.txt");
     pauseToRead();
     return;
   }
@@ -256,7 +256,7 @@ void setup() {
   if (useWiFi.equalsIgnoreCase("Yes")) {
     initServer();
   }
-  Serial.println("If you want to change WiFi data use the command: SetWIFI ");
+  //Serial.println("If you want to change WiFi data use the command: SetWIFI ");
   delay(3000);
 }
 
@@ -267,21 +267,19 @@ void loop() {
   pointer_of_sensors* data = get_sensors_data();
   print_sensors_data(data, stateMotor);
   generateSensorsDataJson(data, stateMotor);
-  Serial.println(stateMotor ? "Solar panels deployed" : "Solar panels retracted");
-  Serial.println("════════════════════════════════");
-  Serial.print("StarLED status: ");
+  Serial.print(stateMotor ? "  Solar panels: Deployed" : "  Solar panels: Retracted");
+  Serial.print("  |  ");
+  Serial.print("StarLED: ");
   Serial.println(stateLight ? "ON" : "OFF");
 
   if (useWiFi.equalsIgnoreCase("Yes")) {
     server.handleClient();
-    Serial.println("════════════════════════════════");
-    Serial.print("CONNECT VIA WIFI “");
-    Serial.print(ssid);
-    Serial.println("”:");
+    Serial.println("================================");
+    Serial.print("CONNECT VIA WIFI “"); Serial.print(ssid); Serial.println("”:");
     Serial.println(WiFi.localIP());
-    Serial.println("════════════════════════════════");
+    Serial.println("================================");
   } else {
-    Serial.println("════════════════════════════════");
+    Serial.println("================================");
     Serial.println("WiFi not configured. Use the command: SetWIFI");
   }
 

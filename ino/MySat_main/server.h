@@ -707,5 +707,5 @@ void initServer() {
   server.on("/motor_on", HTTP_GET, motor_on);
   server.on("/get_photo", HTTP_GET, handleGetPhoto);
   server.begin();
-  Serial.println("HTTP server started");
+  Serial.println("! HTTP server started");
 }

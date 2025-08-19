@@ -57,8 +57,8 @@ void print_data(mpu * data_){
     else 
         Serial.println("Cannot read sensorId");
     */
-    Serial.println("═══POSITION:═════════════════════");
-    Serial.print("aX = ");
+    Serial.println("===POSITION:=====================");
+    Serial.print("  aX = ");
     Serial.print(data_->aX);
     Serial.print(" | ");
     Serial.print("aY = ");
@@ -67,9 +67,9 @@ void print_data(mpu * data_){
     Serial.print("aZ = ");
     Serial.println(data_->aZ);
 
-    Serial.println("------------------------------------");
+    Serial.println("  ------------------------------------");
     
-    Serial.print("gX = ");
+    Serial.print("  gX = ");
     Serial.print(data_->gX);
     Serial.print(" | ");
     Serial.print("gY = ");
@@ -78,9 +78,9 @@ void print_data(mpu * data_){
     Serial.print("gZ = ");
     Serial.println(data_->gZ);
 
-    Serial.println("------------------------------------");
+    Serial.println("  ------------------------------------");
     
-    Serial.print("mX = ");
+    Serial.print("  mX = ");
     Serial.print(data_->mX);
     Serial.print(" | ");
     Serial.print("mY = ");
@@ -88,5 +88,4 @@ void print_data(mpu * data_){
     Serial.print(" | ");
     Serial.print("mZ = ");
     Serial.println(data_->mZ);
-    Serial.println("════════════════════════════════");
 }

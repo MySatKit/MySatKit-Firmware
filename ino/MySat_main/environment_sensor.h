@@ -35,21 +35,20 @@ bme_struct * get_bme_data(){
 }
 
 void print_data(bme_struct * bme680){
-    Serial.println("═══ENVIRONMENT:══════════════════");
-    Serial.print("Temperature = ");
+    Serial.println("===ENVIRONMENT:==================");
+    Serial.print("  Temperature = ");
     Serial.print(bme680->temperature);
     Serial.println(F(" *C"));
     
-    Serial.print("Pressure = ");
+    Serial.print("  Pressure = ");
     Serial.print(bme680->pressure);
     Serial.println(" hPa");
 
-    Serial.print("Humidity = ");
+    Serial.print("  Humidity = ");
     Serial.print(bme680->humidity);
     Serial.println(" %");
 
-    Serial.print("Gas resistance = ");
+    Serial.print("  Gas resistance = ");
     Serial.print(bme680->gas_resistance);
     Serial.println(" KOhms");
-    Serial.println("════════════════════════════════");
 }

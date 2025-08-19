@@ -1,6 +1,6 @@
-//for INA - triple-channel current and voltage sensore 
+//for INA3221 - triple-channel current and voltage sensor 
 
-// used to monitor battery voltage/current and calculate solar panel power output
+//used to control battery charge and solar panels current
 
 #include <Beastdevices_INA3221.h>
 
@@ -19,7 +19,7 @@ bool initINA() {
 }
 
 ina_struct* get_ina_data() {
-   ina_data.batteryVoltage = ina.getVoltage(INA3221_CH1);
+  ina_data.batteryVoltage = ina.getVoltage(INA3221_CH1);
   ina_data.batteryCurrent = ina.getCurrent(INA3221_CH1);
   ina_data.leftSolarPanelPower  = ina.getVoltage(INA3221_CH2) * ina.getCurrent(INA3221_CH2);
   ina_data.rightSolarPanelPower = ina.getVoltage(INA3221_CH3) * ina.getCurrent(INA3221_CH3);
@@ -27,20 +27,13 @@ ina_struct* get_ina_data() {
 }
 
 void print_data(ina_struct* data_) {
-  Serial.println("═══POWER SYSTEM══════════════════");
-  Serial.print("Battery:\n  Voltage = ");
-  Serial.print(data_->batteryVoltage, 2);  // 
-  Serial.print(" V\n  Current = ");
+  Serial.println("===POWER SYSTEM:==================");
+  Serial.print("  Battery:       U = "); 
+  Serial.print(data_->batteryVoltage, 2);   
+  Serial.print("  V   I =  "); 
   Serial.print(data_->batteryCurrent, 2); 
   Serial.println(" mA");
 
-  Serial.print("\nSolar Panel Left:\n  Power = ");
-  Serial.print(data_->leftSolarPanelPower, 2);
-  Serial.println(" mW");
-
-  Serial.print("Solar Panel Right:\n  Power = ");
-  Serial.print(data_->rightSolarPanelPower, 2);
-  Serial.println(" mW");
-
-  Serial.println("════════════════════════════════");
+  Serial.print("  Solar Panel L: P = "); Serial.print(data_->leftSolarPanelPower, 2); Serial.println(" mW");
+  Serial.print("  Solar Panel R: P = "); Serial.print(data_->rightSolarPanelPower, 2); Serial.println(" mW");
 }

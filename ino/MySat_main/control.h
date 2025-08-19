@@ -1,7 +1,7 @@
-//for communication with Arduino Nano  - MySat auxiliary microcontroller
+//for communication with Nano (ATmega328p) microcontroller - MySat auxiliary microcontroller
 //and for controlling the STAR LED - MySat debug indicator
 
-//Arduino Nano is used for the operation of subsystems - control of the MySat solar panels movement and other tasks
+//Nano (ATmega328p) is used for the operation of subsystems - control of the MySat solar panels movement and other tasks
 #include <EEPROM.h>
 
 #define STARLED_BRIGHTNESS 65
@@ -32,12 +32,12 @@ void control_motor(bool state_motor) {  //deploys or retracts the solar panels d
     Wire.beginTransmission(8);
     Wire.write(byte(0));
     Wire.endTransmission();
-    Serial.println("Open motor");
+    Serial.println("Close motor");
   } else {
     Wire.beginTransmission(8);
     Wire.write(byte(1));
     Wire.endTransmission();
-    Serial.println("Close motor");
+    Serial.println("Open motor");
   }
 }
 
