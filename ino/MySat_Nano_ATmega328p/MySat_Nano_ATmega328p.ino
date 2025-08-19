@@ -18,8 +18,8 @@
 #include <Servo.h> 
 
 enum Commands_list {
-    MOTOR_CLOSE,
     MOTOR_OPEN,
+    MOTOR_CLOSE,
     RF_TURN,
     RF_SET
 };
