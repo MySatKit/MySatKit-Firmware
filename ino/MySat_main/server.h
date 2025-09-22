@@ -265,7 +265,7 @@ const char* htmlContent = R"###(
             </div>
             <div class = "col-lg-3 text-data m-2">
               <h3 id = "text_data">Z:</h3>
-              <h4 id = "yaw"></h3>
+              <h4 id = "yaw">0</h3>
             </div>
             
           </div>
