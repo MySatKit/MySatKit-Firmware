@@ -3,7 +3,6 @@
 #define FIRMWARE_VERSION "v.1.0.2"
 #include <Wire.h>
 #include "server.h"
-#include <SPIFFS.h>
 
 String ssid = "";
 String password = "";
@@ -215,6 +214,9 @@ void useCommandForChanging() {  // read commands for changing data
       } else if (inputBuffer.equalsIgnoreCase("SolarMove")) {
         setStateMotor(!stateMotor);
         pauseToRead();
+      }else if(inputBuffer.equalsIgnoreCase("Calibrate")){
+        calibrateMPU();
+        pauseToRead();
       }
       inputBuffer = "";
     } else {
@@ -262,6 +264,7 @@ void setup() {
 
 void loop() {
   useCommandForChanging();
+  
 
   Serial.println("\n\n\nStart loop (" FIRMWARE_VERSION ")");
   pointer_of_sensors* data = get_sensors_data();

@@ -256,22 +256,16 @@ const char* htmlContent = R"###(
           </div>
           <div class = "row">
             <div class = "col-lg-4 text-data m-2">
-              <h3 id = "text_data">Accelerometer:</h3>
-              <h4 id = "ax">aX: 0</h3>
-              <h4 id = "ay">aY: 0</h3>
-              <h4 id = "az">aZ: 0</h3>
+              <h3 id = "text_data">X:</h3>
+              <h4 id = "roll">0</h3>
             </div>
             <div class = "col-lg-4 text-data m-2">
-              <h3 id = "text_data">Gyroscope:</h3>
-              <h4 id = "gx">gX: 0</h3>
-              <h4 id = "gy">gY: 0</h3>
-              <h4 id = "gz">gZ: 0</h3>
+              <h3 id = "text_data">Y:</h3>
+              <h4 id = "pitch">0</h3>
             </div>
             <div class = "col-lg-3 text-data m-2">
-              <h3 id = "text_data">Compass:</h3>
-              <h4 id = "mx"></h3>
-              <h5 id = "my">( magnetometer </h3>
-              <h5 id = "mz">is off )</h3>
+              <h3 id = "text_data">Z:</h3>
+              <h4 id = "yaw"></h3>
             </div>
             
           </div>
@@ -389,17 +383,41 @@ const char* htmlContent = R"###(
           xhttp.onreadystatechange = function() {
           if (xhttp.readyState === 4) {
             if (xhttp.status === 200) {
-              
-              var base64Data = xhttp.responseText;
-              var img = document.getElementById('photoFromESP');
-              img.src = 'data:image/jpeg;base64,' + base64Data;
+                var base64Data = xhttp.responseText;
+                var img = document.getElementById('photoFromESP');
+                img.src = 'data:image/jpeg;base64,' + base64Data;
+                
+                var photoTimestamp = xhttp.getResponseHeader('X-Photo-Timestamp');
+                
+                if (photoTimestamp) {
+                    var photoDate = new Date(photoTimestamp);
+                    var photoTimeString = photoDate.toLocaleString();
+                    var photoTimeElement = document.getElementById('photo_timestamp');
+                    if (!photoTimeElement) {
+                        photoTimeElement = document.createElement('div');
+                        photoTimeElement.id = 'photo_timestamp';
+                        photoTimeElement.className = 'datetime_font';
+                        photoTimeElement.style.marginTop = '10px';
+                        photoTimeElement.style.color = '#ffffff';
+                        var photoContainer = img.parentNode;
+                        photoContainer.appendChild(photoTimeElement);
+                    }
+                    
+                    photoTimeElement.textContent = 'Photo taken: ' + photoTimeString;
+                    
+                    console.log('Photo timestamp:', photoTimestamp);
+                } else {
+                    console.warn('No photo timestamp received');
+                }
+                
             } else {
-              console.error('Error fetching photo');
-              }
+                console.error('Error fetching photo');
             }
-          };
-          xhttp.open('GET', '/get_photo', true);
-          xhttp.send();
+          }
+        };
+    
+      xhttp.open('GET', '/get_photo', true);
+      xhttp.send();
       }
         function toggleMotor() { //TURN WING
             var xhttp = new XMLHttpRequest();
@@ -420,10 +438,10 @@ const char* htmlContent = R"###(
 		}
 	}		
 
- const R_MIN = 20;    
+ const R_MIN = 0;    
  const R_MAX = 100;    
  const SUN_DOT_R = 112; 
- const HIDE_THRESHOLD = 0.18; 
+ const HIDE_THRESHOLD = 0.10; 
 
  function brightnessFromRaw(raw) {
   return (1023 - Math.max(0, Math.min(1023, raw))) / 1023;
@@ -508,13 +526,9 @@ const char* htmlContent = R"###(
                     document.getElementById("pressure").textContent = responseData.pressure.toFixed(2)+ ' Pa';
                     document.getElementById("humidity").textContent = responseData.humidity.toFixed(2) + ' %';
                     
-                    document.getElementById("ax").textContent = "aX: " + Math.round((responseData.ax)*100)/100;
-                    document.getElementById("ay").textContent = "aY: " + Math.round((responseData.ay)*100)/100;
-                    document.getElementById("az").textContent = "aZ: " + Math.round((responseData.az)*100)/100;
-          
-                    document.getElementById("gx").textContent = "gX: " + Math.round((responseData.gx)*100)/100;
-                    document.getElementById("gy").textContent = "gY: " + Math.round((responseData.gy)*100)/100;
-                    document.getElementById("gz").textContent = "gZ: " + Math.round((responseData.gz)*100)/100;
+                    document.getElementById("roll").textContent = Math.round(responseData.roll);
+                    document.getElementById("pitch").textContent = Math.round(responseData.pitch);
+                    document.getElementById("yaw").textContent = Math.round(responseData.yaw);
 
         let gas_res = responseData.gas_resistance;
         let gas_res_percent = (gas_res/6).toFixed(1);
@@ -545,11 +559,11 @@ const char* htmlContent = R"###(
         }
       
                   updateLightChart(
-  responseData.ph1,
-  responseData.ph2,
-  responseData.ph3,
-  responseData.ph4
-);
+                   responseData.ph1,
+                   responseData.ph2,
+                   responseData.ph3,
+                   responseData.ph4
+                  );
                 
     let year = responseData.year_;
     let month = responseData.month_;
@@ -633,25 +647,13 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
     json_sensors["second_"] = 0;
   }
   if (init_status.mpu_) {
-    json_sensors["ax"] = data_->mpu_->aX;
-    json_sensors["ay"] = data_->mpu_->aY;
-    json_sensors["az"] = data_->mpu_->aZ;
-    json_sensors["gx"] = data_->mpu_->gX;
-    json_sensors["gy"] = data_->mpu_->gY;
-    json_sensors["gz"] = data_->mpu_->gZ;
-    json_sensors["mx"] = data_->mpu_->mX;
-    json_sensors["my"] = data_->mpu_->mY;
-    json_sensors["mz"] = data_->mpu_->mZ;
+    json_sensors["yaw"] = data_->mpu_->yaw;
+    json_sensors["pitch"] = data_->mpu_->pitch;
+    json_sensors["roll"] = data_->mpu_->roll;
   } else {
-    json_sensors["ax"] = 0;
-    json_sensors["ay"] = 0;
-    json_sensors["az"] = 0;
-    json_sensors["gx"] = 0;
-    json_sensors["gy"] = 0;
-    json_sensors["gz"] = 0;
-    json_sensors["mx"] = 0;
-    json_sensors["my"] = 0;
-    json_sensors["mz"] = 0;
+    json_sensors["yaw"] = 0;
+    json_sensors["pitch"] = 0;
+    json_sensors["roll"] = 0;
   }
   json_sensors["motor_state"] = motor_state;
   serializeJson(json_sensors, json_string);
@@ -672,6 +674,7 @@ void handleGetData() {
 
 void handleGetPhoto() {
   Serial.println("Create Photo");
+  rtc_struct* current_time = get_rtc();
   camera_fb_t* fb = esp_camera_fb_get();
 
   while (!fb) {
@@ -684,8 +687,22 @@ void handleGetPhoto() {
   Serial.println(fb->len);
   String base64String = base64::encode(fb->buf, fb->len);
   //Serial.println(base64String);
+  char timestamp[25];
+  snprintf(timestamp, sizeof(timestamp), "%04d-%02d-%02dT%02d:%02d:%02d",
+           current_time->year_,
+           current_time->month_,
+           current_time->day_,
+           current_time->hour_,
+           current_time->minute_,
+           current_time->second_);
+  server.sendHeader("X-Photo-Timestamp", timestamp);
+  server.sendHeader("Cache-Control", "no-cache");
+
   server.send(200, "text/plain", base64String);
-  Serial.print("Photo sended");
+
+  Serial.print("Photo sent with timestamp: ");
+  Serial.println(timestamp);
+
   esp_camera_fb_return(fb);
 }
 

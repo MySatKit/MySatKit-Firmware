@@ -64,7 +64,7 @@ void print_sensors_data(pointer_of_sensors * data_, bool motor_state){
    }
   if (init_status.mpu_){
     print_data(data_->mpu_);
-  } else{
+  }else{
    Serial.println("▲ MPU9250 module (position sensor) not found!"); 
   }
   if (init_status.ads_){
