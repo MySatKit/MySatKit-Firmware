@@ -4,15 +4,16 @@
  *
  * Controls the satellite subsystems in accordance with commands from the ESP32-CAM (main satellite OBC):
  *  - servomotor (MySat solar panels deployment);
+ *  - HC-12 module (MySat radio transceiver);
  *
- * version: v.1.1.0
- * date: 17.08.2025
+ * version: v.1.2.0
+ * date: 23.09.2025
  *
  * look for instructions here: [link]
  *
-*/
+ */
 
-#define VERSION "v.1.1.0"
+#define VERSION "v.1.2.0"
 
 #include <Wire.h>
 #include <Servo.h> 
@@ -33,11 +34,11 @@ const uint8_t OPENED_ANGLE = 10;
 const int POWER_SUPPLY_DELAY = 2200; //[ms]
 const int STEP_DELAY = 10;
 
-const uint8_t MOTOR_PIN = 9; //using D9 pin of Nano board to control the servomotor
+//Servo settings:
+const uint8_t MOTOR_PIN = 9;  //using D9 pin of Nano board to control the servomotor
 Servo MySat_servo; //creating servo object
 bool direction;
 uint8_t angle = CLOSED_ANGLE;
-
 enum Motor_statuses { //all possible servo motor statuses
     NEW_COMMAND,
     TURNING,
@@ -46,7 +47,9 @@ enum Motor_statuses { //all possible servo motor statuses
 };
 Motor_statuses motor_status = OFF;
 
-
+//RF transceiver settings:
+const uint8_t RF_ON_PIN = 5;  //using D5 pin of Nano board to control the HC-12 power supply
+const uint8_t RF_SET_PIN = 4; //using D5 pin of Nano board to control the HC-12 set pin
 
 
 void ESP32_I2C_handler(); //called automatically when receiving a signal via the I2С from ESP32
@@ -54,12 +57,14 @@ void command_handler(); //processes commands received in ESP32_I2C_handler()
 void blink_LED(); //blinks the built-in LED
 
 void setup() {
-  Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(RF_ON_PIN, OUTPUT);
+  digitalWrite(RF_ON_PIN, LOW); //allows HC-12 to always work by default (necessary for boards v.1.5.5)
   //  I2C settings:
   Wire.begin(0x08); 
   Wire.onReceive(ESP32_I2C_handler); 
-
+  //  Serial port:
+  Serial.begin(115200);
   Serial.print("MYSAT Firmware "); Serial.println(VERSION);
   Serial.println("Awaiting commands from ESP32...");
 }
@@ -147,7 +152,7 @@ void motor() {
 }
 
 void blink_LED() { //blinking the built-in LED according to the pattern: -----*--*-----
-  static const uint16_t pattern[] = {100, 200, 100, 3000}; // [ms]
+  static const uint16_t pattern[] = {400, 200, 100, 3000}; // [ms]
   static uint8_t step = 0;
   static unsigned long timer = 0;
   if (millis() - timer > pattern[step]) {
