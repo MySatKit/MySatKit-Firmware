@@ -21,6 +21,8 @@ float angle_x = 0, angle_y = 0, angle_z = 0;
 unsigned long lastMicros = 0;
 bool mpuReady = false;
 
+float offset_yaw, offset_pitch, offset_roll; //for calibration
+
 void writeRegister(uint8_t reg, uint8_t value);
 void loadCalibration();
 void saveCalibration();
@@ -152,7 +154,7 @@ mpu * get_mpu_data() {
 
 void calibrateMPU() {
   Serial.println("Calibration...");
-  Serial.println("Place the device on a flat surface and do not move for 5 seconds!");
+  Serial.println("Put the device on a surface and do not move for 5 seconds!");
   delay(2000);
 
   long sum_gx = 0, sum_gy = 0, sum_gz = 0;
@@ -181,6 +183,11 @@ void calibrateMPU() {
   calibration.valid = true;
 
   saveCalibration();
+
+  mpu* data = get_mpu_data();
+  offset_roll = data->roll;
+  offset_pitch = data->pitch;
+  offset_yaw = data->yaw;
 
   Serial.println("Calibration is complete");
 }
@@ -220,13 +227,11 @@ void print_data(mpu * data_){
     return;
   }
 
-  int roll  = round(data_->roll);
-  int pitch = round(data_->pitch);
-  int yaw   = round(data_->yaw);
+  int roll  = round(data_->roll - offset_roll);
+  int pitch = round(data_->pitch - offset_pitch);
+  int yaw   = round(data_->yaw - offset_yaw);
 
   Serial.printf("  x = %s%d   grad\n", (roll>0?"+":""), roll);
   Serial.printf("  y = %s%d   grad\n", (pitch>0?"+":""), pitch);
   Serial.printf("  z = %s%d   grad\n", (yaw>0?"+":""), yaw);
 }
-
-
