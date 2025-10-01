@@ -1,6 +1,7 @@
 //for DS3231 - Real Time Clock (RTC) on MySat
 
 //used to control the actual time during power off of the main microcontroller
+#pragma once
 
 #include <RtcDS3231.h>
 #include <Wire.h>
@@ -101,45 +102,4 @@ rtc_struct* get_rtc() {
   rtc_data.minute_ = dt.Minute();
   rtc_data.second_ = dt.Second();
   return &rtc_data;
-}
-
-void print_data(rtc_struct* data_) {
-  Serial.println("================================");
-  Serial.print("  Time: ");
-  Serial.print(data_->year_);
-  Serial.print(".");
-  if (data_->month_ < 10) {
-    Serial.print(0);
-    Serial.print(data_->month_);
-  } else {
-    Serial.print(data_->month_);
-  }
-  Serial.print(".");
-  if (data_->day_ < 10) {
-    Serial.print(0);
-    Serial.print(data_->day_);
-  } else {
-    Serial.print(data_->day_);
-  }
-  Serial.print("  ");
-  if (data_->hour_ < 10) {
-    Serial.print(0);
-    Serial.print(data_->hour_);
-  } else {
-    Serial.print(data_->hour_);
-  }
-  Serial.print(":");
-  if (data_->minute_ < 10) {
-    Serial.print(0);
-    Serial.print(data_->minute_);
-  } else {
-    Serial.print(data_->minute_);
-  }
-  Serial.print(":");
-  if (data_->second_ < 10) {
-    Serial.print(0);
-    Serial.println(data_->second_);
-  } else {
-    Serial.println(data_->second_);
-  }
 }

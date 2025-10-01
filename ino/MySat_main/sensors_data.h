@@ -1,4 +1,5 @@
 //collects data from all sensors
+#pragma once
 
 #include <Adafruit_Sensor.h>
 //#include "Adafruit_BME680.h"
@@ -54,33 +55,4 @@ pointer_of_sensors * get_sensors_data(){
       pointers.rtc_ = get_rtc();
   }
   return &pointers;
-}
-
-void print_sensors_data(pointer_of_sensors * data_, bool motor_state){
-  if (init_status.bme_){
-    print_data(data_->bme_); 
-  } else{
-   Serial.println("▲ BME680 (environmental sensor) not found!"); 
-   }
-  if (init_status.mpu_){
-    print_data(data_->mpu_);
-  }else{
-   Serial.println("▲ MPU9250 module (position sensor) not found!"); 
-  }
-  if (init_status.ads_){
-    print_data(data_->ads_);
-  }
-  else{
-    Serial.println("▲ ADS1015 module (analog-to-digital convertor) not found!"); 
-  }
-  if(init_status.ina_){
-    print_data(data_->ina_);
-  }else{
-    Serial.println("▲ INA3221 module (triple-channel current and voltage sensore) not found!");
-  }
-  if (init_status.rtc_){
-    print_data(data_->rtc_);
-  } else{
-    Serial.println("▲ DS3231 module (real time clock) not found!"); 
-  }
 }

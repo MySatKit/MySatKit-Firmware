@@ -2,6 +2,7 @@
 //and for controlling the STAR LED - MySat debug indicator
 
 //Nano (ATmega328p) is used for the operation of subsystems - control of the MySat solar panels movement and other tasks
+#pragma once
 #include <EEPROM.h>
 
 #define STARLED_BRIGHTNESS 65
@@ -32,12 +33,10 @@ void control_motor(bool state_motor) {  //deploys or retracts the solar panels d
     Wire.beginTransmission(8);
     Wire.write(byte(0));
     Wire.endTransmission();
-    Serial.println("Open motor");
   } else {
     Wire.beginTransmission(8);
     Wire.write(byte(1));
     Wire.endTransmission();
-    Serial.println("Close motor");
   }
 }
 

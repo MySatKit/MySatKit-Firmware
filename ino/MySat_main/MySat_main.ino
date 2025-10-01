@@ -1,12 +1,47 @@
-// MySatKit-Firmware V.1.0.2
+// MySatKit-Firmware V.1.2
 
-#define FIRMWARE_VERSION "v.1.0.2"
 #include <Wire.h>
 #include "server.h"
+#include "console.h"
 
 String ssid = "";
 String password = "";
 String useWiFi = "";
+
+bool loadWiFiConfig(String& ssid, String& password, String& useWiFi);
+void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi);
+void promptUserForWiFi(String& ssid, String& password);
+void tryConnectWiFi();
+void setWiFi();
+void connectToWiFi();
+
+const int def_SDA(15);
+const int def_SCL(13);
+
+void setup() {
+  loadStateMotor();
+  control_motor(stateMotor);
+  Serial.begin(115200);
+  connectToWiFi();
+  initStarLed();
+  setTime();
+  loadCallSign(callSign);
+  Wire.begin(def_SDA, def_SCL);
+  initSensors();
+  if (useWiFi.equalsIgnoreCase("Yes")) {
+    initServer();
+  }
+  //Serial.println("If you want to change WiFi data use the command: SetWIFI ");
+}
+
+void loop() {
+  handleCommands();
+
+  pointer_of_sensors* data = get_sensors_data();
+  outputData(data);
+  generateSensorsDataJson(data, stateMotor);
+
+}
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   if (!SPIFFS.begin(true)) {
@@ -181,110 +216,4 @@ void connectToWiFi() {
     Serial.println("WiFi disabled by user.");
     pauseToRead();
   }
-}
-
-void useCommandForChanging() {  // read commands for changing data
-  static String inputBuffer = "";
-
-  while (Serial.available() > 0) {
-    char inChar = Serial.read();
-    if (inChar == '\r') continue;
-    if (inChar == '\n') {
-      inputBuffer.trim();
-      if (inputBuffer.equalsIgnoreCase("ChangeTime")) {
-        readUARTTime();
-
-      } else if (inputBuffer.equalsIgnoreCase("SetWIFI")) {
-        setWiFi();
-        if (useWiFi.equalsIgnoreCase("Yes")) {
-          tryConnectWiFi();
-        }
-
-      }else if (inputBuffer.equalsIgnoreCase("TurnLed")) {
-        light_on();
-
-      } else if (inputBuffer.equalsIgnoreCase("SolarDeploy")) {
-        setStateMotor(true);
-        pauseToRead();
-
-      } else if (inputBuffer.equalsIgnoreCase("SolarRetract")) {
-        setStateMotor(false);
-        pauseToRead();
-        
-      } else if (inputBuffer.equalsIgnoreCase("SolarMove")) {
-        setStateMotor(!stateMotor);
-        pauseToRead();
-      }else if(inputBuffer.equalsIgnoreCase("Calibrate")){
-        calibrateMPU();
-        pauseToRead();
-      }
-      inputBuffer = "";
-    } else {
-      inputBuffer += inChar;
-    }
-  }
-}
-
-
-const int def_SDA(15);
-const int def_SCL(13);
-
-struct sensors_structure {
-  float ph1;
-  float ph2;
-  float ph3;
-  float ph4;
-  float temperature;
-  float humidity;
-  float gas_resistance;
-  float pressure;
-  int year_;
-  int month_;
-  int day_;
-  int hour_;
-  int minute_;
-  int second_;
-} sensors_data;
-
-void setup() {
-  loadStateMotor();
-  control_motor(stateMotor);
-  Serial.begin(115200);
-  connectToWiFi();
-  initStarLed();
-  setTime();
-  Wire.begin(def_SDA, def_SCL);
-  initSensors();
-  if (useWiFi.equalsIgnoreCase("Yes")) {
-    initServer();
-  }
-  //Serial.println("If you want to change WiFi data use the command: SetWIFI ");
-  delay(3000);
-}
-
-void loop() {
-  useCommandForChanging();
-  
-
-  Serial.println("\n\n\nStart loop (" FIRMWARE_VERSION ")");
-  pointer_of_sensors* data = get_sensors_data();
-  print_sensors_data(data, stateMotor);
-  generateSensorsDataJson(data, stateMotor);
-  Serial.print(stateMotor ? "  Solar panels: Deployed" : "  Solar panels: Retracted");
-  Serial.print("  |  ");
-  Serial.print("StarLED: ");
-  Serial.println(stateLight ? "ON" : "OFF");
-
-  if (useWiFi.equalsIgnoreCase("Yes")) {
-    server.handleClient();
-    Serial.println("================================");
-    Serial.print("CONNECT VIA WIFI “"); Serial.print(ssid); Serial.println("”:");
-    Serial.println(WiFi.localIP());
-    Serial.println("================================");
-  } else {
-    Serial.println("================================");
-    Serial.println("WiFi not configured. Use the command: SetWIFI");
-  }
-
-  delay(1000);
 }

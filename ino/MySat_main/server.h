@@ -1,4 +1,5 @@
 //ensures the operation of the MySat main console (web-interface)
+#pragma once
 
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -652,7 +653,7 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
     json_sensors["roll"] = data_->mpu_->roll;
   } else {
     json_sensors["yaw"] = 0;
-    json_sensors["pitch"] = 0;
+    json_sensors["pitch"] = 0;  
     json_sensors["roll"] = 0;
   }
   json_sensors["motor_state"] = motor_state;

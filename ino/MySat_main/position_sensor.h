@@ -1,3 +1,8 @@
+//for MPU - MySat accelerometer, gyroscope
+
+//used to determine the position of a satellite relative to the Earth's gravitational field
+
+#pragma once
 #include <SPIFFS.h>
 #define MPU_ADDRESS 0x69
 
@@ -218,20 +223,4 @@ void loadCalibration() {
     }
     file.close();
   }
-}
-
-void print_data(mpu * data_){
-  Serial.println("===POSITION:=====================");
-  if(!calibration.valid){
-    Serial.println("MPU**** is not calibrated.");
-    return;
-  }
-
-  int roll  = round(data_->roll - offset_roll);
-  int pitch = round(data_->pitch - offset_pitch);
-  int yaw   = round(data_->yaw - offset_yaw);
-
-  Serial.printf("  x = %s%d   grad\n", (roll>0?"+":""), roll);
-  Serial.printf("  y = %s%d   grad\n", (pitch>0?"+":""), pitch);
-  Serial.printf("  z = %s%d   grad\n", (yaw>0?"+":""), yaw);
 }
