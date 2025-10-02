@@ -1,6 +1,21 @@
-// MySatKit-Firmware V.1.0.2
+/*
+ * MYSAT MAIN FIRMWARE 
+ * for ESP32-CAM				! select "AI Thinker ESP32-CAM" in Arduino IDE Boards Manager
+ *
+ *
+ * Main satellite firmware that simulates CubeSat operations and 
+ *   manages all subsystems of the MySat educational kit
+ *
+ * version: v.1.1
+ * date: 22.10.2025
+ * author: MySat Developmet team
+ * license: Open Source (MIT) – github.com/mysatkit
+ *
+ * website: mysatkit.com
+ * 
+ */
 
-#define FIRMWARE_VERSION "v.1.0.2"
+#define FIRMWARE_VERSION "v.1.1"
 #include <Wire.h>
 #include "server.h"
 

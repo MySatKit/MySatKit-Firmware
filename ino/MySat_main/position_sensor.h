@@ -1,3 +1,7 @@
+//for MPU9250 or MPU6500 - MySat accelerometer & gyroscope
+
+//used to determine the position of a satellite relative to the Earth's gravitational field
+
 #include <SPIFFS.h>
 #define MPU_ADDRESS 0x69
 
@@ -231,7 +235,7 @@ void print_data(mpu * data_){
   int pitch = round(data_->pitch - offset_pitch);
   int yaw   = round(data_->yaw - offset_yaw);
 
-  Serial.printf("  x = %s%d   grad\n", (roll>0?"+":""), roll);
-  Serial.printf("  y = %s%d   grad\n", (pitch>0?"+":""), pitch);
-  Serial.printf("  z = %s%d   grad\n", (yaw>0?"+":""), yaw);
+  Serial.printf("  x = %s%d   deg\n", (roll>0?"+":""), roll);
+  Serial.printf("  y = %s%d   deg\n", (pitch>0?"+":""), pitch);
+  Serial.printf("  z = %s%d   deg\n", (yaw>0?"+":""), yaw);
 }

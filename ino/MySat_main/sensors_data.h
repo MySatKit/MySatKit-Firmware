@@ -65,7 +65,7 @@ void print_sensors_data(pointer_of_sensors * data_, bool motor_state){
   if (init_status.mpu_){
     print_data(data_->mpu_);
   }else{
-   Serial.println("▲ MPU9250 module (position sensor) not found!"); 
+   Serial.println("▲ MPU**** module (position sensor) not found!"); 
   }
   if (init_status.ads_){
     print_data(data_->ads_);
@@ -76,7 +76,7 @@ void print_sensors_data(pointer_of_sensors * data_, bool motor_state){
   if(init_status.ina_){
     print_data(data_->ina_);
   }else{
-    Serial.println("▲ INA3221 module (triple-channel current and voltage sensore) not found!");
+    Serial.println("▲ INA3221 module (voltage and current sensor) not detected!");
   }
   if (init_status.rtc_){
     print_data(data_->rtc_);
