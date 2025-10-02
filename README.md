@@ -35,10 +35,10 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 || • minor changes and bug fixes|
 | Bug Fixes → | • ensured compatibility with v.1.5.5 boards (for HC-12 module)|
 
-**MySat boards support**
+**MySat boards support:**
 > *full:* v.1.5.3+  
 > *partial:* v.1.5.2
-
+<br/><br/>
 
 ## V.1.0.1  
 
@@ -52,6 +52,7 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 
 **MySat boards support:**
 > *full:* v.1.5.2 - v.1.5.4 (no newer!)
+<br/><br/>
 
 ## V.1.0.0
 
