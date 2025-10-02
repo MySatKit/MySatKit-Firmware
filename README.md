@@ -15,54 +15,43 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 # Release notes
 
 ## V.1.1  
-  
->||||
-|:-|--|--|
-|**Release date**|||
-|| 2025/10/03  ||
-|**Changes**|||
-|| New Features → ||
-||| • added support for INA3221, voltage&current sensor|
-||| • added rotation angle calculation using the MPUxxxx module|
-||| • implemented software protection for servomotor|
-|| UI Updates → ||
-||| • new Web GUI widget for the solar navigation system |
-||| • displaying photo capture time in Web GUI|
-||| • added console commands for controlling servomotor and StarLED |
-||| • minor changes and bug fixes|
-|| Bug Fixes → ||
-||| • ensured compatibility with v.1.5.5 boards (for HC-12 module)|
-|**Support**|||
-|| full:  | *MySat boards v.1.5.3+* |
-|| partial:  | *MySat boards v.1.5.2* |
+
+**Release date:** 2025/10/03   
+**Changes**:
+|||
+|:-|--|
+| New Features → | • added support for INA3221, voltage&current sensor|
+|| • added rotation angle calculation using the MPUxxxx module|
+|| • implemented software protection for servomotor|
+| UI Updates → | • new Web GUI widget for the solar navigation system|
+|| • displaying photo capture time in Web GUI|
+|| • added console commands for controlling servomotor and StarLED |
+|| • minor changes and bug fixes|
+| Bug Fixes → | • ensured compatibility with v.1.5.5 boards (for HC-12 module)|
+
+**MySat boards support**
+> *full:* v.1.5.3+  
+> *partial:* v.1.5.2
 
 
 ## V.1.0.1  
-  
->||||
-|:-|--|--|
-|**Release date**|||
-|| 2025/05/13  ||
-|**Changes**|||
-|| New Features → ||
-||| • added Wi-Fi configuration function |
-||| • added RTC configuration function|
-||| • implemented software protection for servomotor|
-|| Bug Fixes → ||
-||| • minor bug fixes |
-|**Support**|||
-|| full:  | *v.1.5.2 - v.1.5.4 (no newer!)* |
 
+**Release date:** 2025/05/13   
+**Changes**:
+|||
+|:-|--|
+| New Features → |• added Wi-Fi configuration function |
+|| • added RTC configuration function|
+| Bug Fixes → | • minor bug fixes|
 
+**MySat boards support:**
+> *full:* v.1.5.2 - v.1.5.4 (no newer!)
 
 ## V.1.0.0
 
->||||
-|:-|--|--|
-|**Release date**|||
-|| 2025/01/18  ||
-|**Changes**|||
-|| [ initial release ] ||
-|**Support**|||
-|| full:  | *v.1.5.2 - v.1.5.4 (no newer!)* |
+**Release date:** 2025/01/18  
+**Changes**:  
+[ initial release ]
 
+**MySat boards support:**
+> *full:* v.1.5.2 - v.1.5.4 (no newer!)
