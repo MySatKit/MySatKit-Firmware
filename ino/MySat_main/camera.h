@@ -1,4 +1,5 @@
 //for OV2640 - satellite camera
+#pragma once
 
 #include "esp_camera.h"
 #define CAMERA_MODEL_AI_THINKER
