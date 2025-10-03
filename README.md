@@ -1,8 +1,10 @@
 <img src="https://drive.google.com/uc?export=download&id=10ScfFZb5kTdQQ1aUS-J6Ik5yzo1wd_EH" alt="MySat" width="150"/>
 
+[MySat Webstore](https://www.mysatkit.com/)
+
 # MySatKit-Firmware
 This repository contains the main firmware for MySat Kit microcontrollers (ESP32-CAM and ATmega328P).  <br/><br/>
-**Purpose:** To simulate the functionality of a 1U CubeSat nanosatellite.  
+**Purpose:** Simulate the functionality of a 1U CubeSat nanosatellite.  
 **Required software:** Arduino IDE 2.0+.
 
 **Instructions:**
@@ -38,7 +40,6 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 **MySat boards support:**
 > *full:* v.1.5.3+  
 > *partial:* v.1.5.2
-<br/><br/>
 
 ## V.1.0.1  
 
@@ -52,7 +53,6 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 
 **MySat boards support:**
 > *full:* v.1.5.2 - v.1.5.4 (no newer!)
-<br/><br/>
 
 ## V.1.0.0
 
