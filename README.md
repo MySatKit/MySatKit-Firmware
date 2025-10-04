@@ -1,22 +1,64 @@
+<img src="https://drive.google.com/uc?export=download&id=10ScfFZb5kTdQQ1aUS-J6Ik5yzo1wd_EH" alt="MySat" width="150"/>
+
+[MySat Webstore](https://www.mysatkit.com/)
+
 # MySatKit-Firmware
-<p>ino folder - for Arduino Studio based project
-<p>MySat_main - folder with firmware for ESP32
-<p>ServoArduino - folder with firmware for Arduino - don't need any update 
-<p>libraries.zip - folder with all libs. Unpack and move it the folder: c:\Users\{YOUR USER NAME}\Documents\Arduino\
-<p>Update WiFi login and password before upload the sketch!
-<p>Instuction for firmware update: https://docs.google.com/document/d/146EPTvLMzydpwUMsbJWAC3gcRO6yPDe3p8kIpxRUwU4/edit?usp=sharing
-<p>Instuction for MySat Fan Kit assembly: https://github.com/MySatKit/MySatKit-Instructions/blob/main/FAN%20Kit%20ENG%20v.0.1.pdf
+This repository contains the main firmware for MySat Kit microcontrollers (ESP32-CAM and ATmega328P).  <br/><br/>
+**Purpose:** Simulate the functionality of a 1U CubeSat nanosatellite.  
+**Required software:** Arduino IDE 2.0+.
+
+**Instructions:**
+[MYSAT KIT GUIDE](https://docs.google.com/document/d/146EPTvLMzydpwUMsbJWAC3gcRO6yPDe3p8kIpxRUwU4/edit?tab=t.0) [(→ Microcontroller Setup Guide)](URL)
+
+**Repo structure:**  
+- `ino` - contains Arduino projects
+  - `MySat_main` - for ESP32-CAM
+  - `MySat_Nano_ATmega328p` - for Nano board (ATmega328P)
+- `libraries.zip` - archive with libs for ESP32 firmware
+
+
+
+---
 
 # Release notes
-# MySatKit-Firmware V.1.0.1
-Release date: 2025/05/13
-Hardware version: 1.5.2
-Add console commands for:
-  1. Change Wifi credential
-  2. Setup correct time for Real Time Clock.
 
+## V.1.1  
 
-# MySatKit-Firmware V.1.0.0
-Release date: 2025/01/08
-Hardware version: 1.5.2
-Basic functional.
+**Release date:** 2025/10/03   
+**Changes**:
+|||
+|:-|--|
+| New Features → | • added support for INA3221, voltage&current sensor|
+|| • added rotation angle calculation using the MPUxxxx module|
+|| • implemented software protection for servomotor|
+| UI Updates → | • new Web GUI widget for the solar navigation system|
+|| • displaying photo capture time in Web GUI|
+|| • added console commands for controlling servomotor and StarLED |
+|| • minor changes and bug fixes|
+| Bug Fixes → | • ensured compatibility with v.1.5.5 boards (for HC-12 module)|
+
+**MySat boards support:**
+> *full:* v.1.5.3+  
+> *partial:* v.1.5.2
+
+## V.1.0.1  
+
+**Release date:** 2025/05/13   
+**Changes**:
+|||
+|:-|--|
+| New Features → |• added Wi-Fi configuration function |
+|| • added RTC configuration function|
+| Bug Fixes → | • minor bug fixes|
+
+**MySat boards support:**
+> *full:* v.1.5.2 - v.1.5.4 (no newer!)
+
+## V.1.0.0
+
+**Release date:** 2025/01/18  
+**Changes**:  
+[ initial release ]
+
+**MySat boards support:**
+> *full:* v.1.5.2 - v.1.5.4 (no newer!)
