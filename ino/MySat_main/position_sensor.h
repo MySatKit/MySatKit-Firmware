@@ -1,4 +1,4 @@
-//for MPU - MySat accelerometer, gyroscope
+//for MPU9250 or MPU6500 - MySat accelerometer & gyroscope
 
 //used to determine the position of a satellite relative to the Earth's gravitational field
 
@@ -198,8 +198,6 @@ void calibrateMPU() {
 }
 
 void saveCalibration() {
-  if (!SPIFFS.begin(true)) return;
-
   File file = SPIFFS.open("/cal.dat", "w");
   if (file) {
     uint32_t magic = 0x6500ABCD;
@@ -211,8 +209,6 @@ void saveCalibration() {
 }
 
 void loadCalibration() {
-  if (!SPIFFS.begin(true)) return;
-
   File file = SPIFFS.open("/cal.dat", "r");
   if (file && file.size() >= 4 + sizeof(calibration)) {
     uint32_t magic;

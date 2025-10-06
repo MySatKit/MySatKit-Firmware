@@ -1,4 +1,19 @@
-// MySatKit-Firmware V.1.2
+/*
+ * MYSAT MAIN FIRMWARE 
+ * for ESP32-CAM				! select "AI Thinker ESP32-CAM" in Arduino IDE Boards Manager
+ *
+ *
+ * Main satellite firmware that simulates CubeSat operations and 
+ *   manages all subsystems of the MySat educational kit
+ *
+ * version: v.1.2
+ * author: MySat Developmet team
+ * license: Open Source (MIT) – github.com/mysatkit
+ *
+ * website: mysatkit.com
+ * 
+*/
+
 
 #include <Wire.h>
 #include "server.h"
@@ -22,6 +37,9 @@ void setup() {
   loadStateMotor();
   control_motor(stateMotor);
   Serial.begin(115200);
+   if (!SPIFFS.begin(true)) {
+    Serial.println("Failed to mount SPIFFS!");
+  }
   connectToWiFi();
   initStarLed();
   setTime();
@@ -44,11 +62,6 @@ void loop() {
 }
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
-  if (!SPIFFS.begin(true)) {
-    Serial.println("▲ SPIFFS mount failed!");
-    pauseToRead();
-    return false;
-  }
 
   File file = SPIFFS.open("/config.txt", "r");
   if (!file) {
