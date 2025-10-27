@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
+#include <LittleFS.h>  
 #include "sensors_data.h"
 #include "control.h"
 #include "base64.h"
@@ -12,7 +13,7 @@ const char* htmlContent = R"###(
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <link href="/bootstrap.css" rel="stylesheet">
     <style>
         body {
       background-color: #008080;
@@ -50,12 +51,12 @@ const char* htmlContent = R"###(
 }
 
 .stars {
-  background:#000 url(https://i.postimg.cc/hhFD7Nkf/apps-47636-13819498107583324-fb06b53a-4974-4acb-85e6-f6f363f85ab6-edec48d0-ec35-4a1f-8bf5-c455987b4a.png) repeat top center;
+  background:#000 url(/bg_stars.png) repeat top center;
   z-index: 0;
 }
 
 .twinkling {
-  background-image: url(https://i.postimg.cc/CLpNr4PF/twinkling.png);
+  background-image: url(/twinkling.png);;
   animation: 3s twinkle infinite;
   animation-timing-function: linear;
 }
@@ -152,51 +153,51 @@ const char* htmlContent = R"###(
 		.front {
 			background: blue;
 			transform: translateZ(50px);
-			background-image:url(https://i.ibb.co/wWJpx5h/front.png);
+			background-image:url(/cube_front.png);
 		}
 		
 		.left {
 			background: yellow;
 			transform: rotateY(-90deg) translateZ(50px);
-			background-image:url(https://i.ibb.co/jkf6TK6/side.png);
+			background-image:url(/cube_side.png);
 		}
 		
 		.right {
 			background: orange;
 			transform: rotateY(90deg) translateZ(50px);
-			background-image:url(https://i.ibb.co/jkf6TK6/side.png);
+			background-image:url(/cube_side.png);
 		}
 		
 		.top {
 			background: green;
 			transform: rotateX(90deg) translateZ(50px);
-			background-image:url(https://i.ibb.co/4ZZ0FJS/plate.png);
+			background-image:url(/cube_plate.png);
 		}
 		
 		.bottom {
 			background: black;
 			transform: rotateX(-90deg) translateZ(50px);
-			background-image:url(https://i.ibb.co/4ZZ0FJS/plate.png);
+			background-image:url(/cube_plate.png);
 		}
 		
 		.back {
 			background: brown;
 			transform: rotateY(180deg) translateZ(50px);
-			background-image:url(https://i.ibb.co/FDfxmRm/shield.png);
+			background-image:url(/cube_shield.png);
 		}
 		
 		.rightwing {
 			background: LightGreen;
 			transform-origin: 50% 0%;
 			transform: rotateY(90deg) translateZ(60px) rotateX(3deg);
-			background-image:url(https://i.ibb.co/MsrKsLG/solar.png);
+			background-image:url(/cube_solar.png);
 			width: 80px;
 		}
 		.leftwing {
 			background: LightGreen;
 			transform-origin: 50% 0%;
 			transform: rotateY(-90deg) translateZ(40px) rotateX(3deg);
-			background-image:url(https://i.ibb.co/MsrKsLG/solar.png);
+			background-image:url(/cube_solar.png);
 			width: 80px;
 		}
 		.leftwingback { /*днище левого крыла*/
@@ -232,7 +233,7 @@ const char* htmlContent = R"###(
     <div class="container-fluid">
     <div class="row">
       <div class="col-lg-5">
-        <img src="https://i.ibb.co/5RrGwm5/photo.png" alt="" id = "photoFromESP">
+        <img src="/photo_placeholder.png" alt="" id = "photoFromESP">
   <span id = "date_time_mysat" class = "datetime_font">Date and time: </span>
       </div>
       <div class = "col-lg-7">
@@ -357,6 +358,7 @@ const char* htmlContent = R"###(
     </div>    
     </div>
     </div>
+    <script src="/bootstrap.js"></script>
     
     <script>
 	
@@ -590,11 +592,8 @@ const char* htmlContent = R"###(
     
 
 fetchDataPeriodically();
-xhttp.send();
-
 
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 </body>
 </html>
 )###";
@@ -724,6 +723,27 @@ void initServer() {
   server.on("/light_on", HTTP_GET, light_on);
   server.on("/motor_on", HTTP_GET, motor_on);
   server.on("/get_photo", HTTP_GET, handleGetPhoto);
+
+  server.onNotFound([]() {
+    String path = server.uri();
+    if (LittleFS.exists(path)) {
+      String contentType = "text/plain";
+      if (path.endsWith(".html")) contentType = "text/html";
+      else if (path.endsWith(".css")) contentType = "text/css";
+      else if (path.endsWith(".js")) contentType = "application/javascript";
+      else if (path.endsWith(".png")) contentType = "image/png";
+      else if (path.endsWith(".jpg") || path.endsWith(".jpeg")) contentType = "image/jpeg";
+      else if (path.endsWith(".gif")) contentType = "image/gif";
+      else if (path.endsWith(".svg")) contentType = "image/svg+xml";
+
+      File file = LittleFS.open(path, "r");
+      server.streamFile(file, contentType);
+      file.close();
+      return;
+    }
+    server.send(404, "text/plain", "File Not Found");
+  });
+
   server.begin();
-  Serial.println("! HTTP server started");
+  Serial.println("HTTP server started");
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "sensors_data.h"
 #include "control.h"
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #define FIRMWARE_VERSION "v.1.2"
 #define OUTPUT_FREQUENCE 1500
 
@@ -42,7 +42,7 @@ void selectPlotterMode() {
 }
 
 void saveCallSign(const String& callSign) {
-  File file = SPIFFS.open("/callsign.txt", "w");
+  File file = LittleFS.open("/callsign.txt", "w");
   if (file) {
     file.println(callSign);
     file.close();
@@ -50,7 +50,7 @@ void saveCallSign(const String& callSign) {
 }
 
 void loadCallSign(String& callSign) {
-  File file = SPIFFS.open("/callsign.txt", "r");
+  File file = LittleFS.open("/callsign.txt", "r");
   if (file) {
     callSign = file.readStringUntil('\n');
     callSign.trim();

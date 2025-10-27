@@ -18,6 +18,7 @@
 #include <Wire.h>
 #include "server.h"
 #include "console.h"
+#include <LittleFS.h>
 
 String ssid = "";
 String password = "";
@@ -37,8 +38,9 @@ void setup() {
   loadStateMotor();
   control_motor(stateMotor);
   Serial.begin(115200);
-   if (!SPIFFS.begin(true)) {
-    Serial.println("Failed to mount SPIFFS!");
+   if (!LittleFS.begin(true)) {
+    Serial.println("Failed to mount LittleFS!");
+    return;
   }
   connectToWiFi();
   initStarLed();
@@ -63,7 +65,7 @@ void loop() {
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
 
-  File file = SPIFFS.open("/config.txt", "r");
+  File file = LittleFS.open("/config.txt", "r");
   if (!file) {
     Serial.println("▲ No config.txt found");
     pauseToRead();
@@ -80,11 +82,11 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   if (lineCount < 3) {
     Serial.println("▲ Invalid config.txt: less than 3 lines");
     pauseToRead();
-    SPIFFS.remove("/config.txt");
+    LittleFS.remove("/config.txt");
     return false;
   }
 
-  file = SPIFFS.open("/config.txt", "r");
+  file = LittleFS.open("/config.txt", "r");
   useWiFi = file.readStringUntil('\n');
   useWiFi.trim();
   ssid = file.readStringUntil('\n');
@@ -103,7 +105,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
 }
 
 void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi) {  //write data to a file
-  File file = SPIFFS.open("/config.txt", "w");
+  File file = LittleFS.open("/config.txt", "w");
   if (!file) {
     Serial.println("▲ Can`t write config.txt");
     pauseToRead();
