@@ -51,7 +51,7 @@ const char* htmlContent = R"###(
 }
 
 .stars {
-  background:#000 url(/bg_stars.png) repeat top center;
+  background:#000 url(/apps_bg.png) repeat top center;
   z-index: 0;
 }
 

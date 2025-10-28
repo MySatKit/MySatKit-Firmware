@@ -38,10 +38,13 @@ void setup() {
   loadStateMotor();
   control_motor(stateMotor);
   Serial.begin(115200);
-   if (!LittleFS.begin(true)) {
-    Serial.println("Failed to mount LittleFS!");
-    return;
+  if(!LittleFS.begin(true)){
+      Serial.println("Failed to mount LittleFS!");
+      return;
   }
+
+  Serial.println("LittleFS mounted successfully.");
+
   connectToWiFi();
   initStarLed();
   setTime();
@@ -60,7 +63,6 @@ void loop() {
   pointer_of_sensors* data = get_sensors_data();
   outputData(data);
   generateSensorsDataJson(data, stateMotor);
-
 }
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
@@ -157,7 +159,7 @@ void promptUserForWiFi(String& ssid, String& password) {  //receive data from th
   }
 }
 
-void tryConnectWiFi() {            //used for connecting to Wi-Fi within other functions
+void tryConnectWiFi() {  //used for connecting to Wi-Fi within other functions
   while (true) {
     Serial.print("Connecting to WiFi: ");
     Serial.println(ssid);
@@ -185,7 +187,7 @@ void tryConnectWiFi() {            //used for connecting to Wi-Fi within other f
   }
 }
 
-void setWiFi() {                //Handles enabling or disabling Wi-Fi based on user input
+void setWiFi() {  //Handles enabling or disabling Wi-Fi based on user input
   unsigned long startTime = millis();
   unsigned long lastRepeat = startTime;
 
