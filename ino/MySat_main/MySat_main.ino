@@ -19,6 +19,9 @@
 #include "server.h"
 #include "console.h"
 #include <LittleFS.h>
+#define BSEC_SAVE_INTERVAL 3600000UL
+
+unsigned long lastSaveTime = 0;  // for save BSEC data
 
 String ssid = "";
 String password = "";
@@ -38,15 +41,16 @@ void setup() {
   loadStateMotor();
   control_motor(stateMotor);
   Serial.begin(115200);
-  if(!LittleFS.begin(true)){
-      Serial.println("Failed to mount LittleFS!");
-      return;
+  if (!LittleFS.begin(true)) {
+    Serial.println("Failed to mount LittleFS!");
+    return;
   }
 
   Serial.println("LittleFS mounted successfully.");
 
   connectToWiFi();
   initStarLed();
+  initSignalLed();
   setTime();
   loadCallSign(callSign);
   Wire.begin(def_SDA, def_SCL);
@@ -59,10 +63,19 @@ void setup() {
 
 void loop() {
   handleCommands();
+  updateSignalLed();
+  evaluateSystemState();
 
   pointer_of_sensors* data = get_sensors_data();
   outputData(data);
   generateSensorsDataJson(data, stateMotor);
+  unsigned long now = millis();
+  if (now - lastSaveTime >= BSEC_SAVE_INTERVAL) {
+    saveState(iaqSensor);
+
+    lastSaveTime = now;
+    Serial.println("BSEC State saved.");
+  }
 }
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {

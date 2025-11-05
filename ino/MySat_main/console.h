@@ -184,22 +184,35 @@ void outputDataText(pointer_of_sensors* data_) {
   Serial.println("\n\n\n" + callSign + "(" FIRMWARE_VERSION ")");
 
   if (init_status.bme_) {
-    Serial.println("===ENVIRONMENT:==================");
-    Serial.print("  Temperature = ");
-    Serial.print(data_->bme_->temperature);
-    Serial.println(F(" *C"));
+    if (data_->bme_->data_available) {
+      Serial.println("===ENVIRONMENT:==================");
+      Serial.print("  Temperature = ");
+      Serial.print(data_->bme_->temperature);
+      Serial.println(F(" *C"));
 
-    Serial.print("  Pressure = ");
-    Serial.print(data_->bme_->pressure);
-    Serial.println(" hPa");
+      Serial.print("  Pressure = ");
+      Serial.print(data_->bme_->pressure);
+      Serial.println(" hPa");
 
-    Serial.print("  Humidity = ");
-    Serial.print(data_->bme_->humidity);
-    Serial.println(" %");
+      Serial.print("  Humidity = ");
+      Serial.print(data_->bme_->humidity);
+      Serial.println(" %");
 
-    Serial.print("  Gas resistance = ");
-    Serial.print(data_->bme_->gas_resistance);
-    Serial.println(" KOhms");
+      Serial.print("  Gas resistance = ");
+      Serial.print(data_->bme_->gas_resistance);
+      Serial.println(" KOhms");
+
+      Serial.print("  IAQ = ");
+      Serial.println(data_->bme_->iaq);
+
+      Serial.print(" IAQ Accuracy: ");
+      Serial.println(data_->bme_->iaq_accuracy);
+
+    } else {
+      Serial.println("===ENVIRONMENT:==================");
+      Serial.println(" IAQ Sensor Warming Up (5 min)...");
+    }
+
   } else {
     Serial.println("▲ BME680 (environmental sensor) not found!");
   }
@@ -219,7 +232,7 @@ void outputDataText(pointer_of_sensors* data_) {
       Serial.printf("  z = %s%d   deg\n", (yaw > 0 ? "+" : ""), yaw);
     }
   } else {
-    Serial.println("▲ MPU**** module (position sensor) not found!"); 
+    Serial.println("▲ MPU**** module (position sensor) not found!");
   }
 
   if (init_status.ads_) {
@@ -316,15 +329,17 @@ void outputDataText(pointer_of_sensors* data_) {
   Serial.println(stateLight ? "ON" : "OFF");
 
   if (useWiFi.equalsIgnoreCase("Yes")) {
-      server.handleClient();
-      Serial.println("================================");
-      Serial.print("CONNECT VIA WIFI “"); Serial.print(ssid); Serial.println("”:");
-      Serial.println(WiFi.localIP());
-      Serial.println("================================");
-    } else {
-      Serial.println("================================");
-      Serial.println("WiFi not configured. Use the command: SetWIFI");
-    }
+    server.handleClient();
+    Serial.println("================================");
+    Serial.print("CONNECT VIA WIFI “");
+    Serial.print(ssid);
+    Serial.println("”:");
+    Serial.println(WiFi.localIP());
+    Serial.println("================================");
+  } else {
+    Serial.println("================================");
+    Serial.println("WiFi not configured. Use the command: SetWIFI");
+  }
 }
 
 void outputDataPlotter(pointer_of_sensors* data_) {

@@ -36,6 +36,12 @@ bool init_camera() {
     Serial.printf("▲ Camera init failed with error 0x%x", err);
     return false;
   }
+
+  camera_fb_t* fb = esp_camera_fb_get(); 
+    if (fb) {
+        esp_camera_fb_return(fb); 
+    }
+
   return true;
 }
 
