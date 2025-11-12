@@ -37,11 +37,6 @@ bool init_camera() {
     return false;
   }
 
-  camera_fb_t* fb = esp_camera_fb_get(); 
-    if (fb) {
-        esp_camera_fb_return(fb); 
-    }
-
   return true;
 }
 

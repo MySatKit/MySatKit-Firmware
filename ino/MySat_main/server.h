@@ -4,7 +4,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
-#include <LittleFS.h>  
+#include <LittleFS.h>
 #include "sensors_data.h"
 #include "control.h"
 #include "base64.h"
@@ -681,7 +681,7 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
     json_sensors["roll"] = data_->mpu_->roll;
   } else {
     json_sensors["yaw"] = 0;
-    json_sensors["pitch"] = 0;  
+    json_sensors["pitch"] = 0;
     json_sensors["roll"] = 0;
   }
   json_sensors["motor_state"] = motor_state;
@@ -705,6 +705,12 @@ void handleGetData() {
 void handleGetPhoto() {
   Serial.println("Create Photo");
   rtc_struct* current_time = get_rtc();
+  camera_fb_t* old_fb = esp_camera_fb_get();
+  if (old_fb) {
+    esp_camera_fb_return(old_fb);
+    Serial.println("Initial camera frame discarded.");
+  }
+
   camera_fb_t* fb = esp_camera_fb_get();
 
   while (!fb) {
@@ -714,9 +720,9 @@ void handleGetPhoto() {
     }
   }
   if (!fb) {
-     server.send(500, "text/plain", "Camera capture failed");
-     return; 
-    }
+    server.send(500, "text/plain", "Camera capture failed");
+    return;
+  }
   Serial.print("Get photo length: ");
   Serial.println(fb->len);
   String base64String = base64::encode(fb->buf, fb->len);
@@ -737,8 +743,6 @@ void handleGetPhoto() {
 
   Serial.print("Photo sent with timestamp: ");
   Serial.println(timestamp);
-
-  esp_camera_fb_return(fb);
 }
 
 bool stateLight = false;
