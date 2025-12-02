@@ -98,9 +98,22 @@ const char* htmlContent = R"###(
 
 }
 .gas-res-text{
-  padding-top:35%;
-  padding-bottom:35%;
+  padding-top:28%;
+  padding-bottom:0;
   margin:0;
+  font-size: 24px;
+}
+
+#gasResistance {
+  position: absolute; 
+  top: 55%;
+  left: 50%; 
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #CCCCCC; 
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 .box { 
@@ -118,10 +131,6 @@ const char* htmlContent = R"###(
   bottom: 0;
   right: 0;
 }
-
-
-
-
 
     .satelite-box {
       position: absolute;
@@ -226,7 +235,7 @@ const char* htmlContent = R"###(
     <table>
       <tr>
         <td>
-          <h1>MySat - <span id= "callSign">MYSAT</span></h1>
+          <h1 id= "callSign">MySat</h1>
         </td>
         <td>
           <h6 style="padding-left: 20px; vertical-align:bottom;"></h6>
@@ -337,6 +346,7 @@ const char* htmlContent = R"###(
             <div class="box">
         <div class = "gas-res-border" id = "gas-res-border">
           <h3 class = "gas-res-text" id ="gas-res-text">IAQ</h3>
+          <p id="gasResistance" class="gas-res-subtext"></p>
                 </div>
       </div>
       <p id="data-quality-text" style="font-size: 14px; margin-top: 10px;"></p>
@@ -531,6 +541,7 @@ const char* htmlContent = R"###(
                 document.getElementById("temperature").textContent = responseData.temperature.toFixed(2) + ' C';
                 document.getElementById("pressure").textContent = responseData.pressure.toFixed(2)+ ' Pa';
                 document.getElementById("humidity").textContent = responseData.humidity.toFixed(2) + ' %';
+                document.getElementById("gasResistance").textContent = 'G.\u03A9 = ' + responseData.gas_resistance.toFixed(2) + ' KOhm';
                 
                 document.getElementById("roll").textContent = Math.round(responseData.roll);
                 document.getElementById("pitch").textContent = Math.round(responseData.pitch);
@@ -560,25 +571,27 @@ const char* htmlContent = R"###(
 
                     if (iaqAccuracy === 1) {
                         qualityText = 'Data quality: ⚫️⚪️⚪️ LOW';
-                        color = '#DAA520'; 
+                        color = '#A9A9A9'; 
                     } else if (iaqAccuracy === 2) {
-                        qualityText = 'Data quality: ⚫️⚫️⚪️ Medium';
-                        color = '#FFD700'; 
+                        qualityText = 'Data quality: ⚫️⚫️⚪️ MEDIUM';
                     } else if (iaqAccuracy === 3) {
-                        qualityText = 'Data quality: ⚫️⚫️⚫️ High';
-                        
-                        if (score <= 50) {
-                            color = '#00FF00'; // Excellent
-                        } else if (score <= 100) {
-                            color = '#9ACD32'; // Good
-                        } else if (score <= 150) {
-                            color = '#FFA500'; // Lightly Polluted
-                        } else if (score <= 200) {
-                            color = '#FF4500'; // Moderately Polluted
-                        } else {
-                            color = '#8B0000'; // Heavily Polluted
-                        }
+                        qualityText = 'Data quality: ⚫️⚫️⚫️ HIGH';
                     }
+                        
+                    if (iaqAccuracy >= 2) {
+        
+                      if (score <= 50) {
+                        color = '#00FF00'; // Excellent
+                    } else if (score <= 100) {
+                        color = '#9ACD32'; // Good
+                    } else if (score <= 150) {
+                        color = '#FFA500'; // Lightly Polluted
+                    } else if (score <= 200) {
+                        color = '#FF4500'; // Moderately Polluted
+                    } else {
+                        color = '#8B0000'; // Heavily Polluted
+                    }
+                }
                 }
 
                 iaqElement.textContent = iaqStatusText;
@@ -704,7 +717,6 @@ void handleGetData() {
 
 void handleGetPhoto() {
   Serial.println("Create Photo");
-  rtc_struct* current_time = get_rtc();
   camera_fb_t* old_fb = esp_camera_fb_get();
   if (old_fb) {
     esp_camera_fb_return(old_fb);
@@ -723,6 +735,7 @@ void handleGetPhoto() {
     server.send(500, "text/plain", "Camera capture failed");
     return;
   }
+  rtc_struct* current_time = get_rtc();
   Serial.print("Get photo length: ");
   Serial.println(fb->len);
   String base64String = base64::encode(fb->buf, fb->len);

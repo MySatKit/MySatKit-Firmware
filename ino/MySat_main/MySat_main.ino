@@ -63,12 +63,10 @@ void setup() {
 
 void loop() {
   handleCommands();
-  updateSignalLed();
-  evaluateSystemState();
+  checkSystemState();
 
   pointer_of_sensors* data = get_sensors_data();
   outputData(data);
-  generateSensorsDataJson(data, stateMotor);
   unsigned long now = millis();
   if (now - lastSaveTime >= BSEC_SAVE_INTERVAL) {
     saveState(iaqSensor);
@@ -229,6 +227,8 @@ void setWiFi() {  //Handles enabling or disabling Wi-Fi based on user input
 
   } else {
     saveWiFiConfig("none", "none", useWiFi);
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
     Serial.println("WiFi disabled by user.");
     pauseToRead();
   }

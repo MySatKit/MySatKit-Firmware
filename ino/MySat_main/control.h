@@ -58,7 +58,7 @@ void setSignalLed(uint8_t r, uint8_t g, uint8_t b, LedMode mode,        //config
   signalStrip.setBrightness(brightness);
 }
 
-void updateSignalLed() {      //tracks which LED mode should be used; called in the loop() function
+void updateSignalLed() {      //tracks which LED mode should be used; 
   unsigned long now = millis();
   switch (signalLed.mode) {
     case LED_OFF:
@@ -78,13 +78,23 @@ void updateSignalLed() {      //tracks which LED mode should be used; called in 
   signalStrip.show();
 }
 
-void evaluateSystemState() {     //monitors the system state and triggers appropriate LED indication; called in loop()
+void evaluateSystemState() {     //monitors the system state and triggers appropriate LED indication; 
   if (WiFi.status() != WL_CONNECTED) {
     setSignalLed(255, 255, 0, LED_BLINK, SIGNALLED_BRIGHTNESS, 200);
     return;
   }
 
   setSignalLed(0, 0, 255, LED_SOLID);
+}
+
+unsigned long lastSystemCheck = 0;
+
+void checkSystemState(){
+  if(millis() - lastSystemCheck > 5000){
+    evaluateSystemState();
+    lastSystemCheck = millis();
+  }
+  updateSignalLed();
 }
 
 void control_light(bool state_light) {  //turns the STAR LED on or off based on the input parameter (true/false)
