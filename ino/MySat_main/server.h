@@ -644,9 +644,7 @@ const char* htmlContent = R"###(
         };
         xhttp.open('GET', '/get_data', true);
         xhttp.send();
-      }, 2000);
-
-        
+      }, 2000);   
   }
     
 

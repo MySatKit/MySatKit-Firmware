@@ -62,6 +62,13 @@ void saveBsecState(){
 }
 
 bool initBME(){
+  Wire.beginTransmission(BME680_I2C_ADDR);
+  byte error = Wire.endTransmission();
+
+  if (error != 0) {
+    Serial.println(BME680_I2C_ADDR, HEX);
+    return false;
+  }
   iaqSensor.begin(BME680_I2C_ADDR, Wire);
   
   if (iaqSensor.bsecStatus != BSEC_OK) {
