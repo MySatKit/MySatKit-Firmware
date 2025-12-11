@@ -19,9 +19,6 @@
 #include "server.h"
 #include "console.h"
 #include <LittleFS.h>
-#define BSEC_SAVE_INTERVAL 3600000UL
-
-unsigned long lastSaveTime = 0;  // for save BSEC data
 
 String ssid = "";
 String password = "";
@@ -61,19 +58,23 @@ void setup() {
   //Serial.println("If you want to change WiFi data use the command: SetWIFI ");
 }
 
+unsigned long lastSensorUpdate = 0;
+const unsigned long SENSOR_INTERVAL = 500;
+
 void loop() {
+  if (useWiFi.equalsIgnoreCase("Yes")) {
+    server.handleClient(); 
+  }
   handleCommands();
   checkSystemState();
 
-  pointer_of_sensors* data = get_sensors_data();
-  outputData(data);
   unsigned long now = millis();
-  if (now - lastSaveTime >= BSEC_SAVE_INTERVAL) {
-    saveState(iaqSensor);
-
-    lastSaveTime = now;
-    Serial.println("BSEC State saved.");
+  if (now - lastSensorUpdate >= SENSOR_INTERVAL) {
+     lastSensorUpdate = now;
+     pointer_of_sensors* data = get_sensors_data();
+     outputData(data);
   }
+  saveBsecState();
 }
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {

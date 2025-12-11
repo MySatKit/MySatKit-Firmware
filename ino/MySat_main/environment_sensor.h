@@ -7,6 +7,9 @@
 #include <Wire.h>
 #include <Preferences.h> 
 #define BME680_I2C_ADDR 0x77 
+#define BSEC_SAVE_INTERVAL 3600000UL
+
+unsigned long lastSaveTime = 0;  // for save BSEC data
 
 Bsec iaqSensor;
 
@@ -46,6 +49,16 @@ void saveState(Bsec &iaqSensor) {
   preferences.putBytes("bsec_state", state, state_len);
   preferences.end();
   Serial.println("BSEC state saved to NVS.");
+}
+
+void saveBsecState(){
+  unsigned long now = millis();
+  if (now - lastSaveTime >= BSEC_SAVE_INTERVAL) {
+    saveState(iaqSensor);
+
+    lastSaveTime = now;
+    Serial.println("BSEC State saved.");
+  }
 }
 
 bool initBME(){

@@ -79,18 +79,8 @@ void reactToCommand(String str) {
 }
 
 bool output = true;
-unsigned long timeStop = 0;
 void turnConsole() {
-  if (output) {
-    output = false;
-    timeStop = millis();
-  }
-}
-
-void checkConsoleTimer() {
-  if (!output && millis() - timeStop >= 3000) {
-    output = true;
-  }
+  output = !output;
 }
 
 void handleCommands() {  // read commands for changing data
@@ -329,7 +319,6 @@ void outputDataText(pointer_of_sensors* data_) {
   Serial.println(stateLight ? "ON" : "OFF");
 
   if (useWiFi.equalsIgnoreCase("Yes")) {
-    server.handleClient();
     Serial.println("================================");
     Serial.print("CONNECT VIA WIFI “");
     Serial.print(ssid);
@@ -423,7 +412,6 @@ void outputDataPlotter(pointer_of_sensors* data_) {
 unsigned long lastOutput = 0;
 void outputData(pointer_of_sensors* data_) {
   unsigned long now = millis();
-  checkConsoleTimer();
 
   if (now - lastOutput >= OUTPUT_FREQUENCE && output) {
     if (currentMode == text) {

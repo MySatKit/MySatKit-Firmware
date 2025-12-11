@@ -387,10 +387,22 @@ const char* htmlContent = R"###(
           return btoa(binary);
         }
         function toggleLED() {
+          console.log("TurnLED CLICK:", new Date().toISOString());
+
           var xhttp = new XMLHttpRequest();
+
+          xhttp.addEventListener("loadstart", () => {
+            console.log("TurnLED HTTP SENT:", new Date().toISOString());
+          });
+
+          xhttp.onload = () => {
+            console.log("TurnLED RESPONSE RECEIVED:", new Date().toISOString());
+          };
+
           xhttp.open('GET', '/light_on', true);
           xhttp.send();
         }
+
         function getPhoto() {
           var xhttp = new XMLHttpRequest();
           xhttp.onreadystatechange = function() {
@@ -519,13 +531,18 @@ const char* htmlContent = R"###(
   }
   }
     
-    
+  var isRequestPending = false;
   function fetchDataPeriodically() {
       setInterval(function() {
+        if (isRequestPending) {
+          console.log("Skipping request: previous one is still pending...");
+          return; 
+        }
         var xhttp = new XMLHttpRequest();
-
+        isRequestPending = true;
         xhttp.onreadystatechange = function() {
             if (xhttp.readyState === 4) {
+              isRequestPending = false;
               if (xhttp.status === 200) {
                 var responseData = JSON.parse(xhttp.responseText);
                 let target = responseData.motor_state ? 75 : 3;
@@ -619,6 +636,11 @@ const char* htmlContent = R"###(
                 console.error('Error fetching data');
               }
             }
+        };
+        xhttp.timeout = 4000; 
+        xhttp.ontimeout = function () { 
+          console.log("Timeout!"); 
+          isRequestPending = false; 
         };
         xhttp.open('GET', '/get_data', true);
         xhttp.send();
@@ -761,12 +783,14 @@ void handleGetPhoto() {
 bool stateLight = false;
 
 void light_on() {
-  stateLight = !stateLight;
-  control_light(stateLight);
+    stateLight = !stateLight;
+    control_light(stateLight);
+    server.send(200, "text/plain", "OK");
 }
 
 void motor_on() {
   setStateMotor(!stateMotor);
+  server.send(200, "text/plain", "OK");
 }
 
 void initServer() {
