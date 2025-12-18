@@ -10,7 +10,8 @@ extern String ssid;
 extern String password;
 String callSign = "MYSAT";
 enum TelemetryMode { text,
-                     plotter };
+                     plotter,
+                     debug };
 TelemetryMode currentMode = text;
 
 enum PlotterMode { environment,
@@ -142,15 +143,21 @@ void handleCommands() {  // read commands for changing data
       } else if (inputBuffer.equalsIgnoreCase("SwitchTelemetry")) {
         if (currentMode == text) {
           currentMode = plotter;
-          reactToCommand("Switch telemetry to plotter.");
+          debug_mode_active = false;
+          reactToCommand("Mode: PLOTTER.");
           selectPlotterMode();
-        } else {
+        } else if (currentMode == plotter) {
+          currentMode = debug;
+          debug_mode_active = true;
+          reactToCommand("Mode: DEBUG.");
+        }else if(currentMode == debug){
           currentMode = text;
-          reactToCommand("Switch telemetry to text.");
+          debug_mode_active = false;
+          reactToCommand("Mode: TEXT");
         }
         recognized = true;
 
-      } else if (inputBuffer.equalsIgnoreCase("PlotterMode")) {
+      } else if (inputBuffer.equalsIgnoreCase("SelectPlotterMode")) {
         if (currentMode == plotter) {
           selectPlotterMode();
         } else {

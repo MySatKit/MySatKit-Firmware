@@ -664,6 +664,7 @@ const size_t bufferSize = JSON_OBJECT_SIZE(35);
 DynamicJsonDocument json_sensors(bufferSize);
 
 String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
+  unsigned long t_start = millis();
   json_string = "";
   if (init_status.ads_) {
     json_sensors["ph1"] = data_->ads_->ph1;
@@ -720,23 +721,38 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
   json_sensors["motor_state"] = motor_state;
   json_sensors["callSign"] = callSign;
   serializeJson(json_sensors, json_string);
-  //Serial.println(json_string);
+
+  if(debug_mode_active){
+    unsigned long dt = t_start - millis();
+    if (dt > 1000000) dt = 0;
+    logDebug("JSON Generated: " + String(json_string.length()) + " bytes in " + String(dt) + " ms");
+    Serial.println(json_string);
+  }
   return &json_string;
 }
 
 void handleRoot() {
-  Serial.println(json_string);
+  //Serial.println(json_string);
+  logDebug("[WEB] Request: / (Root)");
   server.send(200, "text/html", htmlContent);
+  logDebug("[WEB] Sent index.html");
 }
 
 void handleGetData() {
+  if (debug_mode_active) {
+    logDebug("[WEB] Request: /get_data | Free Heap: " + String(ESP.getFreeHeap()) + " bytes");
+  }
   pointer_of_sensors* data = get_sensors_data();
   generateSensorsDataJson(data, stateMotor);
   server.send(200, "text/plain", json_string);
 }
 
 void handleGetPhoto() {
+  logDebug("[PHOTO] --- Request: /get_photo ---");
+  unsigned long t_total_start = millis();
+
   Serial.println("Create Photo");
+  unsigned long t_cap = millis();
   camera_fb_t* old_fb = esp_camera_fb_get();
   if (old_fb) {
     esp_camera_fb_return(old_fb);
@@ -752,14 +768,14 @@ void handleGetPhoto() {
     }
   }
   if (!fb) {
+    logDebug("[PHOTO] Error: Capture Failed");
     server.send(500, "text/plain", "Camera capture failed");
     return;
   }
+  logDebug("[PHOTO] Captured: " + String(fb->len) + " bytes in " + String(millis() - t_cap) + " ms");
+
   rtc_struct* current_time = get_rtc();
-  Serial.print("Get photo length: ");
-  Serial.println(fb->len);
-  String base64String = base64::encode(fb->buf, fb->len);
-  //Serial.println(base64String);
+
   char timestamp[25];
   snprintf(timestamp, sizeof(timestamp), "%04d-%02d-%02dT%02d:%02d:%02d",
            current_time->year_,
@@ -768,11 +784,20 @@ void handleGetPhoto() {
            current_time->hour_,
            current_time->minute_,
            current_time->second_);
+  
+  logDebug("[PHOTO] Encoding Base64...");
+  unsigned long t_enc = millis();
+  String base64String = base64::encode(fb->buf, fb->len);
+  logDebug("[PHOTO] Encoded in " + String(millis() - t_enc) + " ms. StrLen: " + String(base64String.length()));
+
+  unsigned long t_send = millis();
   server.sendHeader("X-Photo-Timestamp", timestamp);
   server.sendHeader("Cache-Control", "no-cache");
-
   server.send(200, "text/plain", base64String);
+  logDebug("[PHOTO] Sent in " + String(millis() - t_send) + " ms");
+
   esp_camera_fb_return(fb);
+  logDebug("[PHOTO] --- TOTAL TIME: " + String(millis() - t_total_start) + " ms ---");
 
   Serial.print("Photo sent with timestamp: ");
   Serial.println(timestamp);
@@ -781,14 +806,18 @@ void handleGetPhoto() {
 bool stateLight = false;
 
 void light_on() {
-    stateLight = !stateLight;
-    control_light(stateLight);
-    server.send(200, "text/plain", "OK");
+  logDebug("[WEB] Request: /light_on");
+  stateLight = !stateLight;
+  control_light(stateLight);
+  server.send(200, "text/plain", "OK");
+  logDebug("[WEB] LED Toggled");
 }
 
 void motor_on() {
+  logDebug("[WEB] Request: /motor_on");
   setStateMotor(!stateMotor);
   server.send(200, "text/plain", "OK");
+  logDebug("[WEB] Motor Toggled");
 }
 
 void initServer() {

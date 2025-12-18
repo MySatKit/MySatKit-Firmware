@@ -11,6 +11,17 @@
 #include <ArduinoJson.h>
 #include "power_measure.h"
 
+extern bool debug_mode_active;
+
+void logDebug(String message){
+  if(debug_mode_active){
+    Serial.print("[");
+    Serial.print(millis());
+    Serial.print(" ms] ");
+    Serial.println(message);
+  }
+}
+
 
 struct pointer_of_sensors{
   bme_struct * bme_;
@@ -39,20 +50,34 @@ void initSensors(){
 }
 
 pointer_of_sensors * get_sensors_data(){
+  logDebug("---Reading Sensors START---");
   if (init_status.bme_){
+    unsigned long t = millis();
     pointers.bme_ = get_bme_data(); 
+    unsigned long dt = millis() - t;
+    if (debug_mode_active) logDebug("BME680 Read: " + String(dt) + " ms");
   }
   if (init_status.mpu_){
+    unsigned long t = millis();
     pointers.mpu_ = get_mpu_data();
+    unsigned long dt = millis() - t;
+    if (debug_mode_active) logDebug("MPU**** Read: " + String(dt) + " ms");
   }
   if (init_status.ads_){
+    unsigned long t = millis();
     pointers.ads_ = get_ads_data();
+    unsigned long dt = millis() - t;
+    if (debug_mode_active) logDebug("ADS1015 Read: " + String(dt) + " ms");
   }
   if(init_status.ina_){
+    unsigned long t = millis();
     pointers.ina_ = get_ina_data();
+    unsigned long dt = millis() - t;
+    if (debug_mode_active) logDebug("INA3221 Read: " + String(dt) + " ms");
   }
   if (init_status.rtc_){
       pointers.rtc_ = get_rtc();
   }
+  logDebug("---Reading Sensors END---");
   return &pointers;
 }

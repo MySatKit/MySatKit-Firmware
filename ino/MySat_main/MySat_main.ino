@@ -14,7 +14,6 @@
  * 
 */
 
-
 #include <Wire.h>
 #include "server.h"
 #include "console.h"
@@ -23,6 +22,8 @@
 String ssid = "";
 String password = "";
 String useWiFi = "";
+
+bool debug_mode_active = false;
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi);
 void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi);
