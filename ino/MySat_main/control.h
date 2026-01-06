@@ -9,9 +9,6 @@
 #define SIGNALLED_BRIGHTNESS 20
 #define STARLED_BRIGHTNESS 65
 #define STARLED_PWM_CHANNEL 0
-
-#define STARLED_BRIGHTNESS 65
-#define STARLED_PWM_CHANNEL 0
 #define EEPROM_ADDR_STATE_MOTOR 0
 
 bool stateMotor;
@@ -145,4 +142,10 @@ bool setStateMotor(bool newState) {
     return true;
   }
   return false;
+}
+
+void setRadio(){
+  Wire.beginTransmission(8);
+  Wire.write(byte(3));
+  Wire.endTransmission();
 }

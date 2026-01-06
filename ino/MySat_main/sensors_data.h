@@ -22,7 +22,6 @@ void logDebug(String message){
   }
 }
 
-
 struct pointer_of_sensors{
   bme_struct * bme_;
   mpu * mpu_;

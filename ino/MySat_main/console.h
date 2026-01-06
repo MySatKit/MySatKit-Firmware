@@ -164,6 +164,12 @@ void handleCommands() {  // read commands for changing data
           Serial.println("Switch to plotter mode first (SwitchTelemetry)");
         }
         recognized = true;
+
+      } else if(inputBuffer.equalsIgnoreCase("SetRadio")){
+        setRadio();
+        recognized = true;
+        reactToCommand("Radio(HC-12) AT-config mode activated");
+        
       }
 
       if (inputBuffer.length() >= 3 && !recognized) {
