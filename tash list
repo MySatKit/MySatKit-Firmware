@@ -1,0 +1,205 @@
+[1mdiff --git a/ino/MySat_main/console.h b/ino/MySat_main/console.h[m
+[1mindex 206730f..79cf584 100644[m
+[1m--- a/ino/MySat_main/console.h[m
+[1m+++ b/ino/MySat_main/console.h[m
+[36m@@ -169,7 +169,6 @@[m [mvoid handleCommands() {  // read commands for changing data[m
+         setRadio();[m
+         recognized = true;[m
+         reactToCommand("Radio(HC-12) AT-config mode activated");[m
+[31m-        [m
+       }[m
+ [m
+       if (inputBuffer.length() >= 3 && !recognized) {[m
+[1mdiff --git a/ino/MySat_main/control.h b/ino/MySat_main/control.h[m
+[1mindex e9e76ee..c1326d0 100644[m
+[1m--- a/ino/MySat_main/control.h[m
+[1m+++ b/ino/MySat_main/control.h[m
+[36m@@ -7,6 +7,9 @@[m
+ #include <Adafruit_NeoPixel.h>[m
+ [m
+ #define SIGNALLED_BRIGHTNESS 20[m
+[32m+[m[32m#define STARLED_BRIGHTNESS 65[m
+[32m+[m[32m#define STARLED_PWM_CHANNEL 0[m
+[32m+[m
+ #define STARLED_BRIGHTNESS 65[m
+ #define STARLED_PWM_CHANNEL 0[m
+ #define EEPROM_ADDR_STATE_MOTOR 0[m
+[36m@@ -142,10 +145,4 @@[m [mbool setStateMotor(bool newState) {[m
+     return true;[m
+   }[m
+   return false;[m
+[31m-}[m
+[31m-[m
+[31m-void setRadio(){[m
+[31m-  Wire.beginTransmission(8);[m
+[31m-  Wire.write(byte(3));[m
+[31m-  Wire.endTransmission();[m
+ }[m
+\ No newline at end of file[m
+[1mdiff --git a/ino/MySat_main/environment_sensor.h b/ino/MySat_main/environment_sensor.h[m
+[1mindex 2915654..5d86bfe 100644[m
+[1m--- a/ino/MySat_main/environment_sensor.h[m
+[1m+++ b/ino/MySat_main/environment_sensor.h[m
+[36m@@ -5,23 +5,23 @@[m
+ [m
+ #include "bsec.h"[m
+ #include <Wire.h>[m
+[31m-#include <Preferences.h>[m
+[31m-#define BME680_I2C_ADDR 0x77[m
+[32m+[m[32m#include <Preferences.h>[m[41m [m
+[32m+[m[32m#define BME680_I2C_ADDR 0x77[m[41m [m
+ #define BSEC_SAVE_INTERVAL 3600000UL[m
+ [m
+ unsigned long lastSaveTime = 0;  // for save BSEC data[m
+ [m
+ Bsec iaqSensor;[m
+ [m
+[31m-struct bme_struct {[m
+[31m-  float temperature;[m
+[31m-  float humidity;[m
+[31m-  float gas_resistance;[m
+[31m-  float pressure;[m
+[31m-  float iaq;[m
+[31m-  int iaq_accuracy;[m
+[31m-  bool data_available = false;   // for warming up sensor in the beginning and not to send just 0[m
+[31m-  bool first_save_done = false;  // for first save data if sensor do not work for 1 hour(save data by timer in loop())[m
+[32m+[m[32mstruct bme_struct{[m
+[32m+[m[32m    float temperature;[m
+[32m+[m[32m    float humidity;[m
+[32m+[m[32m    float gas_resistance;[m[41m [m
+[32m+[m[32m    float pressure;[m
+[32m+[m[32m    float iaq;[m[41m      [m
+[32m+[m[32m    int iaq_accuracy;[m
+[32m+[m[32m    bool data_available = false; // for warming up sensor in the beginning and not to send just 0[m
+[32m+[m[32m    bool first_save_done = false; // for first save data if sensor do not work for 1 hour(save data by timer in loop())[m
+ } bme_data;[m
+ [m
+ Preferences preferences;[m
+[36m@@ -31,9 +31,9 @@[m [mvoid loadState(Bsec &iaqSensor) {[m
+   if (preferences.isKey("bsec_state")) {[m
+     uint8_t state[BSEC_MAX_STATE_BLOB_SIZE];[m
+     size_t n = preferences.getBytes("bsec_state", state, BSEC_MAX_STATE_BLOB_SIZE);[m
+[31m-[m
+[31m-    iaqSensor.setState(state);[m
+[31m-[m
+[32m+[m[41m    [m
+[32m+[m[32m    iaqSensor.setState(state);[m[41m [m
+[32m+[m[41m    [m
+     Serial.println("BSEC State loaded from NVS.");[m
+   } else {[m
+     Serial.println("BSEC State not found, starting fresh calibration.");[m
+[36m@@ -44,14 +44,14 @@[m [mvoid loadState(Bsec &iaqSensor) {[m
+ void saveState(Bsec &iaqSensor) {[m
+   preferences.begin("bsec_state", false);[m
+   uint8_t state[BSEC_MAX_STATE_BLOB_SIZE];[m
+[31m-  uint8_t state_len = BSEC_MAX_STATE_BLOB_SIZE;[m
+[31m-  iaqSensor.getState(state);[m
+[32m+[m[32m  uint8_t state_len = BSEC_MAX_STATE_BLOB_SIZE;[m[41m [m
+[32m+[m[32m  iaqSensor.getState(state);[m[41m [m
+   preferences.putBytes("bsec_state", state, state_len);[m
+   preferences.end();[m
+   Serial.println("BSEC state saved to NVS.");[m
+ }[m
+ [m
+[31m-void saveBsecState() {[m
+[32m+[m[32mvoid saveBsecState(){[m
+   unsigned long now = millis();[m
+   if (now - lastSaveTime >= BSEC_SAVE_INTERVAL) {[m
+     saveState(iaqSensor);[m
+[36m@@ -61,7 +61,7 @@[m [mvoid saveBsecState() {[m
+   }[m
+ }[m
+ [m
+[31m-bool initBME() {[m
+[32m+[m[32mbool initBME(){[m
+   Wire.beginTransmission(BME680_I2C_ADDR);[m
+   byte error = Wire.endTransmission();[m
+ [m
+[36m@@ -70,40 +70,40 @@[m [mbool initBME() {[m
+     return false;[m
+   }[m
+   iaqSensor.begin(BME680_I2C_ADDR, Wire);[m
+[31m-[m
+[32m+[m[41m  [m
+   if (iaqSensor.bsecStatus != BSEC_OK) {[m
+     return false;[m
+   }[m
+ [m
+   bsec_virtual_sensor_t sensorList[] = {[m
+[31m-    BSEC_OUTPUT_IAQ,[m
+[31m-    BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,[m
+[31m-    BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,[m
+[31m-    BSEC_OUTPUT_RAW_PRESSURE,[m
+[31m-    BSEC_OUTPUT_RAW_GAS[m
+[32m+[m[32m      BSEC_OUTPUT_IAQ,[m[41m [m
+[32m+[m[32m      BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,[m[41m [m
+[32m+[m[32m      BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,[m[41m   [m
+[32m+[m[32m      BSEC_OUTPUT_RAW_PRESSURE,[m
+[32m+[m[32m      BSEC_OUTPUT_RAW_GAS[m
+   };[m
+[31m-[m
+[32m+[m[41m  [m
+   iaqSensor.updateSubscription(sensorList, 5, BSEC_SAMPLE_RATE_CONT);[m
+   loadState(iaqSensor);[m
+   return true;[m
+ }[m
+ [m
+[31m-bme_struct *get_bme_data() {[m
+[31m-[m
+[31m-  if (iaqSensor.run()) {[m
+[31m-    bme_data.iaq = iaqSensor.iaq;[m
+[31m-    bme_data.iaq_accuracy = iaqSensor.iaqAccuracy;[m
+[31m-    bme_data.temperature = iaqSensor.temperature;[m
+[31m-    bme_data.humidity = iaqSensor.humidity;[m
+[31m-    bme_data.pressure = iaqSensor.pressure / 100.0;[m
+[31m-    bme_data.gas_resistance = iaqSensor.gasResistance / 1000.0;[m
+[31m-[m
+[31m-    bme_data.data_available = true;[m
+[31m-[m
+[31m-    if (!bme_data.first_save_done) {[m
+[31m-      saveState(iaqSensor);[m
+[31m-      bme_data.first_save_done = true;[m
+[32m+[m[32mbme_struct * get_bme_data(){[m
+[32m+[m[41m    [m
+[32m+[m[32m    if (iaqSensor.run()) {[m[41m [m
+[32m+[m[32m        bme_data.iaq = iaqSensor.iaq;[m
+[32m+[m[32m        bme_data.iaq_accuracy = iaqSensor.iaqAccuracy;[m
+[32m+[m[32m        bme_data.temperature = iaqSensor.temperature;[m
+[32m+[m[32m        bme_data.humidity = iaqSensor.humidity;[m
+[32m+[m[32m        bme_data.pressure = iaqSensor.pressure / 100.0;[m[41m [m
+[32m+[m[32m        bme_data.gas_resistance = iaqSensor.gasResistance / 1000.0;[m[41m [m
+[32m+[m
+[32m+[m[32m        bme_data.data_available = true;[m
+[32m+[m
+[32m+[m[32m        if(!bme_data.first_save_done){[m
+[32m+[m[32m          saveState(iaqSensor);[m
+[32m+[m[32m          bme_data.first_save_done = true;[m
+[32m+[m[32m        }[m
+     }[m
+[31m-  }[m
+[31m-  return &bme_data;[m
+[32m+[m[32m    return &bme_data;[m
+ }[m
+[1mdiff --git a/ino/MySat_main/sensors_data.h b/ino/MySat_main/sensors_data.h[m
+[1mindex 5cc513d..9b3f5a4 100644[m
+[1m--- a/ino/MySat_main/sensors_data.h[m
+[1m+++ b/ino/MySat_main/sensors_data.h[m
+[36m@@ -22,6 +22,7 @@[m [mvoid logDebug(String message){[m
+   }[m
+ }[m
+ [m
+[32m+[m
+ struct pointer_of_sensors{[m
+   bme_struct * bme_;[m
+   mpu * mpu_;[m
+[1mdiff --git a/ino/MySat_main/server.h b/ino/MySat_main/server.h[m
+[1mindex 571904e..cc76cee 100644[m
+[1m--- a/ino/MySat_main/server.h[m
+[1m+++ b/ino/MySat_main/server.h[m
+[36m@@ -849,4 +849,4 @@[m [mvoid initServer() {[m
+ [m
+   server.begin();[m
+   Serial.println("HTTP server started");[m
+[31m-}[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
