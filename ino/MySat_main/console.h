@@ -168,7 +168,7 @@ void handleCommands() {  // read commands for changing data
       } else if(inputBuffer.equalsIgnoreCase("SetRadio")){
         setRadio();
         recognized = true;
-        reactToCommand("Radio(HC-12) AT-config mode activated.");
+        reactToCommand("Radio(HC-12) AT-config mode activated");
         
       }
 
