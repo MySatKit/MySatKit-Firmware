@@ -31,6 +31,7 @@ void promptUserForWiFi(String& ssid, String& password);
 void tryConnectWiFi();
 void setWiFi();
 void connectToWiFi();
+void auditFileSystem();
 
 const int def_SDA(15);
 const int def_SCL(13);
@@ -45,14 +46,15 @@ void setup() {
   }
 
   Serial.println("LittleFS mounted successfully.");
-
   connectToWiFi();
   initStarLed();
   initSignalLed();
   setTime();
+  loadLoggerState();
   loadCallSign(callSign);
   Wire.begin(def_SDA, def_SCL);
   initSensors();
+  auditFileSystem();
   if (useWiFi.equalsIgnoreCase("Yes")) {
     initServer();
   }
@@ -248,4 +250,44 @@ void connectToWiFi() {
     Serial.println("WiFi disabled by user.");
     pauseToRead();
   }
+}
+
+void auditFileSystem() {
+  Serial.println("\n======= FILE SYSTEM AUDIT (LittleFS) =======");
+
+  size_t total = LittleFS.totalBytes();
+  size_t used = LittleFS.usedBytes();
+  float usagePercent = (float)used / total * 100.0;
+
+  Serial.printf("TOTAL CAPACITY: %u bytes (%.2f KB)\n", total, total / 1024.0);
+  Serial.printf("USED SPACE:     %u bytes (%.2f KB) [%.1f%%]\n", used, used / 1024.0, usagePercent);
+  Serial.printf("FREE SPACE:     %u bytes (%.2f KB)\n", total - used, (total - used) / 1024.0);
+  Serial.println("--------------------------------------------------");
+
+  File root = LittleFS.open("/");
+  if (!root || !root.isDirectory()) {
+    Serial.println("Error: Failed to open root directory!");
+    return;
+  }
+
+  File file = root.openNextFile();
+  while (file) {
+    if (file.isDirectory()) {
+      Serial.printf("[DIR]  /%s\n", file.name());
+      int allDirSize = 0;
+      
+      File subDir = LittleFS.open(file.name());
+      File subFile = subDir.openNextFile();
+      while (subFile) {
+        Serial.printf("      |-- %-20s | %u bytes\n", subFile.name(), subFile.size());
+        allDirSize += subFile.size();
+        subFile = subDir.openNextFile();
+      }
+      Serial.printf("Total Directory Size: %u bytes\n", allDirSize);
+    } else {
+      Serial.printf("[FILE] /%-20s | %u bytes\n", file.name(), file.size());
+    }
+    file = root.openNextFile();
+  }
+  Serial.println("==================================================\n");
 }

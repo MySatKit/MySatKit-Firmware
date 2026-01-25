@@ -57,6 +57,28 @@ void initPhotoStorage() {
     } else {
       Serial.println("[PHOTO] ERROR: Cannot open index file");
     }
+    File root = LittleFS.open("/");
+      File file = root.openNextFile();
+      while(file){
+        String fileName = file.name();
+        if(fileName.startsWith("photo_") && fileName.endsWith(".jpg")){
+          bool found = false;
+          for(const auto& record : photoRecords){
+            if(record.filename == "/" + fileName || record.filename == fileName){
+              found = true;
+              break;
+            }
+          }
+          if(!found){
+            Serial.printf("[PHOTO] Cleanup: deleting orphan file %s\n", fileName.c_str());
+            String fullPath = "/" + fileName;
+            file.close();
+            LittleFS.remove(fullPath);
+            root = LittleFS.open("/");
+          }
+        }
+        file = root.openNextFile();
+      }
   } else {
     Serial.println("[PHOTO] No existing photo index, starting fresh");
     globalPhotoCounter = 0;
@@ -64,7 +86,7 @@ void initPhotoStorage() {
 }
 
 void savePhotoIndex() {
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(3072);
   doc["counter"] = globalPhotoCounter;
 
   JsonArray photos = doc.createNestedArray("photos");
@@ -84,6 +106,12 @@ void savePhotoIndex() {
 }
 
 bool savePhoto(camera_fb_t* fb, const char* timestamp) {
+  if (photoRecords.size() >= MAX_PHOTOS) {
+    logDebug("[PHOTO] Max limit reached. Deleting: " + photoRecords[0].filename);
+    LittleFS.remove(photoRecords[0].filename.c_str());
+    photoRecords.erase(photoRecords.begin());
+  }
+
   int nextId = globalPhotoCounter + 1;
 
   logDebug("[PHOTO] Saving photo #" + String(nextId));
@@ -118,12 +146,6 @@ bool savePhoto(camera_fb_t* fb, const char* timestamp) {
   record.timestamp = String(timestamp);
   record.filename = String(filename);
   photoRecords.push_back(record);
-
-  if (photoRecords.size() > MAX_PHOTOS) {
-    logDebug("[PHOTO] Max limit reached. Deleting: " + photoRecords[0].filename);
-    LittleFS.remove(photoRecords[0].filename.c_str());
-    photoRecords.erase(photoRecords.begin());
-  }
 
   savePhotoIndex();
 
@@ -165,13 +187,6 @@ const char* htmlContent = R"###(
       color: white;
       overflow-x: hidden;
         }
-        button{
-      background-color:#0a0a23;
-        color: white;
-        border-radius:10px;
-            width: 100px;
-            height: 30px;
-      }
       img {
         max-width: 100%;
       }
@@ -366,15 +381,70 @@ const char* htmlContent = R"###(
       transform: rotateY(90deg) translateZ(50px) rotateX(3deg);
       width: 80px;
     }
-    #photoButtons button {
-      margin: 3px;
-      width: 60px;
-    }
 
-    #photoButtons button:disabled {
-      opacity: 0.4;
-    }
+.control-btn {
+  background-color: #0a0a23;     
+  color: white;
+  border-radius: 10px;
+  height: 34px;
+  font-size: 14px;
+  border: none;
+  padding: 0 12px;
+  line-height: 34px;            
+  cursor: pointer;
+}
+#photoButtons {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
 
+#photoButtons button {
+  width: 44px;
+  padding: 0;
+}
+#photoButtons button.active {
+  background-color: #d6d6d6;
+  color: black;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.7);
+}
+.pressable:active {
+  filter: brightness(1.25);
+  transform: translateY(1px);
+}
+#logBtn {
+  background-color: #4a4a4a;
+}
+#logMenu {
+  display: none;
+  position: absolute;
+  bottom: 45px;
+  right: 0;
+  background: #0a0a23;
+  border: 2px solid white;
+  border-radius: 10px;
+  padding: 10px;
+  z-index: 1000;
+  min-width: 250px;
+}
+#logMenu p {
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+#logFilesList {
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: white;
+  background: #222;
+  border: 1px solid white;
+}
+.log-download-btn {
+  width: 100%;
+  background-color: #d6d6d6;
+  color: #000;
+}
 
     </style>
 
@@ -397,7 +467,7 @@ const char* htmlContent = R"###(
       <div class="col-lg-5">
         <img src="/photo_placeholder.png" alt="" id="photoFromESP">
         <div id="photoInfo" class="datetime_font" style="margin-top:10px;">
-          Photo № -, taken -
+          Photo №:, taken:
         </div>
         <div id="photoButtons" style="margin-top:10px;"></div>
     
@@ -508,21 +578,32 @@ const char* htmlContent = R"###(
       </div>
       <p id="data-quality-text" style="font-size: 14px; margin-top: 10px;"></p>
         </div>
+          <div class="col-lg-12" style="text-align:center; margin-top:10px;">
+            <button class="control-btn pressable" onclick="toggleLED()">Turn LED</button>
+            <button class="control-btn pressable" onclick="toggleMotor()">Turn Motor</button>
+            <button class="control-btn pressable" onclick="getPhoto()">Get Photo</button>
+            <div style="display: inline-block; margin-left: 10px; position: relative;">
+              <button id="logBtn" class="control-btn pressable" onclick="toggleLogMenu()">
+                Mission Logs ▾
+              </button>
+              <div id="logMenu">
+                <p>Select log file:</p>
+                <select id="logFilesList" class="control-btn">
+                  <option>Loading logs...</option>
+                </select>
+                <button class="control-btn pressable log-download-btn" onclick="downloadSelectedLog()">
+                  Download Selected (.csv)
+                </button>
+              </div>
+            </div>
+        </div>
+
       </div>
           </div>
 
         </div>
       </div>
     </div>
-    <div class="row">
-    <div class="col-lg-4">
-            Turn:
-            <button onclick='toggleLED()'>Turn LED</button>
-            <button onclick='toggleMotor()'>Turn Motor</button>
-            <button onclick='getPhoto()'>Get Photo</button>
-    </div>
-        
-    </div>    
     </div>
     </div>
     <script src="/bootstrap.js"></script>
@@ -563,6 +644,17 @@ const char* htmlContent = R"###(
     let availablePhotoIds = [];
     let lastPhotoId = null;
 
+    function highlightActivePhotoButton(id) {
+      const buttons = document.querySelectorAll("#photoButtons button");
+      buttons.forEach(btn => {
+        if (btn.textContent == id) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+    }
+
     function updatePhotoButtons() {
       let container = document.getElementById("photoButtons");
       container.innerHTML = "";
@@ -578,6 +670,7 @@ const char* htmlContent = R"###(
 
       for (let i = 0; i < 10; i++) {
         let btn = document.createElement("button");
+        btn.classList.add("control-btn", "pressable");
 
         if (displayIds[i] !== undefined) {
           btn.textContent = displayIds[i];
@@ -617,9 +710,11 @@ const char* htmlContent = R"###(
           const nice = date.toLocaleString("uk-UA");
 
           document.getElementById("photoInfo").textContent =
-             `Photo №${data.id}, taken ${nice}`;
+             `Photo №${data.id}, taken: ${nice}`;
 
           lastPhotoId = data.id;
+          highlightActivePhotoButton(data.id);
+
         }
       };
       xhttp.open("GET", "/get_photo_by_id?id=" + id, true);
@@ -644,16 +739,73 @@ const char* htmlContent = R"###(
         const nice = date.toLocaleString("uk-UA");
 
         document.getElementById("photoInfo").textContent =
-          `Photo №${data.id}, taken ${nice}`;
+          `Photo №${data.id}, taken: ${nice}`;
 
         availablePhotoIds.push(data.id);
         updatePhotoButtons();
 
         lastPhotoId = data.id;
+        highlightActivePhotoButton(data.id);
       };
 
       xhttp.open("GET", "/get_photo", true);
       xhttp.send();
+    }
+
+    function toggleLogMenu() {
+      const menu = document.getElementById('logMenu');
+      if (menu.style.display === 'none') {
+        menu.style.display = 'block';
+        fetchLogList(); 
+      } else {
+        menu.style.display = 'none';
+      }
+    }
+
+    function fetchLogList() {
+      const list = document.getElementById('logFilesList');
+      list.innerHTML = '<option>Searching files...</option>';
+
+      fetch('/get_log_list')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.files || data.files.length === 0) {
+                list.innerHTML = '<option>No logs found</option>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            data.files.sort((a, b) => b.name.localeCompare(a.name));
+
+            data.files.forEach(file => {
+                let opt = document.createElement('option');
+                opt.value = file.name;
+                let sizeKB = (file.size / 1024).toFixed(1);
+                opt.textContent = `${file.date || file.name} (${sizeKB} KB)`;
+                list.appendChild(opt);
+            });
+        })
+        .catch(err => {
+            console.error('Error fetching logs:', err);
+            list.innerHTML = '<option>Connection error</option>';
+        });
+    }
+
+    function downloadSelectedLog() {
+      const list = document.getElementById('logFilesList');
+      const fileName = list.value;
+    
+      if (!fileName || fileName.includes(' ')) return; 
+
+      console.log("Downloading log:", fileName);
+      window.location.href = `/download_log?file=${fileName}`;
+    }
+
+    window.onclick = function(event) {
+      if (!event.target.matches('#logBtn') && !event.target.closest('#logMenu')) {
+        const menu = document.getElementById('logMenu');
+        if (menu) menu.style.display = 'none';
+      }
     }
 
         function toggleMotor() { //TURN WING
@@ -841,7 +993,7 @@ const char* htmlContent = R"###(
             let minute = responseData.minute_;
             let second = responseData.second_;     
             date_time_string = new Date(year, month - 1, day, hour, minute, second);
-            document.getElementById("date_time_mysat").textContent = 'Date and time: ' + date_time_string.toLocaleString();
+            document.getElementById("date_time_mysat").textContent = 'Date and time: ' + date_time_string.toLocaleString("uk-UA");
             console.log(date_time_string);
 
               } else {
@@ -1075,6 +1227,67 @@ void handleGetPhoto() {
   logDebug("[PHOTO] --- TOTAL TIME: " + String(millis() - t_total_start) + " ms ---");
 }
 
+void handleGetLogList() {
+    logDebug("[WEB] Request: /get_log_list");
+    DynamicJsonDocument doc(4096); 
+    JsonArray files = doc.createNestedArray("files");
+
+    File root = LittleFS.open("/");
+    File file = root.openNextFile();
+
+    while (file) {
+        String filename = String(file.name());
+        if (filename.startsWith("/")) filename = filename.substring(1);
+
+        if (filename.startsWith("log_") && filename.endsWith(".csv")) {
+            JsonObject fileObj = files.createNestedObject();
+            fileObj["name"] = filename;
+            fileObj["size"] = file.size();
+
+            if (filename.length() >= 20) {
+                String d = filename.substring(4, 12);  
+                String t = filename.substring(13, 19); 
+                
+                fileObj["date"] = d.substring(0, 4) + "-" + d.substring(4, 6) + "-" + d.substring(6, 8) + 
+                                  " " + t.substring(0, 2) + ":" + t.substring(2, 4);
+            } else {
+                fileObj["date"] = "Unknown Date";
+            }
+        }
+        file = root.openNextFile();
+    }
+    String response;
+    serializeJson(doc, response);
+    server.send(200, "application/json", response);
+}
+
+void handleDownloadLog() {
+  if (!server.hasArg("file")) {
+    server.send(400, "text/plain", "Missing file parameter");
+    return;
+  }
+  
+  String filename = "/" + server.arg("file");
+  logDebug("[WEB] Request: /download_log?file=" + filename);
+  
+  if (!LittleFS.exists(filename.c_str())) {
+    server.send(404, "text/plain", "File not found");
+    return;
+  }
+  
+  File file = LittleFS.open(filename.c_str(), "r");
+  if (!file) {
+    server.send(500, "text/plain", "Failed to open file");
+    return;
+  }
+  
+  server.sendHeader("Content-Disposition", "attachment; filename=\"" + server.arg("file") + "\"");
+  server.streamFile(file, "text/csv");
+  file.close();
+  
+  logDebug("[WEB] File downloaded: " + filename);
+}
+
 bool stateLight = false;
 
 void light_on() {
@@ -1101,6 +1314,8 @@ void initServer() {
   server.on("/get_photo", HTTP_GET, handleGetPhoto);
   server.on("/get_photo_list", HTTP_GET, handleGetPhotoList);
   server.on("/get_photo_by_id", HTTP_GET, handleGetPhotoById);
+  server.on("/get_log_list", HTTP_GET, handleGetLogList);
+  server.on("/download_log", HTTP_GET, handleDownloadLog);
 
   server.onNotFound([]() {
     String path = server.uri();

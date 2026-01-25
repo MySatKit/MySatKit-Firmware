@@ -1,6 +1,7 @@
 #pragma once
 #include "sensors_data.h"
 #include "control.h"
+#include "data_logger.h"
 #include <LittleFS.h>
 #define FIRMWARE_VERSION "v.1.2"
 #define OUTPUT_FREQUENCE 1500
@@ -153,7 +154,7 @@ void handleCommands() {  // read commands for changing data
         }else if(currentMode == debug){
           currentMode = text;
           debug_mode_active = false;
-          reactToCommand("Mode: TEXT");
+          reactToCommand("Mode: TEXT.");
         }
         recognized = true;
 
@@ -167,9 +168,18 @@ void handleCommands() {  // read commands for changing data
 
       } else if(inputBuffer.equalsIgnoreCase("SetRadio")){
         setRadio();
-        recognized = true;
         reactToCommand("Radio(HC-12) AT-config mode activated.");
+        recognized = true;
         
+      }else if(inputBuffer.equalsIgnoreCase("StartLogging")){
+        startLogging();
+        reactToCommand("Start logging...");
+        recognized = true;
+        
+      }else if(inputBuffer.equalsIgnoreCase("StopLogging")){
+        stopLogging();
+        reactToCommand("Stop logging...");
+        recognized = true;
       }
 
       if (inputBuffer.length() >= 3 && !recognized) {
@@ -208,7 +218,7 @@ void outputDataText(pointer_of_sensors* data_) {
       Serial.print("  IAQ = ");
       Serial.println(data_->bme_->iaq);
 
-      Serial.print(" IAQ Accuracy: ");
+      Serial.print("  IAQ Accuracy: ");
       Serial.println(data_->bme_->iaq_accuracy);
 
     } else {
@@ -240,9 +250,9 @@ void outputDataText(pointer_of_sensors* data_) {
 
   if (init_status.ads_) {
     Serial.println("===SUN TRACKER:==================");
-    Serial.print("  ph1 ( left) = ");
+    Serial.print("  ph1 (left) = ");
     Serial.print(data_->ads_->ph1);
-    Serial.print("  |  ph2 ( back) = ");
+    Serial.print("   |  ph2 (back) = ");
     Serial.println(data_->ads_->ph2);
 
     Serial.print("  ph3 (right) = ");
@@ -434,4 +444,6 @@ void outputData(pointer_of_sensors* data_) {
     }
     lastOutput = now;
   }
+
+  handleDataLogging(data_);
 }
