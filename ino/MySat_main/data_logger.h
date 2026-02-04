@@ -43,7 +43,7 @@ void saveLoggerState() {
 
 String createCSVHeader() {
   return "RTC_Time,ESP32_Uptime,Temperature,Pressure,Humidity,Gas_Resistance,IAQ,IAQ_Accuracy,"
-         "Roll,Pitch,Yaw,PH1,PH2,PH3,PH4,Battery_V,Battery_I,Solar_V,Solar_I_L,Solar_I_R\n";
+         "Roll - X,Pitch - Y,Yaw - Z,PH1,PH2,PH3,PH4,Battery_V,Battery_I,Solar_V,Solar_I_L,Solar_I_R\n";
 }
 
 bool createNewLogFile() {
@@ -222,7 +222,7 @@ void writeDataRow(pointer_of_sensors* data) {
   
   if (init_status.ads_) {
     pos += snprintf(csv_line + pos, sizeof(csv_line) - pos,
-                    "%d,%d,%d,%d,",
+                    "%.0f,%.0f,%.0f,%.0f,",
                     data->ads_->ph1,
                     data->ads_->ph2,
                     data->ads_->ph3,

@@ -85,6 +85,46 @@ void turnConsole() {
   output = !output;
 }
 
+void auditFileSystem() {
+  Serial.println("\n======= FILE SYSTEM AUDIT (LittleFS) =======");
+
+  size_t total = LittleFS.totalBytes();
+  size_t used = LittleFS.usedBytes();
+  float usagePercent = (float)used / total * 100.0;
+
+  Serial.printf("TOTAL CAPACITY: %u bytes (%.2f KB)\n", total, total / 1024.0);
+  Serial.printf("USED SPACE:     %u bytes (%.2f KB) [%.1f%%]\n", used, used / 1024.0, usagePercent);
+  Serial.printf("FREE SPACE:     %u bytes (%.2f KB)\n", total - used, (total - used) / 1024.0);
+  Serial.println("--------------------------------------------------");
+
+  File root = LittleFS.open("/");
+  if (!root || !root.isDirectory()) {
+    Serial.println("Error: Failed to open root directory!");
+    return;
+  }
+
+  File file = root.openNextFile();
+  while (file) {
+    if (file.isDirectory()) {
+      Serial.printf("[DIR]  /%s\n", file.name());
+      int allDirSize = 0;
+      
+      File subDir = LittleFS.open(file.name());
+      File subFile = subDir.openNextFile();
+      while (subFile) {
+        Serial.printf("      |-- %-20s | %u bytes\n", subFile.name(), subFile.size());
+        allDirSize += subFile.size();
+        subFile = subDir.openNextFile();
+      }
+      Serial.printf("Total Directory Size: %u bytes\n", allDirSize);
+    } else {
+      Serial.printf("[FILE] /%-20s | %u bytes\n", file.name(), file.size());
+    }
+    file = root.openNextFile();
+  }
+  Serial.println("==================================================\n");
+}
+
 void handleCommands() {  // read commands for changing data
   static String inputBuffer = "";
 
@@ -179,6 +219,16 @@ void handleCommands() {  // read commands for changing data
       }else if(inputBuffer.equalsIgnoreCase("StopLogging")){
         stopLogging();
         reactToCommand("Stop logging...");
+        recognized = true;
+
+      }else if(inputBuffer.equalsIgnoreCase("AuditFileSystem")){
+        auditFileSystem();
+        pauseToRead();
+        recognized = true;
+
+      }else if(inputBuffer.equalsIgnoreCase("ListLogFiles")){
+        listLogFiles();
+        pauseToRead();
         recognized = true;
       }
 
@@ -340,6 +390,18 @@ void outputDataText(pointer_of_sensors* data_) {
   Serial.print("  |  ");
   Serial.print("StarLED: ");
   Serial.println(stateLight ? "ON" : "OFF");
+
+  if(logger.total_rows >= MAX_TOTAL_ROWS && logger.total_rows > 0){
+    Serial.println("  Logging: STOPPED (memory full)");
+  }else if(logger.enabled){
+    Serial.print("  Logging: ACTIVE (period: ");
+    Serial.print(logger.period_seconds);
+    Serial.print(" s, rows: ");
+    Serial.print(logger.total_rows);
+    Serial.print("/");
+    Serial.print(MAX_TOTAL_ROWS);
+    Serial.println(")");
+  }
 
   if (useWiFi.equalsIgnoreCase("Yes")) {
     Serial.println("================================");

@@ -445,6 +445,59 @@ const char* htmlContent = R"###(
   background-color: #d6d6d6;
   color: #000;
 }
+#connectionStatus {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+#statusText {
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-active {
+  background-color: #00FF00;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+}
+
+.text-active {
+  color: #00FF00;
+}
+
+.status-waiting {
+  background-color: #FFA500;
+  box-shadow: 0 0 8px rgba(255, 165, 0, 0.8);
+  animation: pulse 2s infinite;
+}
+
+.text-waiting {
+  color: #FFA500;
+}
+
+.status-lost {
+  background-color: #FF0000;
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.8);
+  animation: pulse 1s infinite;
+}
+
+.text-lost {
+  color: #FF0000;
+}
 
     </style>
 
@@ -455,7 +508,14 @@ const char* htmlContent = R"###(
     <table>
       <tr>
         <td>
-          <h1 id= "callSign">MySat</h1>
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <h1 id="callSign">MySat</h1>
+  
+            <div id="connectionStatus">
+              <span id="statusDot"></span>
+              <span id="statusText">Communication session active</span>
+            </div>
+          </div>
         </td>
         <td>
           <h6 style="padding-left: 20px; vertical-align:bottom;"></h6>
@@ -498,28 +558,25 @@ const char* htmlContent = R"###(
             </div>
             <div class = "col-lg-4 text-data m-2">
               <h3 id = "text_data">Y:</h3>
-              <h4 id = "pitch">0</h3>
+              <h4 id = "pitch">0</h4>
             </div>
             <div class = "col-lg-3 text-data m-2">
               <h3 id = "text_data">Z:</h3>
-              <h4 id = "yaw">0</h3>
+              <h4 id = "yaw">0</h4>
             </div>
             
           </div>
           <div class = "row">
             <div class = "col-lg-4 text-data m-2">
               <div class="text-data-sunLight">
-    <h3>Sunlight trackers</h3>
+    <h3>Sun Tracker</h3>
 
-
-    <svg id="sunSvg" viewBox="-120 -120 240 240" style="width:80%;margin-left:10%;display:block;">
+    <svg id="sunSvg" viewBox="-160 -160 320 320" style="width:100%; display:block;">
       <defs>
-    
         <radialGradient id="g1"><stop offset="0%" stop-color="white"/><stop id="g1s" offset="100%" stop-color="gray"/></radialGradient>
         <radialGradient id="g2"><stop offset="0%" stop-color="white"/><stop id="g2s" offset="100%" stop-color="gray"/></radialGradient>
         <radialGradient id="g3"><stop offset="0%" stop-color="white"/><stop id="g3s" offset="100%" stop-color="gray"/></radialGradient>
         <radialGradient id="g4"><stop offset="0%" stop-color="white"/><stop id="g4s" offset="100%" stop-color="gray"/></radialGradient>
-      
         <radialGradient id="sunGrad"><stop offset="0%" stop-color="yellow"/><stop offset="100%" stop-color="gold"/></radialGradient>
       </defs>
     
@@ -532,12 +589,62 @@ const char* htmlContent = R"###(
       <path id="sec3" fill="url(#g3)"></path>
       <path id="sec4" fill="url(#g4)"></path>
 
-      <circle r="112" fill="none" stroke="white" stroke-width="2" />
+      <circle r="112" fill="none" stroke="white" stroke-width="2.5" />
 
+      <style>
+        .label-main { font-family: sans-serif; font-weight: bold; fill: white; font-size: 15px; }
+        .label-sub { font-family: sans-serif; font-weight: normal; fill: #ccc; font-size: 12px; }
+      </style>
+
+      <g transform="translate(0, -125)">
+        <g transform="translate(-11, -30) scale(0.9)" fill="none" stroke="white" stroke-width="1.5">
+            <rect x="0" y="0" width="22" height="15" rx="2" />
+            <circle cx="11" cy="7.5" r="4.5" />
+            <path d="M7,0 L8,-3 L14,-3 L15,0" />
+            <circle cx="18" cy="4" r="1" fill="white" stroke="none" />
+        </g>
+        <text x="0" y="5" text-anchor="middle">
+            <tspan class="label-main">PH4</tspan>
+            <tspan class="label-sub"> · +X</tspan>
+        </text>
+      </g>
+
+      <g transform="translate(0, 135)">
+        <text x="0" y="5" text-anchor="middle">
+            <tspan class="label-main">PH2</tspan>
+            <tspan class="label-sub"> · −X</tspan>
+        </text>
+        <g transform="translate(40, -30) scale(0.06)" fill="none" stroke="white" stroke-width="25">
+            <path d="M493.52,581.67c-9-12.42-19.26-23.94-30.61-34.27c-4.24-3.86-31.98-20.19-31.3-25.1
+            c0.03-0.22,0.06-0.45,0.09-0.67c4.74-33.69,5.26-66.97,4.62-101.09c-0.96-51.5-6.5-103.47-23.48-152.37
+            c-6.36-18.3-14.27-36.05-23.14-53.27c-10.52-20.42-22.54-40.23-37.31-57.89c-13.81-16.51-31-27.21-46.46-41.51v-0.03
+            c-0.01,0.01-0.01,0.01-0.02,0.02c-0.01-0.01-0.01-0.01-0.02-0.02v0.03c-15.46,14.3-32.64,25-46.44,41.51
+            c-14.76,17.66-26.78,37.47-37.29,57.89c-8.87,17.23-16.78,34.97-23.13,53.27c-16.98,48.89-22.51,100.87-23.47,152.37
+            c-0.64,34.12-0.12,67.4,4.62,101.09c0.03,0.22,0.06,0.45,0.09,0.67c0.69,4.91-27.04,21.24-31.28,25.1
+            c-11.34,10.33-21.59,21.85-30.59,34.27c-28.8,39.76-44.01,88.5-43.39,137.56c0.27,21.7,1.69,50.79,12.11,70.29
+            c0.32,0.61,8.73-12.75,9.22-13.53c3.52-5.57,7.29-10.98,11.27-16.23c8.23-10.85,17.4-20.98,27.37-30.26
+            c24.14-22.48,52.28-38.37,82.71-50.54c-0.18,0.07,11.77,20.89,12.91,22.49c5.72,7.99,12.72,15.04,20.59,20.91
+            c15.72,11.72,35.04,18.79,54.71,19.05v0c0.01,0,0.02,0,0.03,0c0.01,0,0.02,0,0.03,0v0c19.68-0.26,39.01-7.33,54.73-19.05
+            c7.87-5.87,14.88-12.92,20.6-20.91c1.14-1.6,13.1-22.41,12.92-22.49c30.45,12.17,58.6,28.06,82.75,50.54
+            c9.97,9.28,19.14,19.41,27.38,30.26c3.98,5.25,7.75,10.66,11.27,16.23c0.5,0.79,8.9,14.14,9.23,13.53
+            c10.42-19.49,11.84-48.59,12.12-70.29C537.55,670.17,522.34,621.43,493.52,581.67z M305.95,380.09c-29.51,0-53.43-23.92-53.43-53.43
+            s23.92-53.43,53.43-53.43s53.43,23.92,53.43,53.43S335.46,380.09,305.95,380.09z"/>
+        </g>
+      </g>
+
+      <g transform="translate(-125, 0)">
+        <text x="0" y="-5" text-anchor="end" class="label-main">PH1</text>
+        <text x="0" y="12" text-anchor="end" class="label-sub">+Y</text>
+      </g>
+
+      <g transform="translate(125, 0)">
+        <text x="0" y="-5" text-anchor="start" class="label-main">PH3</text>
+        <text x="0" y="12" text-anchor="start" class="label-sub">−Y</text>
+      </g>
       
       <circle id="sunDot" r="9" fill="url(#sunGrad)" visibility="hidden"></circle>
     </svg>
-</div>
+  </div>
             </div>
       <div class = "col-lg-4 text-data m-2">
       <h3>Status</h3>
@@ -576,7 +683,7 @@ const char* htmlContent = R"###(
           <p id="gasResistance" class="gas-res-subtext"></p>
                 </div>
       </div>
-      <p id="data-quality-text" style="font-size: 14px; margin-top: 10px;"></p>
+      <p id="data-quality-text" style="font-size: 14px; margin-top: 25px;"></p>
         </div>
           <div class="col-lg-12" style="text-align:center; margin-top:10px;">
             <button class="control-btn pressable" onclick="toggleLED()">Turn LED</button>
@@ -808,6 +915,58 @@ const char* htmlContent = R"###(
       }
     }
 
+let lastDataReceived = Date.now();
+
+const CONNECTION_STATUS = {
+  ACTIVE: {
+    text: 'Communication session active',
+    dotClass: 'status-active',
+    textClass: 'text-active',
+    timeout: 5000
+  },
+  WAITING: {
+    text: 'Waiting for telemetry packet…',
+    dotClass: 'status-waiting',
+    textClass: 'text-waiting',
+    timeout: 40000
+  },
+  LOST: {
+    text: 'Communication lost',
+    dotClass: 'status-lost',
+    textClass: 'text-lost',
+    timeout: Infinity
+  }
+};
+
+function updateConnectionStatus() {
+  const timeSinceLastData = Date.now() - lastDataReceived;
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  
+  let currentStatus;
+  
+  if (timeSinceLastData < CONNECTION_STATUS.ACTIVE.timeout) {
+    currentStatus = CONNECTION_STATUS.ACTIVE;
+  } else if (timeSinceLastData < CONNECTION_STATUS.WAITING.timeout) {
+    currentStatus = CONNECTION_STATUS.WAITING;
+  } else {
+    currentStatus = CONNECTION_STATUS.LOST;
+  }
+  
+  if (statusText.textContent !== currentStatus.text) {
+    statusDot.classList.remove('status-active', 'status-waiting', 'status-lost');
+    statusText.classList.remove('text-active', 'text-waiting', 'text-lost');
+    
+    statusDot.classList.add(currentStatus.dotClass);
+    statusText.classList.add(currentStatus.textClass);
+    statusText.textContent = currentStatus.text;
+    
+    console.log('[STATUS] Connection status changed:', currentStatus.text);
+  }
+}
+
+setInterval(updateConnectionStatus, 1000);
+
         function toggleMotor() { //TURN WING
           var xhttp = new XMLHttpRequest();
           xhttp.open('GET', '/motor_on', true);
@@ -908,6 +1067,8 @@ const char* htmlContent = R"###(
             if (xhttp.readyState === 4) {
               isRequestPending = false;
               if (xhttp.status === 200) {
+                lastDataReceived = Date.now();
+                updateConnectionStatus();
                 var responseData = JSON.parse(xhttp.responseText);
                 let target = responseData.motor_state ? 75 : 3;
 
@@ -919,14 +1080,14 @@ const char* htmlContent = R"###(
                 if (responseData.callSign) {
                   document.getElementById("callSign").textContent = responseData.callSign;
                 }
-                document.getElementById("temperature").textContent = responseData.temperature.toFixed(2) + ' C';
+                document.getElementById("temperature").textContent = responseData.temperature.toFixed(2) + ' °C';
                 document.getElementById("pressure").textContent = responseData.pressure.toFixed(2)+ ' Pa';
                 document.getElementById("humidity").textContent = responseData.humidity.toFixed(2) + ' %';
                 document.getElementById("gasResistance").textContent = 'G.\u03A9 = ' + responseData.gas_resistance.toFixed(2) + ' KOhm';
                 
-                document.getElementById("roll").textContent = Math.round(responseData.roll);
-                document.getElementById("pitch").textContent = Math.round(responseData.pitch);
-                document.getElementById("yaw").textContent = Math.round(responseData.yaw);
+                document.getElementById("roll").textContent = Math.round(responseData.roll) + '°';
+                document.getElementById("pitch").textContent = Math.round(responseData.pitch) + '°';
+                document.getElementById("yaw").textContent = Math.round(responseData.yaw) + '°';
 
                 let iaqScore = responseData.iaq_score; 
                 let iaqAccuracy = responseData.iaq_accuracy;
