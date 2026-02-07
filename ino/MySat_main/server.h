@@ -499,6 +499,24 @@ const char* htmlContent = R"###(
   color: #FF0000;
 }
 
+.charging-label {
+  font-size: 11px;          
+  color: #CCCCCC;          
+  font-weight: 100;        
+  text-transform: uppercase; 
+  margin-top: -8px;        
+  min-height: 12px;         
+  display: block;
+}
+
+.solar-bar-style {
+  font-size: 13px;        
+  letter-spacing: 2px;      
+  color: #FFFFFF;         
+  margin-top: -7px;      
+  line-height: 1;
+}
+
     </style>
 
 </head>
@@ -537,20 +555,22 @@ const char* htmlContent = R"###(
     </div>
       <div class = "col-lg-7">
         <div class="container-fluid">
-          <div class = "row">
+          <div class = "row justify-content-start">
             <div class="col-lg-4 text-data  m-2">
               <h3 id = "text_data">Temperature:</h3>
                 <h4 id = "temperature">0.0</h4>
             </div>  
             <div class="col-lg-4 text-data  m-2">
-              <h3 id = "text_data">Pressure:</h3>
-              <h3 id = "pressure">0</h3>
+              <h3 id = "text_data">Battery:</h3>
+              <h4 id = "battery_v">0.00 V</h4>
+              <div id = "charging_status" class="charging-label"></div>
             </div>
             <div class="col-lg-3 text-data  m-2">
-              <h3 id = "text_data">Humidity:</h3>
-              <h3 id = "humidity">0</h3>
+              <h3 id = "text_data" style="white-space: nowrap;">Solar panels:</h3>
+              <h4 id = "solarPanels_v">0.00 V</h4>
+              <div id="solar_bar" class="solar-bar-style"></div>
             </div>
-              </div>
+          </div>
           <div class = "row">
             <div class = "col-lg-4 text-data m-2">
               <h3 id = "text_data">X:</h3>
@@ -1081,8 +1101,23 @@ setInterval(updateConnectionStatus, 1000);
                   document.getElementById("callSign").textContent = responseData.callSign;
                 }
                 document.getElementById("temperature").textContent = responseData.temperature.toFixed(2) + ' °C';
-                document.getElementById("pressure").textContent = responseData.pressure.toFixed(2)+ ' Pa';
-                document.getElementById("humidity").textContent = responseData.humidity.toFixed(2) + ' %';
+                let bV = responseData.battery_v;
+                let bC = responseData.battery_c;
+                document.getElementById("battery_v").textContent = bV.toFixed(2)+ ' V';
+                let chargingElement = document.getElementById("charging_status");
+                if (bV > 4.0 && bC < -5.0) {
+                  chargingElement.textContent = "Battery charging";
+                } else {
+                  chargingElement.textContent = ""; 
+                }
+                let sV = responseData.solarPanels_v;
+                document.getElementById("solarPanels_v").textContent = sV.toFixed(2) + ' V';
+                let barText = "";
+                let fullSteps = Math.floor(sV);
+                for (let i = 1; i <= 7; i++) {
+                  barText += (i <= fullSteps) ? "▮" : "▯";
+                }
+                document.getElementById("solar_bar").textContent = barText;
                 document.getElementById("gasResistance").textContent = 'G.\u03A9 = ' + responseData.gas_resistance.toFixed(2) + ' KOhm';
                 
                 document.getElementById("roll").textContent = Math.round(responseData.roll) + '°';
@@ -1244,6 +1279,15 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
     json_sensors["yaw"] = 0;
     json_sensors["pitch"] = 0;
     json_sensors["roll"] = 0;
+  }
+  if(init_status.ina_){
+    json_sensors["battery_v"] = data_->ina_->batteryVoltage;
+    json_sensors["battery_c"] = data_->ina_->batteryCurrent;
+    json_sensors["solarPanels_v"] = data_->ina_->SolarPanelVoltage;
+  }else{
+    json_sensors["battery_v"] = 0;
+    json_sensors["battery_c"] = 0;
+    json_sensors["solarPanels_v"] = 0;
   }
   json_sensors["motor_state"] = motor_state;
   json_sensors["callSign"] = callSign;

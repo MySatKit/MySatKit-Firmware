@@ -408,7 +408,11 @@ void outputDataText(pointer_of_sensors* data_) {
     Serial.print("CONNECT VIA WIFI “");
     Serial.print(ssid);
     Serial.println("”:");
-    Serial.println(WiFi.localIP());
+    if (LittleFS.exists("/bootstrap.css")) {
+      Serial.println(WiFi.localIP());
+    } else {
+      Serial.println("▲ Files for WebGUI not found!");
+    }
     Serial.println("================================");
   } else {
     Serial.println("================================");
