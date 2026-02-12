@@ -1271,10 +1271,10 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
     json_sensors["minute_"] = 0;
     json_sensors["second_"] = 0;
   }
-  if (init_status.mpu_) {
-    json_sensors["yaw"] = data_->mpu_->yaw;
-    json_sensors["pitch"] = data_->mpu_->pitch;
-    json_sensors["roll"] = data_->mpu_->roll;
+  if (init_status.mpu_ && calibration.valid) {
+    json_sensors["yaw"] = data_->mpu_->yaw   - offset_yaw;
+    json_sensors["pitch"] = data_->mpu_->pitch - offset_pitch;
+    json_sensors["roll"] = data_->mpu_->roll  - offset_roll;
   } else {
     json_sensors["yaw"] = 0;
     json_sensors["pitch"] = 0;

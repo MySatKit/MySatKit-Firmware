@@ -6,7 +6,7 @@
  * Main satellite firmware that simulates CubeSat operations and 
  *   manages all subsystems of the MySat educational kit
  *
- * version: v.1.2
+ * version: v.1.3
  * author: MySat Developmet team
  * license: Open Source (MIT) – github.com/mysatkit
  *
@@ -30,7 +30,6 @@ void saveWiFiConfig(const String& ssid, const String& password, const String& us
 void promptUserForWiFi(String& ssid, String& password);
 void tryConnectWiFi();
 void setWiFi();
-void connectToWiFi();
 
 const int def_SDA(15);
 const int def_SCL(13);
@@ -45,7 +44,6 @@ void setup() {
   }
 
   Serial.println("LittleFS mounted successfully.");
-  connectToWiFi();
   initStarLed();
   initSignalLed();
   setTime();
@@ -53,8 +51,11 @@ void setup() {
   loadCallSign(callSign);
   Wire.begin(def_SDA, def_SCL);
   initSensors();
-  if (useWiFi.equalsIgnoreCase("Yes")) {
-    initServer();
+  if(loadWiFiConfig(ssid, password, useWiFi)){
+    if (useWiFi.equalsIgnoreCase("Yes")) {
+      tryConnectWiFi();
+      initServer();
+    }
   }
   //Serial.println("If you want to change WiFi data use the command: SetWIFI ");
 }
@@ -68,6 +69,7 @@ void loop() {
   }
   handleCommands();
   checkSystemState();
+  updateBlinkStarLed();
 
   unsigned long now = millis();
   if (now - lastSensorUpdate >= SENSOR_INTERVAL) {
@@ -79,6 +81,7 @@ void loop() {
 }
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
+  if(!LittleFS.exists("/config.txt")) return false;
 
   File file = LittleFS.open("/config.txt", "r");
   if (!file) {
@@ -231,20 +234,6 @@ void setWiFi() {  //Handles enabling or disabling Wi-Fi based on user input
     saveWiFiConfig("none", "none", useWiFi);
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
-    Serial.println("WiFi disabled by user.");
-    pauseToRead();
-  }
-}
-
-void connectToWiFi() {
-  if (!loadWiFiConfig(ssid, password, useWiFi)) {
-    Serial.println("No WiFi config. Enter data for WiFi");
-    pauseToRead();
-    setWiFi();
-  }
-  if (useWiFi.equalsIgnoreCase("Yes")) {
-    tryConnectWiFi();
-  } else {
     Serial.println("WiFi disabled by user.");
     pauseToRead();
   }

@@ -3,7 +3,7 @@
 #include "control.h"
 #include "data_logger.h"
 #include <LittleFS.h>
-#define FIRMWARE_VERSION "v.1.2"
+#define FIRMWARE_VERSION "v.1.3"
 #define OUTPUT_FREQUENCE 1500
 
 extern String useWiFi;
@@ -144,6 +144,7 @@ void handleCommands() {  // read commands for changing data
         setWiFi();
         if (useWiFi.equalsIgnoreCase("Yes")) {
           tryConnectWiFi();
+          initServer();
         }
         recognized = true;
 
@@ -229,6 +230,10 @@ void handleCommands() {  // read commands for changing data
       }else if(inputBuffer.equalsIgnoreCase("ListLogFiles")){
         listLogFiles();
         pauseToRead();
+        recognized = true;
+
+      }else if(inputBuffer.equalsIgnoreCase("BlinkLed")){
+        startBlink(stateLight);
         recognized = true;
       }
 

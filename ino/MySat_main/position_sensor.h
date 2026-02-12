@@ -60,7 +60,7 @@ uint8_t readRegister(uint8_t reg) {
   Wire.beginTransmission(MPU_ADDRESS);
   Wire.write(reg);
   Wire.endTransmission(false);
-  Wire.requestFrom(MPU_ADDRESS, (uint8_t)1);
+  Wire.requestFrom((uint8_t)MPU_ADDRESS, (uint8_t)1);
   if (Wire.available()) {
     return Wire.read();
   }
@@ -79,7 +79,7 @@ bool readRegistersBurst(uint8_t reg, uint8_t *buf, uint8_t len) {
   Wire.beginTransmission(MPU_ADDRESS);
   Wire.write(reg);
   if (Wire.endTransmission(false) != 0) return false;
-  uint8_t got = Wire.requestFrom(MPU_ADDRESS, len);
+  uint8_t got = Wire.requestFrom((uint8_t)MPU_ADDRESS, (uint8_t)len);
   if (got != len) return false;
   for (uint8_t i = 0; i < len; i++) buf[i] = Wire.read();
   return true;
