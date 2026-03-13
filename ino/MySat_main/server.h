@@ -708,7 +708,7 @@ const char* htmlContent = R"###(
           <div class="col-lg-12" style="text-align:center; margin-top:10px;">
             <button class="control-btn pressable" onclick="toggleLED()">Turn LED</button>
             <button class="control-btn pressable" onclick="toggleMotor()">Turn Motor</button>
-            <button class="control-btn pressable" onclick="getPhoto()">Get Photo</button>
+            <button id="photoBtn" class="control-btn pressable" onclick="getPhoto()">Get Photo</button>
             <div style="display: inline-block; margin-left: 10px; position: relative;">
               <button id="logBtn" class="control-btn pressable" onclick="toggleLogMenu()">
                 Mission Logs ▾
@@ -1174,6 +1174,20 @@ setInterval(updateConnectionStatus, 1000);
                 iaqElement.textContent = iaqStatusText;
                 qualityElement.textContent = qualityText;
                 borderElement.style.border = "15px solid " + color;
+
+                let photoBtn = document.getElementById("photoBtn");
+                if (photoBtn) {
+                  if (responseData.camera_ready) {
+                    photoBtn.disabled = false;
+                    photoBtn.style.opacity = "1"; 
+                    photoBtn.style.cursor = "pointer"; 
+                  } else {
+                    photoBtn.disabled = true;
+                    photoBtn.style.opacity = "0.5";
+                    photoBtn.style.cursor = "not-allowed"; 
+                    photoBtn.title = "Camera not found!";
+                  }
+                }
           
                 updateLightChart(
                   responseData.ph1,
@@ -1291,6 +1305,7 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
   }
   json_sensors["motor_state"] = motor_state;
   json_sensors["callSign"] = callSign;
+  json_sensors["camera_ready"] = init_status.camera_;
   serializeJson(json_sensors, json_string);
 
   if(debug_mode_active){
@@ -1373,6 +1388,11 @@ void handleGetPhotoById() {
 
 void handleGetPhoto() {
   logDebug("[PHOTO] --- Request: /get_photo ---");
+  if (!init_status.camera_) {
+    logDebug("[PHOTO] Error: Camera not found!");
+    server.send(503, "text/plain", "Camera not available"); // 503 Service Unavailable
+    return;
+  }
   unsigned long t_total_start = millis();
 
   Serial.println("Create Photo");

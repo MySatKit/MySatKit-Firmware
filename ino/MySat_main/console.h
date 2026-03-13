@@ -10,6 +10,7 @@ extern String useWiFi;
 extern String ssid;
 extern String password;
 String callSign = "MYSAT";
+extern bool debug_mode_active;
 enum TelemetryMode { text,
                      plotter,
                      debug };
@@ -185,16 +186,11 @@ void handleCommands() {  // read commands for changing data
       } else if (inputBuffer.equalsIgnoreCase("SwitchTelemetry")) {
         if (currentMode == text) {
           currentMode = plotter;
-          debug_mode_active = false;
           reactToCommand("Mode: PLOTTER.");
           selectPlotterMode();
+          
         } else if (currentMode == plotter) {
-          currentMode = debug;
-          debug_mode_active = true;
-          reactToCommand("Mode: DEBUG.");
-        }else if(currentMode == debug){
           currentMode = text;
-          debug_mode_active = false;
           reactToCommand("Mode: TEXT.");
         }
         recognized = true;
@@ -207,7 +203,19 @@ void handleCommands() {  // read commands for changing data
         }
         recognized = true;
 
-      } else if(inputBuffer.equalsIgnoreCase("SetRadio")){
+      } else if(inputBuffer.equalsIgnoreCase("DebugModeOn")){
+        currentMode = debug;
+        debug_mode_active = true;
+        reactToCommand("Mode: DEBUG.");
+        recognized = true;
+
+      } else if(inputBuffer.equalsIgnoreCase("DebugModeOff")){
+        debug_mode_active = false;
+        currentMode = text;
+        reactToCommand("Mode: TEXT.");
+        recognized = true;
+
+      }else if(inputBuffer.equalsIgnoreCase("SetRadio")){
         setRadio();
         reactToCommand("Radio(HC-12) AT-config mode activated.");
         recognized = true;
