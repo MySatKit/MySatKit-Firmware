@@ -33,7 +33,6 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 | | • added option to set a custom "callsign" for the satellite |
 | | • implemented `TurnConsole` command to toggle data broadcasting mode |
 | | • implemented LittleFS file system for reliable data storage |
-| | • implemented HC-12 module configuration via the new `SetRadio` console command |
 | UI Updates → | • refactored console interface: code modularized into a separate `console.h` file |
 | | • added Plotter mode support for real-time graphical data visualization |
 | | • introduced Debug mode for extended system process monitoring |
@@ -42,6 +41,8 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 | Bug Fixes → | • eliminated latencies and lags in the Web GUI performance |
 
 **MySat boards support:**
+> *full:* v.1.5.3+  
+> *partial:* v.1.5.2
 
 ## V.1.1  
 
