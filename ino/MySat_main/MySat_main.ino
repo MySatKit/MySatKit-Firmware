@@ -6,31 +6,81 @@
  * Main satellite firmware that simulates CubeSat operations and 
  *   manages all subsystems of the MySat educational kit
  *
- * version: v.1.1
- * date: 22.10.2025
+ * version: v.1.2
  * author: MySat Developmet team
  * license: Open Source (MIT) – github.com/mysatkit
  *
  * website: mysatkit.com
  * 
- */
+*/
 
-#define FIRMWARE_VERSION "v.1.1"
 #include <Wire.h>
 #include "server.h"
+#include "console.h"
+#include <LittleFS.h>
 
 String ssid = "";
 String password = "";
 String useWiFi = "";
 
-bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
-  if (!SPIFFS.begin(true)) {
-    Serial.println("▲ SPIFFS mount failed!");
-    pauseToRead();
-    return false;
+bool debug_mode_active = false;
+
+bool loadWiFiConfig(String& ssid, String& password, String& useWiFi);
+void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi);
+void promptUserForWiFi(String& ssid, String& password);
+void tryConnectWiFi();
+void setWiFi();
+void connectToWiFi();
+
+const int def_SDA(15);
+const int def_SCL(13);
+
+void setup() {
+  loadStateMotor();
+  control_motor(stateMotor);
+  Serial.begin(115200);
+  if (!LittleFS.begin(true)) {
+    Serial.println("Failed to mount LittleFS!");
+    return;
   }
 
-  File file = SPIFFS.open("/config.txt", "r");
+  Serial.println("LittleFS mounted successfully.");
+
+  connectToWiFi();
+  initStarLed();
+  initSignalLed();
+  setTime();
+  loadCallSign(callSign);
+  Wire.begin(def_SDA, def_SCL);
+  initSensors();
+  if (useWiFi.equalsIgnoreCase("Yes")) {
+    initServer();
+  }
+  //Serial.println("If you want to change WiFi data use the command: SetWIFI ");
+}
+
+unsigned long lastSensorUpdate = 0;
+const unsigned long SENSOR_INTERVAL = 500;
+
+void loop() {
+  if (useWiFi.equalsIgnoreCase("Yes")) {
+    server.handleClient(); 
+  }
+  handleCommands();
+  checkSystemState();
+
+  unsigned long now = millis();
+  if (now - lastSensorUpdate >= SENSOR_INTERVAL) {
+     lastSensorUpdate = now;
+     pointer_of_sensors* data = get_sensors_data();
+     outputData(data);
+  }
+  saveBsecState();
+}
+
+bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
+
+  File file = LittleFS.open("/config.txt", "r");
   if (!file) {
     Serial.println("▲ No config.txt found");
     pauseToRead();
@@ -47,11 +97,11 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   if (lineCount < 3) {
     Serial.println("▲ Invalid config.txt: less than 3 lines");
     pauseToRead();
-    SPIFFS.remove("/config.txt");
+    LittleFS.remove("/config.txt");
     return false;
   }
 
-  file = SPIFFS.open("/config.txt", "r");
+  file = LittleFS.open("/config.txt", "r");
   useWiFi = file.readStringUntil('\n');
   useWiFi.trim();
   ssid = file.readStringUntil('\n');
@@ -70,7 +120,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
 }
 
 void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi) {  //write data to a file
-  File file = SPIFFS.open("/config.txt", "w");
+  File file = LittleFS.open("/config.txt", "w");
   if (!file) {
     Serial.println("▲ Can`t write config.txt");
     pauseToRead();
@@ -122,7 +172,7 @@ void promptUserForWiFi(String& ssid, String& password) {  //receive data from th
   }
 }
 
-void tryConnectWiFi() {            //used for connecting to Wi-Fi within other functions
+void tryConnectWiFi() {  //used for connecting to Wi-Fi within other functions
   while (true) {
     Serial.print("Connecting to WiFi: ");
     Serial.println(ssid);
@@ -150,7 +200,7 @@ void tryConnectWiFi() {            //used for connecting to Wi-Fi within other f
   }
 }
 
-void setWiFi() {                //Handles enabling or disabling Wi-Fi based on user input
+void setWiFi() {  //Handles enabling or disabling Wi-Fi based on user input
   unsigned long startTime = millis();
   unsigned long lastRepeat = startTime;
 
@@ -179,6 +229,8 @@ void setWiFi() {                //Handles enabling or disabling Wi-Fi based on u
 
   } else {
     saveWiFiConfig("none", "none", useWiFi);
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
     Serial.println("WiFi disabled by user.");
     pauseToRead();
   }
@@ -196,110 +248,4 @@ void connectToWiFi() {
     Serial.println("WiFi disabled by user.");
     pauseToRead();
   }
-}
-
-void useCommandForChanging() {  // read commands for changing data
-  static String inputBuffer = "";
-
-  while (Serial.available() > 0) {
-    char inChar = Serial.read();
-    if (inChar == '\r') continue;
-    if (inChar == '\n') {
-      inputBuffer.trim();
-      if (inputBuffer.equalsIgnoreCase("ChangeTime")) {
-        readUARTTime();
-
-      } else if (inputBuffer.equalsIgnoreCase("SetWIFI")) {
-        setWiFi();
-        if (useWiFi.equalsIgnoreCase("Yes")) {
-          tryConnectWiFi();
-        }
-
-      }else if (inputBuffer.equalsIgnoreCase("TurnLed")) {
-        light_on();
-
-      } else if (inputBuffer.equalsIgnoreCase("SolarDeploy")) {
-        setStateMotor(true);
-        pauseToRead();
-
-      } else if (inputBuffer.equalsIgnoreCase("SolarRetract")) {
-        setStateMotor(false);
-        pauseToRead();
-        
-      } else if (inputBuffer.equalsIgnoreCase("SolarMove")) {
-        setStateMotor(!stateMotor);
-        pauseToRead();
-      }else if(inputBuffer.equalsIgnoreCase("Calibrate")){
-        calibrateMPU();
-        pauseToRead();
-      }
-      inputBuffer = "";
-    } else {
-      inputBuffer += inChar;
-    }
-  }
-}
-
-
-const int def_SDA(15);
-const int def_SCL(13);
-
-struct sensors_structure {
-  float ph1;
-  float ph2;
-  float ph3;
-  float ph4;
-  float temperature;
-  float humidity;
-  float gas_resistance;
-  float pressure;
-  int year_;
-  int month_;
-  int day_;
-  int hour_;
-  int minute_;
-  int second_;
-} sensors_data;
-
-void setup() {
-  loadStateMotor();
-  control_motor(stateMotor);
-  Serial.begin(115200);
-  connectToWiFi();
-  initStarLed();
-  setTime();
-  Wire.begin(def_SDA, def_SCL);
-  initSensors();
-  if (useWiFi.equalsIgnoreCase("Yes")) {
-    initServer();
-  }
-  //Serial.println("If you want to change WiFi data use the command: SetWIFI ");
-  delay(3000);
-}
-
-void loop() {
-  useCommandForChanging();
-  
-
-  Serial.println("\n\n\nStart loop (" FIRMWARE_VERSION ")");
-  pointer_of_sensors* data = get_sensors_data();
-  print_sensors_data(data, stateMotor);
-  generateSensorsDataJson(data, stateMotor);
-  Serial.print(stateMotor ? "  Solar panels: Deployed" : "  Solar panels: Retracted");
-  Serial.print("  |  ");
-  Serial.print("StarLED: ");
-  Serial.println(stateLight ? "ON" : "OFF");
-
-  if (useWiFi.equalsIgnoreCase("Yes")) {
-    server.handleClient();
-    Serial.println("================================");
-    Serial.print("CONNECT VIA WIFI “"); Serial.print(ssid); Serial.println("”:");
-    Serial.println(WiFi.localIP());
-    Serial.println("================================");
-  } else {
-    Serial.println("================================");
-    Serial.println("WiFi not configured. Use the command: SetWIFI");
-  }
-
-  delay(1000);
 }

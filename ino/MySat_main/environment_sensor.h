@@ -1,54 +1,109 @@
 //for BME680 - MySat environment (pressure, temperature etc.) sensor
 
 //used for external observations and control of the internal state of the satellite
+#pragma once
 
-#include "Adafruit_BME680.h"
+#include "bsec.h"
+#include <Wire.h>
+#include <Preferences.h>
+#define BME680_I2C_ADDR 0x77
+#define BSEC_SAVE_INTERVAL 3600000UL
 
-Adafruit_BME680 bme;  //BME create
+unsigned long lastSaveTime = 0;  // for save BSEC data
 
-struct bme_struct{
-   float temperature;
-   float humidity;
-   float gas_resistance;
-   float pressure;
+Bsec iaqSensor;
+
+struct bme_struct {
+  float temperature;
+  float humidity;
+  float gas_resistance;
+  float pressure;
+  float iaq;
+  int iaq_accuracy;
+  bool data_available = false;   // for warming up sensor in the beginning and not to send just 0
+  bool first_save_done = false;  // for first save data if sensor do not work for 1 hour(save data by timer in loop())
 } bme_data;
 
-bool initBME(){
-  if (!bme.begin()) {
-    Serial.println(F("▲ Could not find a valid BME680 sensor, check wiring!"));
+Preferences preferences;
+
+void loadState(Bsec &iaqSensor) {
+  preferences.begin("bsec_state", false);
+  if (preferences.isKey("bsec_state")) {
+    uint8_t state[BSEC_MAX_STATE_BLOB_SIZE];
+    size_t n = preferences.getBytes("bsec_state", state, BSEC_MAX_STATE_BLOB_SIZE);
+
+    iaqSensor.setState(state);
+
+    Serial.println("BSEC State loaded from NVS.");
+  } else {
+    Serial.println("BSEC State not found, starting fresh calibration.");
+  }
+  preferences.end();
+}
+
+void saveState(Bsec &iaqSensor) {
+  preferences.begin("bsec_state", false);
+  uint8_t state[BSEC_MAX_STATE_BLOB_SIZE];
+  uint8_t state_len = BSEC_MAX_STATE_BLOB_SIZE;
+  iaqSensor.getState(state);
+  preferences.putBytes("bsec_state", state, state_len);
+  preferences.end();
+  Serial.println("BSEC state saved to NVS.");
+}
+
+void saveBsecState() {
+  unsigned long now = millis();
+  if (now - lastSaveTime >= BSEC_SAVE_INTERVAL) {
+    saveState(iaqSensor);
+
+    lastSaveTime = now;
+    Serial.println("BSEC State saved.");
+  }
+}
+
+bool initBME() {
+  Wire.beginTransmission(BME680_I2C_ADDR);
+  byte error = Wire.endTransmission();
+
+  if (error != 0) {
+    Serial.println(BME680_I2C_ADDR, HEX);
     return false;
   }
-  bme.setTemperatureOversampling(BME680_OS_8X);
-  bme.setHumidityOversampling(BME680_OS_2X);
-  bme.setPressureOversampling(BME680_OS_4X);
-  bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-  bme.setGasHeater(320, 150);  
+  iaqSensor.begin(BME680_I2C_ADDR, Wire);
+
+  if (iaqSensor.bsecStatus != BSEC_OK) {
+    return false;
+  }
+
+  bsec_virtual_sensor_t sensorList[] = {
+    BSEC_OUTPUT_IAQ,
+    BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,
+    BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,
+    BSEC_OUTPUT_RAW_PRESSURE,
+    BSEC_OUTPUT_RAW_GAS
+  };
+
+  iaqSensor.updateSubscription(sensorList, 5, BSEC_SAMPLE_RATE_CONT);
+  loadState(iaqSensor);
   return true;
 }
 
-bme_struct * get_bme_data(){
-  bme_data.temperature = bme.readTemperature();
-  bme_data.pressure = bme.readPressure() / 100;
-  bme_data.humidity = bme.readHumidity();
-  bme_data.gas_resistance = bme.readGas() / 1000.0;
+bme_struct *get_bme_data() {
+
+  if (iaqSensor.run()) {
+    bme_data.iaq = iaqSensor.iaq;
+    bme_data.iaq_accuracy = iaqSensor.iaqAccuracy;
+    bme_data.temperature = iaqSensor.temperature;
+    bme_data.humidity = iaqSensor.humidity;
+    bme_data.pressure = iaqSensor.pressure / 100.0;
+    bme_data.gas_resistance = iaqSensor.gasResistance / 1000.0;
+
+    bme_data.data_available = true;
+
+    if (!bme_data.first_save_done) {
+      saveState(iaqSensor);
+      bme_data.first_save_done = true;
+    }
+  }
   return &bme_data;
-}
-
-void print_data(bme_struct * bme680){
-    Serial.println("===ENVIRONMENT:==================");
-    Serial.print("  Temperature = ");
-    Serial.print(bme680->temperature);
-    Serial.println(F(" *C"));
-    
-    Serial.print("  Pressure = ");
-    Serial.print(bme680->pressure);
-    Serial.println(" hPa");
-
-    Serial.print("  Humidity = ");
-    Serial.print(bme680->humidity);
-    Serial.println(" %");
-
-    Serial.print("  Gas resistance = ");
-    Serial.print(bme680->gas_resistance);
-    Serial.println(" KOhms");
 }

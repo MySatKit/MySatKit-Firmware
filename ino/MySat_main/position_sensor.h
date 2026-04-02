@@ -2,7 +2,8 @@
 
 //used to determine the position of a satellite relative to the Earth's gravitational field
 
-#include <SPIFFS.h>
+#pragma once
+#include <LittleFS.h>
 #define MPU_ADDRESS 0x69
 
 #define PWR_MGMT_1 0x6B
@@ -197,9 +198,7 @@ void calibrateMPU() {
 }
 
 void saveCalibration() {
-  if (!SPIFFS.begin(true)) return;
-
-  File file = SPIFFS.open("/cal.dat", "w");
+  File file = LittleFS.open("/cal.dat", "w");
   if (file) {
     uint32_t magic = 0x6500ABCD;
     file.write((uint8_t*)&magic, 4);
@@ -210,9 +209,7 @@ void saveCalibration() {
 }
 
 void loadCalibration() {
-  if (!SPIFFS.begin(true)) return;
-
-  File file = SPIFFS.open("/cal.dat", "r");
+  File file = LittleFS.open("/cal.dat", "r");
   if (file && file.size() >= 4 + sizeof(calibration)) {
     uint32_t magic;
     file.read((uint8_t*)&magic, 4);
@@ -222,20 +219,4 @@ void loadCalibration() {
     }
     file.close();
   }
-}
-
-void print_data(mpu * data_){
-  Serial.println("===POSITION:=====================");
-  if(!calibration.valid){
-    Serial.println("MPU**** is not calibrated.");
-    return;
-  }
-
-  int roll  = round(data_->roll - offset_roll);
-  int pitch = round(data_->pitch - offset_pitch);
-  int yaw   = round(data_->yaw - offset_yaw);
-
-  Serial.printf("  x = %s%d   deg\n", (roll>0?"+":""), roll);
-  Serial.printf("  y = %s%d   deg\n", (pitch>0?"+":""), pitch);
-  Serial.printf("  z = %s%d   deg\n", (yaw>0?"+":""), yaw);
 }

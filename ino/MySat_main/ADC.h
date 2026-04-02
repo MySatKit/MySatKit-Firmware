@@ -1,6 +1,7 @@
 //for ADS1015 - analog-to-digital convertor (ADC) on MySat
 
 //used to process values ​​from photosensors in the solar navigation system
+#pragma once
 
 #include <Adafruit_ADS1X15.h>
 
@@ -30,13 +31,4 @@ ads_struct * get_ads_data(){
   ads_data.ph3 = ads.readADC_SingleEnded(2); 
   ads_data.ph4 = ads.readADC_SingleEnded(3);
   return &ads_data;
-}
-
-void print_data(ads_struct * data_){
-    Serial.println("===SUN TRACKER:==================");
-    Serial.print("  ph1 ( left) = "); Serial.print(data_->ph1); 
-    Serial.print("  |  ph2 ( back) = "); Serial.println(data_->ph2);
-
-    Serial.print("  ph3 (right) = "); Serial.print(data_->ph3);
-    Serial.print("  |  ph4 (front) = "); Serial.println(data_->ph4);
 }
