@@ -1,17 +1,11 @@
 //collects data from all sensors
 #pragma once
 
-#include <Adafruit_Sensor.h>
-//#include "Adafruit_BME680.h"
-#include "environment_sensor.h"
-#include "position_sensor.h"
-#include "ADC.h"
-#include "RTC.h"
-#include "camera.h"
-#include <ArduinoJson.h>
-#include "power_measure.h"
-
 extern bool debug_mode_active;
+
+#define LOG_INFO(msg)  Serial.println("[INFO]  " + String(msg))
+#define LOG_WARN(msg)  Serial.println("[WARN]  ▲ " + String(msg))
+#define LOG_ERROR(msg) Serial.println("[ERROR] ▲ " + String(msg))
 
 void logDebug(String message){
   if(debug_mode_active){
@@ -21,6 +15,18 @@ void logDebug(String message){
     Serial.println(message);
   }
 }
+
+#define sensor_t adafruit_sensor_t
+#include <Adafruit_Sensor.h>
+#undef sensor_t
+//#include "Adafruit_BME680.h"
+#include "environment_sensor.h"
+#include "position_sensor.h"
+#include "ADC.h"
+#include "RTC.h"
+#include "camera.h"
+#include <ArduinoJson.h>
+#include "power_measure.h"
 
 struct pointer_of_sensors{
   bme_struct * bme_;
@@ -45,7 +51,7 @@ void initSensors(){
   init_status.ads_ = initADS();
   init_status.ina_ = initINA();
   init_status.rtc_ = initRTC();
-  init_camera();
+  init_status.camera_ = init_camera();
 }
 
 pointer_of_sensors * get_sensors_data(){

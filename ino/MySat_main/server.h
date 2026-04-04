@@ -11,170 +11,6 @@
 
 extern String callSign;
 
-const int MAX_PHOTOS = 10;
-const char* PHOTO_INDEX_FILE = "/photo_index.json";
-
-struct PhotoRecord {
-  int id;
-  String timestamp;
-  String filename;
-};
-
-int globalPhotoCounter = 0;
-std::vector<PhotoRecord> photoRecords;
-
-void initPhotoStorage() {
-  logDebug("[PHOTO] Total space: " + String(LittleFS.totalBytes()));
-  logDebug("[PHOTO] Used space: " + String(LittleFS.usedBytes()));
-
-  if (LittleFS.exists(PHOTO_INDEX_FILE)) {
-    Serial.printf("[PHOTO] Found existing index: %s\n", PHOTO_INDEX_FILE);
-
-    File indexFile = LittleFS.open(PHOTO_INDEX_FILE, "r");
-    if (indexFile) {
-      DynamicJsonDocument doc(2048);
-      DeserializationError error = deserializeJson(doc, indexFile);
-      indexFile.close();
-
-      if (!error) {
-        globalPhotoCounter = doc["counter"] | 0;
-        JsonArray photos = doc["photos"].as<JsonArray>();
-
-        for (JsonObject photo : photos) {
-          PhotoRecord record;
-          record.id = photo["id"];
-          record.timestamp = photo["timestamp"].as<String>();
-          record.filename = photo["filename"].as<String>();
-          photoRecords.push_back(record);
-        }
-
-        Serial.printf("[PHOTO] Index loaded. Found %d photos\n", photoRecords.size());
-      } else {
-        Serial.printf("[PHOTO] ERROR: Failed to parse JSON: %s\n", error.c_str());
-        Serial.println("[PHOTO] Starting with empty index");
-        globalPhotoCounter = 0;
-      }
-    } else {
-      Serial.println("[PHOTO] ERROR: Cannot open index file");
-    }
-    File root = LittleFS.open("/");
-      File file = root.openNextFile();
-      while(file){
-        String fileName = file.name();
-        if(fileName.startsWith("photo_") && fileName.endsWith(".jpg")){
-          bool found = false;
-          for(const auto& record : photoRecords){
-            if(record.filename == "/" + fileName || record.filename == fileName){
-              found = true;
-              break;
-            }
-          }
-          if(!found){
-            Serial.printf("[PHOTO] Cleanup: deleting orphan file %s\n", fileName.c_str());
-            String fullPath = "/" + fileName;
-            file.close();
-            LittleFS.remove(fullPath);
-            root = LittleFS.open("/");
-          }
-        }
-        file = root.openNextFile();
-      }
-  } else {
-    Serial.println("[PHOTO] No existing photo index, starting fresh");
-    globalPhotoCounter = 0;
-  }
-}
-
-void savePhotoIndex() {
-  DynamicJsonDocument doc(3072);
-  doc["counter"] = globalPhotoCounter;
-
-  JsonArray photos = doc.createNestedArray("photos");
-  for (const auto& record : photoRecords) {
-    JsonObject photo = photos.createNestedObject();
-    photo["id"] = record.id;
-    photo["timestamp"] = record.timestamp;
-    photo["filename"] = record.filename;
-  }
-
-  File indexFile = LittleFS.open(PHOTO_INDEX_FILE, "w");
-  if (indexFile) {
-    serializeJson(doc, indexFile);
-    indexFile.close();
-    Serial.println("[PHOTO] Index saved");
-  }
-}
-
-bool savePhoto(camera_fb_t* fb, const char* timestamp) {
-  if (photoRecords.size() >= MAX_PHOTOS) {
-    logDebug("[PHOTO] Max limit reached. Deleting: " + photoRecords[0].filename);
-    LittleFS.remove(photoRecords[0].filename.c_str());
-    photoRecords.erase(photoRecords.begin());
-  }
-
-  int nextId = globalPhotoCounter + 1;
-
-  logDebug("[PHOTO] Saving photo #" + String(nextId));
-  logDebug("[PHOTO] RAM free: " + String(ESP.getFreeHeap()) + " bytes");
-
-  char filename[32];
-  snprintf(filename, sizeof(filename), "/photo_%d.jpg", nextId);
-
-  File photoFile = LittleFS.open(filename, "w");
-  if (!photoFile) {
-    Serial.println("[PHOTO] ERROR: Failed to open file for writing");
-
-    logDebug("[PHOTO] Total space: " + String(LittleFS.totalBytes()));
-    logDebug("[PHOTO] Used space: " + String(LittleFS.usedBytes()));
-
-    return false;
-  }
-
-  size_t written = photoFile.write(fb->buf, fb->len);
-  photoFile.close();
-
-  if (written != fb->len) {
-    Serial.printf("[PHOTO] ERROR: Write failed! Expected %d, wrote %d\n",
-                  fb->len, written);
-    LittleFS.remove(filename);
-    return false;
-  }
-
-  globalPhotoCounter = nextId;
-  PhotoRecord record;
-  record.id = globalPhotoCounter;
-  record.timestamp = String(timestamp);
-  record.filename = String(filename);
-  photoRecords.push_back(record);
-
-  savePhotoIndex();
-
-  Serial.printf("[PHOTO] Success! Saved photo #%d (%d bytes)\n", globalPhotoCounter, written);
-  return true;
-}
-
-String getPhotoListJson() {
-  DynamicJsonDocument doc(512);
-  JsonArray ids = doc.createNestedArray("ids");
-
-  for (const auto& record : photoRecords) {
-    ids.add(record.id);
-  }
-
-  String result;
-  serializeJson(doc, result);
-  return result;
-}
-
-PhotoRecord* getPhotoById(int id) {
-  for (auto& record : photoRecords) {
-    if (record.id == id) {
-      return &record;
-    }
-  }
-  return nullptr;
-}
-
 const char* htmlContent = R"###(
 <!DOCTYPE html>
 <html>
@@ -832,9 +668,12 @@ const char* htmlContent = R"###(
 
           document.getElementById("photoFromESP").src =
             "data:image/jpeg;base64," + data.image;
-
-          const date = new Date(data.timestamp);
-          const nice = date.toLocaleString("uk-UA");
+          
+          let nice = "Time unknown(module RTC not found)";
+          if(data.timestamp && data.timestamp !== "unknown"){
+            const date = new Date(data.timestamp);
+            nice = date.toLocaleString("uk-UA");
+          }
 
           document.getElementById("photoInfo").textContent =
              `Photo №${data.id}, taken: ${nice}`;
@@ -862,8 +701,11 @@ const char* htmlContent = R"###(
         document.getElementById("photoFromESP").src =
           "data:image/jpeg;base64," + data.image;
 
-        const date = new Date(data.timestamp);
-        const nice = date.toLocaleString("uk-UA");
+        let nice = "Time unknown(module RTC not found)";
+        if(data.timestamp && data.timestamp !== "unknown"){
+          const date = new Date(data.timestamp);
+          nice = date.toLocaleString("uk-UA");
+        }
 
         document.getElementById("photoInfo").textContent =
           `Photo №${data.id}, taken: ${nice}`;
@@ -1202,10 +1044,13 @@ setInterval(updateConnectionStatus, 1000);
             let hour = responseData.hour_;    
             let minute = responseData.minute_;
             let second = responseData.second_;     
-            date_time_string = new Date(year, month - 1, day, hour, minute, second);
-            document.getElementById("date_time_mysat").textContent = 'Date and time: ' + date_time_string.toLocaleString("uk-UA");
-            console.log(date_time_string);
-
+            if(year === 0){
+              document.getElementById("date_time_mysat").textContent = 'Date and time: ▲ RTC module not found';
+            } else{
+              let date_time_string = new Date(year, month - 1, day, hour, minute, second);
+              document.getElementById("date_time_mysat").textContent = 'Date and time: ' + date_time_string.toLocaleString("uk-UA");
+              console.log(date_time_string);
+            }
               } else {
                 console.error('Error fetching data');
               }
@@ -1311,8 +1156,8 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
   if(debug_mode_active){
     unsigned long dt = t_start - millis();
     if (dt > 1000000) dt = 0;
-    logDebug("JSON Generated: " + String(json_string.length()) + " bytes in " + String(dt) + " ms");
-    Serial.println(json_string);
+    logDebug("[SERVER]JSON Generated: " + String(json_string.length()) + " bytes in " + String(dt) + " ms");
+    logDebug("[SERVER] JSON: " + json_string);
   }
   return &json_string;
 }
@@ -1395,12 +1240,12 @@ void handleGetPhoto() {
   }
   unsigned long t_total_start = millis();
 
-  Serial.println("Create Photo");
+  logDebug("[PHOTO] Capture started");
   unsigned long t_cap = millis();
   camera_fb_t* old_fb = esp_camera_fb_get();
   if (old_fb) {
     esp_camera_fb_return(old_fb);
-    Serial.println("Initial camera frame discarded.");
+    logDebug("[PHOTO] Initial frame discarded.");
   }
 
   camera_fb_t* fb = esp_camera_fb_get();
@@ -1418,16 +1263,20 @@ void handleGetPhoto() {
   }
   logDebug("[PHOTO] Captured: " + String(fb->len) + " bytes in " + String(millis() - t_cap) + " ms");
 
-  rtc_struct* current_time = get_rtc();
-
   char timestamp[25];
-  snprintf(timestamp, sizeof(timestamp), "%04d-%02d-%02dT%02d:%02d:%02d",
+
+  if(init_status.rtc_){
+    rtc_struct* current_time = get_rtc();
+     snprintf(timestamp, sizeof(timestamp), "%04d-%02d-%02dT%02d:%02d:%02d",
            current_time->year_,
            current_time->month_,
            current_time->day_,
            current_time->hour_,
            current_time->minute_,
            current_time->second_);
+  }else{
+    strcpy(timestamp, "unknown");
+  }
 
   if (savePhoto(fb, timestamp)) {
     DynamicJsonDocument doc(fb->len * 1.4 + 256); 
@@ -1563,5 +1412,5 @@ void initServer() {
   });
 
   server.begin();
-  Serial.println("HTTP server started");
+  LOG_INFO("[SERVER] HTTP server started");
 }

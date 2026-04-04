@@ -39,11 +39,11 @@ void setup() {
   control_motor(stateMotor);
   Serial.begin(115200);
   if (!LittleFS.begin(true)) {
-    Serial.println("Failed to mount LittleFS!");
+    LOG_ERROR("[FS] Failed to mount LittleFS!");
     return;
   }
 
-  Serial.println("LittleFS mounted successfully.");
+  LOG_INFO("[FS] LittleFS mounted successfully.");
   initStarLed();
   initSignalLed();
   setTime();
@@ -85,7 +85,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
 
   File file = LittleFS.open("/config.txt", "r");
   if (!file) {
-    Serial.println("▲ No config.txt found");
+    LOG_WARN("[CONFIG] No config.txt found");
     pauseToRead();
     return false;
   }
@@ -98,7 +98,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   file.close();
 
   if (lineCount < 3) {
-    Serial.println("▲ Invalid config.txt: less than 3 lines");
+    LOG_WARN("[CONFIG] Invalid config.txt: less than 3 lines");
     pauseToRead();
     LittleFS.remove("/config.txt");
     return false;
@@ -114,7 +114,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
   file.close();
 
   if (useWiFi.length() == 0 || ssid.length() == 0 || password.length() == 0) {
-    Serial.println("▲ Invalid config: empty fields");
+    LOG_WARN("[CONFIG] Invalid config.txt: empty fields");
     pauseToRead();
     return false;
   }
@@ -125,7 +125,7 @@ bool loadWiFiConfig(String& ssid, String& password, String& useWiFi) {
 void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi) {  //write data to a file
   File file = LittleFS.open("/config.txt", "w");
   if (!file) {
-    Serial.println("▲ Can`t write config.txt");
+    LOG_ERROR("[CONFIG] Can't write config.txt");
     pauseToRead();
     return;
   }
@@ -189,11 +189,11 @@ void tryConnectWiFi() {  //used for connecting to Wi-Fi within other functions
     }
 
     if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("\nWiFi connected successfully!");
+      LOG_INFO("[WIFI] Connected successfully!");
       pauseToRead();
       return;
     } else {
-      Serial.println("\nFailed to connect!");
+      LOG_WARN("[WIFI] Failed to connect to: " + ssid);
       pauseToRead();
       setWiFi();
       if (!useWiFi.equalsIgnoreCase("Yes")) {
@@ -226,7 +226,7 @@ void setWiFi() {  //Handles enabling or disabling Wi-Fi based on user input
     if (ssid.length() > 0 && password.length() > 0) {
       saveWiFiConfig(ssid, password, useWiFi);
     } else {
-      Serial.println("SSID or password is empty. Config not saved.");
+      LOG_WARN("[WIFI] SSID or password is empty. Config not saved.");
       pauseToRead();
     }
 
@@ -234,7 +234,7 @@ void setWiFi() {  //Handles enabling or disabling Wi-Fi based on user input
     saveWiFiConfig("none", "none", useWiFi);
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
-    Serial.println("WiFi disabled by user.");
+    LOG_INFO("[WIFI] WiFi disabled by user.");
     pauseToRead();
   }
 }

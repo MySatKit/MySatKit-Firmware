@@ -40,7 +40,7 @@ void selectPlotterMode() {
     Serial.print("Selected mode: ");
     Serial.println(selection);
   } else {
-    Serial.println("Invalid selection. Keeping current mode.");
+    LOG_WARN("[CONSOLE] Invalid selection. Keeping current mode.");
   }
 }
 
@@ -100,7 +100,7 @@ void auditFileSystem() {
 
   File root = LittleFS.open("/");
   if (!root || !root.isDirectory()) {
-    Serial.println("Error: Failed to open root directory!");
+    LOG_ERROR("[FS] Failed to open root directory!");
     return;
   }
 
@@ -418,13 +418,13 @@ void outputDataText(pointer_of_sensors* data_) {
 
   if (useWiFi.equalsIgnoreCase("Yes")) {
     Serial.println("================================");
-    Serial.print("CONNECT VIA WIFI “");
+    Serial.print("  CONNECT VIA WIFI “");
     Serial.print(ssid);
     Serial.println("”:");
     if (LittleFS.exists("/bootstrap.css")) {
-      Serial.println(WiFi.localIP());
+      Serial.println(  WiFi.localIP());
     } else {
-      Serial.println("▲ Files for WebGUI not found!");
+      Serial.println("  ▲ Files for WebGUI not found!");
     }
     Serial.println("================================");
   } else {

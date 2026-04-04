@@ -38,13 +38,13 @@ bool initMPU() {
     return false;
   }
 
-  writeRegister(PWR_MGMT_1, 0x80);  // reset бо спочатку сенсор може стартувати в смітті
+  writeRegister(PWR_MGMT_1, 0x80);  
   delay(100);
-  writeRegister(PWR_MGMT_1, 0x00); // виходимо з режиму сну щоб сенсор почав працювати
+  writeRegister(PWR_MGMT_1, 0x00); 
   delay(10);
 
 
-  writeRegister(0x1A, 3);  //гасить шум
+  writeRegister(0x1A, 3);  
   writeRegister(0x19, 4);  
   writeRegister(0x1B, 0x00);
   writeRegister(0x1C, 0x00);
@@ -90,9 +90,9 @@ int16_t raw16(const uint8_t *buf, uint8_t idx) {
 }
 
 mpu * get_mpu_data() {
-  const int SAMPLE_RATE = 200;      //частота оновлення датчика, скільки разів на секунду сам датчик вимірює дані
-  const int SAMPLES_PER_CALL = 20;   //за секунду стільки разів ми читаємо і обчислюємо середнє значення
-  const float ALPHA = 0.95f;        //параметр комплементарного фільтра 95% гіроскоп, 5% акселерометр
+  const int SAMPLE_RATE = 200;      
+  const int SAMPLES_PER_CALL = 20;   
+  const float ALPHA = 0.95f;       
 
   static bool first = true;
   if (first) {
@@ -104,7 +104,7 @@ mpu * get_mpu_data() {
     uint8_t buf[14];
     if (!readRegistersBurst(ACCEL_XOUT_H, buf, 14)) break;
 
-    int16_t ax = raw16(buf, 0); //об'єднуємо старші і молодші байти
+    int16_t ax = raw16(buf, 0); 
     int16_t ay = raw16(buf, 2);
     int16_t az = raw16(buf, 4);
     int16_t gx = raw16(buf, 8);
@@ -112,12 +112,12 @@ mpu * get_mpu_data() {
     int16_t gz = raw16(buf, 12);
 
     if (calibration.valid) {
-      gx -= calibration.gyro_x; //відняли офсети початкові
+      gx -= calibration.gyro_x; 
       gy -= calibration.gyro_y;
       gz -= calibration.gyro_z;
     }
 
-    float accel_x = ax / 16384.0f; //переводимо дані у потрібні величини
+    float accel_x = ax / 16384.0f; 
     float accel_y = ay / 16384.0f;
     float accel_z = az / 16384.0f;
 
@@ -130,7 +130,7 @@ mpu * get_mpu_data() {
     lastMicros = now;
     if (dt <= 0 || dt > 0.1f) dt = 1.0f / SAMPLE_RATE;
 
-    angle_x += gyro_x * dt; //інтегруємо
+    angle_x += gyro_x * dt; 
     angle_y += gyro_y * dt;
     angle_z += gyro_z * dt;
 
@@ -158,8 +158,8 @@ mpu * get_mpu_data() {
 }
 
 void calibrateMPU() {
-  Serial.println("Calibration...");
-  Serial.println("Put the device on a surface and do not move for 5 seconds!");
+  LOG_INFO("[MPU] Calibration...");
+  LOG_INFO("[MPU] Put the device on a surface and do not move for 5 seconds!");
   delay(2000);
 
   long sum_gx = 0, sum_gy = 0, sum_gz = 0;
@@ -177,7 +177,7 @@ void calibrateMPU() {
     sum_gz += gz;
 
     if (i % 50 == 0) {
-      Serial.printf(" Progress: %d%%\n", (i * 100) / samples);
+      LOG_INFO("[MPU] Calibration progress: " + String((i * 100) / samples) + "%");
     }
     delay(10);
   }
@@ -194,7 +194,7 @@ void calibrateMPU() {
   offset_pitch = data->pitch;
   offset_yaw = data->yaw;
 
-  Serial.println("Calibration is complete");
+  LOG_INFO("[MPU] Calibration complete");
 }
 
 void saveCalibration() {
@@ -204,7 +204,7 @@ void saveCalibration() {
     file.write((uint8_t*)&magic, 4);
     file.write((uint8_t*)&calibration, sizeof(calibration));
     file.close();
-    Serial.println("Calibration is saved");
+    logDebug("[MPU] Calibration saved to /cal.dat");
   }
 }
 
@@ -215,7 +215,7 @@ void loadCalibration() {
     file.read((uint8_t*)&magic, 4);
     if (magic == 0x6500ABCD) {
       file.read((uint8_t*)&calibration, sizeof(calibration));
-      Serial.println("Calibration is loaded");
+      logDebug("[MPU] Calibration loaded from /cal.dat");
     }
     file.close();
   }

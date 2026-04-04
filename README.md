@@ -22,9 +22,31 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 
 # Release notes
 
+## V.1.3
+
+**Release date:**  
+**Changes**:
+|||
+|:-|--|
+| New Features → | • implemented local photo storage (circular buffer for last 10 images) |
+| | • implemented Telemetry Logging to Flash in CSV format with adjustable periods |
+| | • added `BlinkLED` command for quick hardware connection testing |
+| | • added persistent storage for logging states (ON/OFF) and WiFi configurations |
+| UI Updates → | • new Web GUI Gallery: 10 interactive slots for viewing stored photos |
+| | • integrated "Connection Status" indicator to monitor real-time data sync |
+| | • revamped "Sunlight Trackers" widget with coordinate axes (X/Y) and sensor mapping |
+| | • replaced generic sensors with "Battery" and "Solar panels" monitors (INA3221 data) |
+| | • added log file download capability from ESP32 directly via Web interface |
+| | • minor changes |
+| Bug Fixes → | • minor bug fixes|
+
+**MySat boards support:**
+> *full:* v.1.5.3+  
+> *partial:* v.1.5.2
+
 ## V.1.2
 
-**Release date:**   
+**Release date:** 2026/04/02
 **Changes**:
 |||
 |:-|--|
@@ -42,6 +64,8 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 | | • implemented software protection for servomotor |
 
 **MySat boards support:**
+> *full:* v.1.5.3+  
+> *partial:* v.1.5.2
 
 ## V.1.1  
 
