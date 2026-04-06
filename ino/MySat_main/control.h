@@ -28,7 +28,8 @@ struct SignalLedState {
   uint8_t r, g, b;
   LedMode mode;
   uint8_t brightness;
-  uint16_t interval;
+  uint16_t onInterval;
+  uint16_t offInterval;
   unsigned long lastUpdate;
   bool state;
 };
@@ -39,17 +40,18 @@ void initSignalLed() {   //initializes the SIGNAL LED; used in setup()
   signalStrip.begin();
   signalStrip.setBrightness(SIGNALLED_BRIGHTNESS);
   signalStrip.show();
-  signalLed = { 0, 0, 0, LED_OFF, SIGNALLED_BRIGHTNESS, 500, millis(), false };
+  signalLed = { 0, 0, 0, LED_OFF, SIGNALLED_BRIGHTNESS, 500, 500, millis(), false };
 }
 
 void setSignalLed(uint8_t r, uint8_t g, uint8_t b, LedMode mode,        //configures the SIGNAL LED settings
-                  uint8_t brightness = SIGNALLED_BRIGHTNESS, uint16_t interval = 500) {
+                  uint8_t brightness = SIGNALLED_BRIGHTNESS, uint16_t onInterval = 500, uint16_t offInterval = 0) {
   signalLed.r = r;
   signalLed.g = g;
   signalLed.b = b;
   signalLed.mode = mode;
   signalLed.brightness = brightness;
-  signalLed.interval = interval;
+  signalLed.onInterval = onInterval;
+  signalLed.offInterval = (offInterval == 0) ? onInterval : offInterval;
   signalLed.lastUpdate = millis();
   signalLed.state = true;  //used within LED_BLINK mode to create the blinking effect
   signalStrip.setBrightness(brightness);
@@ -65,7 +67,8 @@ void updateSignalLed() {      //tracks which LED mode should be used;
       signalStrip.setPixelColor(0, signalStrip.Color(signalLed.r, signalLed.g, signalLed.b));
       break;
     case LED_BLINK:
-      if (now - signalLed.lastUpdate > signalLed.interval) {
+      uint16_t currentInterval = signalLed.state ? signalLed.onInterval : signalLed.offInterval;
+      if (now - signalLed.lastUpdate > currentInterval) {
         signalLed.state = !signalLed.state;
         signalLed.lastUpdate = now;
       }
@@ -77,7 +80,7 @@ void updateSignalLed() {      //tracks which LED mode should be used;
 
 void evaluateSystemState() {     //monitors the system state and triggers appropriate LED indication; 
   if (WiFi.status() != WL_CONNECTED) {
-    setSignalLed(255, 255, 0, LED_BLINK, SIGNALLED_BRIGHTNESS, 200);
+    setSignalLed(0, 0, 255, LED_BLINK, SIGNALLED_BRIGHTNESS, 800, 200);
     return;
   }
 
@@ -106,6 +109,45 @@ void initStarLed() {  //initializes the STAR LED; used in setup()
   ledcSetup(STARLED_PWM_CHANNEL, 5000, 8);
   ledcAttachPin(LED, STARLED_PWM_CHANNEL);
   control_light(false);
+}
+
+struct BlinkLedState{
+  bool active;
+  unsigned long lastBlink;
+  uint8_t step;
+  bool returnState;
+};
+
+BlinkLedState blinkLedState = {false, 0, 0, false};
+
+void startBlink(bool current_state_light){
+  blinkLedState.active = true;
+  blinkLedState.lastBlink = millis();
+  blinkLedState.step = 0;
+  blinkLedState.returnState = current_state_light;
+}
+
+void updateBlinkStarLed(){
+  if(!blinkLedState.active) return;
+
+  unsigned long now = millis();
+
+  if(now - blinkLedState.lastBlink < 300) return;
+
+  switch(blinkLedState.step){
+    case 0: control_light(false); break; 
+    case 1: control_light(true); break;  
+    case 2: control_light(false); break;  
+    case 3: control_light(true); break;   
+    case 4: control_light(false); break;  
+    case 5:
+      control_light(blinkLedState.returnState);  
+      blinkLedState.active = false;
+      return;
+  }
+
+  blinkLedState.step++;
+  blinkLedState.lastBlink = now;
 }
 
 void control_motor(bool state_motor) {  //deploys or retracts the solar panels depending on the input parameter (true/false)

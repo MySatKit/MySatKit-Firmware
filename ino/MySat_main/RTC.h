@@ -73,12 +73,12 @@ void readUARTTime() {                   //Read date and time data from the user
   Serial.println(second);
 
   if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59 || second > 59) {
-    Serial.println("▲ Invalid input! Please try again.");
+    LOG_WARN("[RTC] Invalid input! Please try again.");
     return;
   }
 
   setRTC(year, month, day, hour, minute, second);
-  Serial.println("Time is now set!");
+  LOG_INFO("[RTC] Time is now set!");
   pauseToRead();
 }
 
@@ -86,7 +86,7 @@ void setTime() {            //Called during the setup() function
   RtcDateTime now = Rtc.GetDateTime(); 
 
   if (!now.IsValid()) {
-    Serial.println("▲ RTC time is invalid. Please set time.");
+    LOG_WARN("[RTC] Time is invalid. Please set time.");
     readUARTTime();
   } else {
     //Serial.println("If you want to change the time, use the command: ChangeTime ");

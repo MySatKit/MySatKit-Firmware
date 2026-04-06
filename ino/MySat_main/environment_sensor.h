@@ -34,9 +34,9 @@ void loadState(Bsec &iaqSensor) {
 
     iaqSensor.setState(state);
 
-    Serial.println("BSEC State loaded from NVS.");
+    logDebug("[BSEC] State loaded from NVS.");
   } else {
-    Serial.println("BSEC State not found, starting fresh calibration.");
+    logDebug("[BSEC] State not found, starting fresh calibration.");
   }
   preferences.end();
 }
@@ -48,7 +48,7 @@ void saveState(Bsec &iaqSensor) {
   iaqSensor.getState(state);
   preferences.putBytes("bsec_state", state, state_len);
   preferences.end();
-  Serial.println("BSEC state saved to NVS.");
+  logDebug("[BSEC] State saved to NVS.");
 }
 
 void saveBsecState() {
@@ -57,7 +57,7 @@ void saveBsecState() {
     saveState(iaqSensor);
 
     lastSaveTime = now;
-    Serial.println("BSEC State saved.");
+    logDebug("[BSEC] State saved (periodic, 1h interval).");
   }
 }
 
@@ -66,7 +66,7 @@ bool initBME() {
   byte error = Wire.endTransmission();
 
   if (error != 0) {
-    Serial.println(BME680_I2C_ADDR, HEX);
+    logDebug("[BSEC] I2C addr 0x" + String(BME680_I2C_ADDR, HEX) + " not responding.");
     return false;
   }
   iaqSensor.begin(BME680_I2C_ADDR, Wire);

@@ -1,14 +1,16 @@
 #pragma once
 #include "sensors_data.h"
 #include "control.h"
+#include "data_logger.h"
 #include <LittleFS.h>
-#define FIRMWARE_VERSION "v.1.2"
+#define FIRMWARE_VERSION "v.1.3"
 #define OUTPUT_FREQUENCE 1500
 
 extern String useWiFi;
 extern String ssid;
 extern String password;
 String callSign = "MYSAT";
+extern bool debug_mode_active;
 enum TelemetryMode { text,
                      plotter,
                      debug };
@@ -38,7 +40,7 @@ void selectPlotterMode() {
     Serial.print("Selected mode: ");
     Serial.println(selection);
   } else {
-    Serial.println("Invalid selection. Keeping current mode.");
+    LOG_WARN("[CONSOLE] Invalid selection. Keeping current mode.");
   }
 }
 
@@ -84,6 +86,46 @@ void turnConsole() {
   output = !output;
 }
 
+void auditFileSystem() {
+  Serial.println("\n======= FILE SYSTEM AUDIT (LittleFS) =======");
+
+  size_t total = LittleFS.totalBytes();
+  size_t used = LittleFS.usedBytes();
+  float usagePercent = (float)used / total * 100.0;
+
+  Serial.printf("TOTAL CAPACITY: %u bytes (%.2f KB)\n", total, total / 1024.0);
+  Serial.printf("USED SPACE:     %u bytes (%.2f KB) [%.1f%%]\n", used, used / 1024.0, usagePercent);
+  Serial.printf("FREE SPACE:     %u bytes (%.2f KB)\n", total - used, (total - used) / 1024.0);
+  Serial.println("--------------------------------------------------");
+
+  File root = LittleFS.open("/");
+  if (!root || !root.isDirectory()) {
+    LOG_ERROR("[FS] Failed to open root directory!");
+    return;
+  }
+
+  File file = root.openNextFile();
+  while (file) {
+    if (file.isDirectory()) {
+      Serial.printf("[DIR]  /%s\n", file.name());
+      int allDirSize = 0;
+      
+      File subDir = LittleFS.open(file.name());
+      File subFile = subDir.openNextFile();
+      while (subFile) {
+        Serial.printf("      |-- %-20s | %u bytes\n", subFile.name(), subFile.size());
+        allDirSize += subFile.size();
+        subFile = subDir.openNextFile();
+      }
+      Serial.printf("Total Directory Size: %u bytes\n", allDirSize);
+    } else {
+      Serial.printf("[FILE] /%-20s | %u bytes\n", file.name(), file.size());
+    }
+    file = root.openNextFile();
+  }
+  Serial.println("==================================================\n");
+}
+
 void handleCommands() {  // read commands for changing data
   static String inputBuffer = "";
 
@@ -103,6 +145,7 @@ void handleCommands() {  // read commands for changing data
         setWiFi();
         if (useWiFi.equalsIgnoreCase("Yes")) {
           tryConnectWiFi();
+          initServer();
         }
         recognized = true;
 
@@ -143,17 +186,12 @@ void handleCommands() {  // read commands for changing data
       } else if (inputBuffer.equalsIgnoreCase("SwitchTelemetry")) {
         if (currentMode == text) {
           currentMode = plotter;
-          debug_mode_active = false;
           reactToCommand("Mode: PLOTTER.");
           selectPlotterMode();
+          
         } else if (currentMode == plotter) {
-          currentMode = debug;
-          debug_mode_active = true;
-          reactToCommand("Mode: DEBUG.");
-        }else if(currentMode == debug){
           currentMode = text;
-          debug_mode_active = false;
-          reactToCommand("Mode: TEXT");
+          reactToCommand("Mode: TEXT.");
         }
         recognized = true;
 
@@ -165,11 +203,46 @@ void handleCommands() {  // read commands for changing data
         }
         recognized = true;
 
-      } else if(inputBuffer.equalsIgnoreCase("SetRadio")){
-        setRadio();
+      } else if(inputBuffer.equalsIgnoreCase("DebugModeOn")){
+        currentMode = debug;
+        debug_mode_active = true;
+        reactToCommand("Mode: DEBUG.");
         recognized = true;
-        reactToCommand("Radio(HC-12) AT-config mode activated");
+
+      } else if(inputBuffer.equalsIgnoreCase("DebugModeOff")){
+        debug_mode_active = false;
+        currentMode = text;
+        reactToCommand("Mode: TEXT.");
+        recognized = true;
+
+      }else if(inputBuffer.equalsIgnoreCase("SetRadio")){
+        setRadio();
+        reactToCommand("Radio(HC-12) AT-config mode activated.");
+        recognized = true;
         
+      }else if(inputBuffer.equalsIgnoreCase("StartLogging")){
+        startLogging();
+        reactToCommand("Start logging...");
+        recognized = true;
+        
+      }else if(inputBuffer.equalsIgnoreCase("StopLogging")){
+        stopLogging();
+        reactToCommand("Stop logging...");
+        recognized = true;
+
+      }else if(inputBuffer.equalsIgnoreCase("AuditFileSystem")){
+        auditFileSystem();
+        pauseToRead();
+        recognized = true;
+
+      }else if(inputBuffer.equalsIgnoreCase("ListLogFiles")){
+        listLogFiles();
+        pauseToRead();
+        recognized = true;
+
+      }else if(inputBuffer.equalsIgnoreCase("BlinkLed")){
+        startBlink(stateLight);
+        recognized = true;
       }
 
       if (inputBuffer.length() >= 3 && !recognized) {
@@ -208,7 +281,7 @@ void outputDataText(pointer_of_sensors* data_) {
       Serial.print("  IAQ = ");
       Serial.println(data_->bme_->iaq);
 
-      Serial.print(" IAQ Accuracy: ");
+      Serial.print("  IAQ Accuracy: ");
       Serial.println(data_->bme_->iaq_accuracy);
 
     } else {
@@ -240,9 +313,9 @@ void outputDataText(pointer_of_sensors* data_) {
 
   if (init_status.ads_) {
     Serial.println("===SUN TRACKER:==================");
-    Serial.print("  ph1 ( left) = ");
+    Serial.print("  ph1 (left) = ");
     Serial.print(data_->ads_->ph1);
-    Serial.print("  |  ph2 ( back) = ");
+    Serial.print("   |  ph2 (back) = ");
     Serial.println(data_->ads_->ph2);
 
     Serial.print("  ph3 (right) = ");
@@ -331,12 +404,28 @@ void outputDataText(pointer_of_sensors* data_) {
   Serial.print("StarLED: ");
   Serial.println(stateLight ? "ON" : "OFF");
 
+  if(logger.total_rows >= MAX_TOTAL_ROWS && logger.total_rows > 0){
+    Serial.println("  Logging: STOPPED (memory full)");
+  }else if(logger.enabled){
+    Serial.print("  Logging: ACTIVE (period: ");
+    Serial.print(logger.period_seconds);
+    Serial.print(" s, rows: ");
+    Serial.print(logger.total_rows);
+    Serial.print("/");
+    Serial.print(MAX_TOTAL_ROWS);
+    Serial.println(")");
+  }
+
   if (useWiFi.equalsIgnoreCase("Yes")) {
     Serial.println("================================");
-    Serial.print("CONNECT VIA WIFI “");
+    Serial.print("  CONNECT VIA WIFI “");
     Serial.print(ssid);
     Serial.println("”:");
-    Serial.println(WiFi.localIP());
+    if (LittleFS.exists("/bootstrap.css")) {
+      Serial.println(  WiFi.localIP());
+    } else {
+      Serial.println("  ▲ Files for WebGUI not found!");
+    }
     Serial.println("================================");
   } else {
     Serial.println("================================");
@@ -434,4 +523,6 @@ void outputData(pointer_of_sensors* data_) {
     }
     lastOutput = now;
   }
+
+  handleDataLogging(data_);
 }
