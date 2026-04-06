@@ -8,7 +8,7 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 **Required software:** Arduino IDE 2.0+.
 
 **Instructions:**
-[MYSAT KIT GUIDE](https://docs.google.com/document/d/146EPTvLMzydpwUMsbJWAC3gcRO6yPDe3p8kIpxRUwU4/edit?tab=t.0) [(→ Microcontroller Setup Guide)](URL)
+[MYSAT KIT GUIDE](https://docs.google.com/document/d/146EPTvLMzydpwUMsbJWAC3gcRO6yPDe3p8kIpxRUwU4/edit?tab=t.0) [(→ Microcontroller Setup Guide)](https://docs.google.com/document/d/146EPTvLMzydpwUMsbJWAC3gcRO6yPDe3p8kIpxRUwU4/edit?tab=t.mkgezpqxvo88#heading=h.d7als96if9cq)
 
 **Repo structure:**  
 - `ino` - contains Arduino projects
@@ -35,14 +35,14 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 | UI Updates → | • new Web GUI Gallery: 10 interactive slots for viewing stored photos |
 | | • integrated "Connection Status" indicator to monitor real-time data sync |
 | | • revamped "Sunlight Trackers" widget with coordinate axes (X/Y) and sensor mapping |
-| | • replaced generic sensors with "Battery" and "Solar panels" monitors (INA3221 data) |
-| | • added log file download capability from ESP32 directly via Web interface |
+| | • added "Battery" and "Solar panels" monitors to Web GUI |
+| | • added log file download capability from ESP32 directly via Web GUI |
 | | • minor changes |
 | Bug Fixes → | • minor bug fixes|
 
 **MySat boards support:**
-> *full:* v.1.5.3+  
-> *partial:* v.1.5.2
+> *full:* v.1.5.6+  
+> *partial:* v.1.5.2+
 
 ## V.1.2
 
@@ -51,12 +51,11 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 |||
 |:-|--|
 | New Features → | • integrated Signal LED system for real-time system status indication |
-| | • added Indoor Air Quality (IAQ) index calculation based on the BME680 module |
-| | • added option to set a custom "callsign" for the satellite |
+| | • added Indoor Air Quality (IAQ) index calculation based on the BME680 data |
+| | • added option to set a custom callsign for the satellite |
 | | • implemented `TurnConsole` command to toggle data broadcasting mode |
 | | • implemented LittleFS file system for reliable data storage |
-| UI Updates → | • refactored console interface: code modularized into a separate `console.h` file |
-| | • added Plotter mode support for real-time graphical data visualization |
+| UI Updates → | • added Arduino IDE Plotter mode for real-time data visualization |
 | | • introduced Debug mode for extended system process monitoring |
 | | • ensured Web GUI autonomy (offline operation without internet connection) |
 | | • minor changes and bug fixes |
@@ -64,8 +63,8 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 | | • implemented software protection for servomotor |
 
 **MySat boards support:**
-> *full:* v.1.5.3+  
-> *partial:* v.1.5.2
+> *full:* v.1.5.6+  
+> *partial:* v.1.5.2+
 
 ## V.1.1  
 
