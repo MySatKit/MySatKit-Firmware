@@ -1,6 +1,7 @@
 /*
  * MYSAT FIRMWARE 
- * for Nano board (ATmega328p)
+ * for Nano board (ATmega328p)			! select "Arduino Nano" in Arduino IDE Boards Manager
+ *
  *
  * Controls the satellite subsystems in accordance with commands from the ESP32-CAM (main satellite OBC):
  *  - servomotor (MySat solar panels deployment);
@@ -9,7 +10,6 @@
  * version: v.1.2.0
  * date: 23.09.2025
  *
- * look for instructions here: [link]
  *
  */
 

@@ -558,12 +558,23 @@ const char* htmlContent = R"###(
                   Download Selected (.csv)
                 </button>
               </div>
+          <div class = "row">
+            <div class = "col-lg-4 text-data m-2">
+              <h3 id = "text_data">X:</h3>
+              <h4 id = "roll">0</h3>
+            </div>
+            <div class = "col-lg-4 text-data m-2">
+              <h3 id = "text_data">Y:</h3>
+              <h4 id = "pitch">0</h3>
+            </div>
+            <div class = "col-lg-3 text-data m-2">
+              <h3 id = "text_data">Z:</h3>
+              <h4 id = "yaw">0</h3>
             </div>
         </div>
 
       </div>
           </div>
-
         </div>
       </div>
     </div>
