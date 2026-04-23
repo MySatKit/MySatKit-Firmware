@@ -24,7 +24,7 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 
 ## V.1.3
 
-**Release date:**  
+**Release date: 06.04.2026**  
 **Changes**:
 |||
 |:-|--|
