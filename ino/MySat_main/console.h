@@ -2,6 +2,7 @@
 #include "sensors_data.h"
 #include "control.h"
 #include "data_logger.h"
+#include "event_log.h" 
 #include <LittleFS.h>
 #define FIRMWARE_VERSION "v.1.3"
 #define OUTPUT_FREQUENCE 1500
@@ -10,6 +11,7 @@ extern String useWiFi;
 extern String ssid;
 extern String password;
 String callSign = "MYSAT";
+static uint32_t frameCounter = 0;
 extern bool debug_mode_active;
 enum TelemetryMode { text,
                      plotter,
@@ -222,7 +224,6 @@ void handleCommands() {  // read commands for changing data
         
       }else if(inputBuffer.equalsIgnoreCase("StartLogging")){
         startLogging();
-        reactToCommand("Start logging...");
         recognized = true;
         
       }else if(inputBuffer.equalsIgnoreCase("StopLogging")){
@@ -243,6 +244,14 @@ void handleCommands() {  // read commands for changing data
       }else if(inputBuffer.equalsIgnoreCase("BlinkLed")){
         startBlink(stateLight);
         recognized = true;
+
+      }else if(inputBuffer.equalsIgnoreCase("SendEventLog")) {
+        sendEventLogToSerial();
+        recognized = true;
+      }
+
+      if (recognized) {
+        writeEventLog("COMMAND_RECEIVED \"" + inputBuffer + "\"");
       }
 
       if (inputBuffer.length() >= 3 && !recognized) {
@@ -258,31 +267,31 @@ void handleCommands() {  // read commands for changing data
 
 void outputDataText(pointer_of_sensors* data_) {
   Serial.println("\n\n\n" + callSign + "(" FIRMWARE_VERSION ")");
+  Serial.println("  Frame: " + String(frameCounter));
 
   if (init_status.bme_) {
     if (data_->bme_->data_available) {
       Serial.println("===ENVIRONMENT:==================");
-      Serial.print("  Temperature = ");
+
+      Serial.print("  Temp = ");
       Serial.print(data_->bme_->temperature);
-      Serial.println(F(" *C"));
-
-      Serial.print("  Pressure = ");
-      Serial.print(data_->bme_->pressure);
-      Serial.println(" hPa");
-
-      Serial.print("  Humidity = ");
-      Serial.print(data_->bme_->humidity);
-      Serial.println(" %");
-
-      Serial.print("  Gas resistance = ");
+      Serial.print(F(" *C"));
+      Serial.print("   \t| Gas res. = ");
       Serial.print(data_->bme_->gas_resistance);
       Serial.println(" KOhms");
 
-      Serial.print("  IAQ = ");
-      Serial.println(data_->bme_->iaq);
-
-      Serial.print("  IAQ Accuracy: ");
-      Serial.println(data_->bme_->iaq_accuracy);
+      Serial.print("  Pres = ");
+      Serial.print(data_->bme_->pressure);
+      Serial.print(" hPa");
+      Serial.print(" \t| IAQ = ");
+      Serial.print(data_->bme_->iaq);
+      switch (data_->bme_->iaq_accuracy) {
+        case 0: Serial.println(" (low)");      break;
+        case 1: Serial.println(" (medium)");   break;
+        case 2: Serial.println(" (high)");     break;
+        case 3: Serial.println(" (verified)"); break;
+        default: Serial.println(" (?)");       break;
+      }
 
     } else {
       Serial.println("===ENVIRONMENT:==================");
@@ -405,9 +414,9 @@ void outputDataText(pointer_of_sensors* data_) {
   Serial.println(stateLight ? "ON" : "OFF");
 
   if(logger.total_rows >= MAX_TOTAL_ROWS && logger.total_rows > 0){
-    Serial.println("  Logging: STOPPED (memory full)");
+    Serial.println("  Mission data logging: STOPPED (memory full)");
   }else if(logger.enabled){
-    Serial.print("  Logging: ACTIVE (period: ");
+    Serial.print("  Mission data logging: ACTIVE (period: ");
     Serial.print(logger.period_seconds);
     Serial.print(" s, rows: ");
     Serial.print(logger.total_rows);
@@ -516,6 +525,7 @@ void outputData(pointer_of_sensors* data_) {
   unsigned long now = millis();
 
   if (now - lastOutput >= OUTPUT_FREQUENCE && output) {
+    frameCounter++;
     if (currentMode == text) {
       outputDataText(data_);
     } else if (currentMode == plotter) {

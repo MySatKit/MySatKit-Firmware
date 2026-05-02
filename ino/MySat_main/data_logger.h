@@ -44,21 +44,32 @@ String createCSVHeader() {
 }
 
 bool createNewLogFile() {
-  rtc_struct* rtc = get_rtc();
+  char filename[48];
 
-  char filename[64];
-  snprintf(filename, sizeof(filename), "/log_%04d%02d%02d_%02d%02d%02d_row%d.csv",
-           rtc->year_, rtc->month_, rtc->day_,
-           rtc->hour_, rtc->minute_, rtc->second_,
-           logger.total_rows);
+  if (init_status.rtc_) {
+    rtc_struct* rtc = get_rtc();
+    snprintf(filename, sizeof(filename), "/mdata_%04d%02d%02d_%02d%02d%02d_row%d.csv",
+             rtc->year_, rtc->month_, rtc->day_,
+             rtc->hour_, rtc->minute_, rtc->second_,
+             logger.total_rows);
+  } else {
+    LOG_WARN("[LOGGER] RTC unavailable, using uptime for filename.");
+    snprintf(filename, sizeof(filename), "/mdata_nortc_%lu_row%d.csv",
+             millis(), logger.total_rows);
+  }
 
   logger.current_filename = String(filename);
   logger.current_file_rows = 0;
   logger.file_number++;
 
+  logDebug("[LOGGER] Attempting: " + logger.current_filename
+           + "  free: " + String(LittleFS.totalBytes() - LittleFS.usedBytes()) + "B");
+
   File file = LittleFS.open(logger.current_filename.c_str(), "w");
   if (!file) {
-    LOG_ERROR("[LOGGER] Failed to create file!");
+    LOG_ERROR("[LOGGER] Failed to create file: " + logger.current_filename);
+    LOG_ERROR("[LOGGER] FS used: " + String(LittleFS.usedBytes())
+              + " / " + String(LittleFS.totalBytes()) + "B");
     return false;
   }
 
@@ -95,20 +106,14 @@ void loadLoggerState() {
       }
 
       if (logger.enabled && logger.current_filename.length() > 0) {
-        if (!LittleFS.exists(logger.current_filename.c_str())) {
-          LOG_WARN("[LOGGER] File lost after reboot: " + logger.current_filename);
-          LOG_INFO("[LOGGER] Creating new file...");
+        LOG_INFO("[LOGGER] New session after reboot. Creating new file...");
+        LOG_INFO("[LOGGER] Total rows so far: " + String(logger.total_rows));
 
-          if (!createNewLogFile()) {
-            LOG_ERROR("[LOGGER] Cannot create file!");
-            logger.enabled = false;
-            saveLoggerState();
-            return;
-          }
-        } else {
-          LOG_INFO("[LOGGER] Resumed after reboot: " + logger.current_filename
-                   + " rows=" + String(logger.total_rows)
-                   + " file#=" + String(logger.file_number));
+        if (!createNewLogFile()) {
+          LOG_ERROR("[LOGGER] Cannot create file after reboot!");
+          logger.enabled = false;
+          saveLoggerState();
+          return;
         }
 
         logger.session_start = millis();
@@ -130,13 +135,12 @@ void deleteOldestLogFile() {
 
   while (file) {
     String filename = file.name();
-    if (filename.startsWith("/log_") && filename.endsWith(".csv")) {
+    if ((filename.startsWith("/mdata_") || filename.startsWith("mdata_")) && filename.endsWith(".csv")) {
       int row_pos = filename.indexOf("_row");
-      if (row_pos > 0) {
+       if (row_pos > 0) {
         int dot_pos = filename.indexOf(".csv");
         String row_str = filename.substring(row_pos + 4, dot_pos);
-        int row_num = row_str.toInt();
-
+        int row_num = row_str.toInt(); 
         if (row_num < smallest_row) {
           smallest_row = row_num;
           oldest_file = filename;
@@ -290,7 +294,6 @@ void startLogging() {
   logger.enabled = true;
   logger.session_start = millis();
   logger.last_log_time = millis();
-  logger.total_rows = 0;
   logger.file_number = 0;
 
   if (!createNewLogFile()) {
@@ -306,7 +309,6 @@ void startLogging() {
   LOG_INFO("[LOGGER] Period: " + String(logger.period_seconds) + " s"
            + "  Max rows: " + String(MAX_TOTAL_ROWS)
            + "  Est. max time: ~" + String(max_time_hours) + " h");
-  LOG_INFO("[LOGGER] Files rotate every hour");
 }
 
 void stopLogging() {
@@ -327,7 +329,7 @@ void listLogFiles() {
   int count = 0;
   while (file) {
     String filename = file.name();
-    if (filename.startsWith("/log_") && filename.endsWith(".csv")) {
+    if ((filename.startsWith("/mdata_") || filename.startsWith("mdata_")) && filename.endsWith(".csv")) {
       Serial.print(filename);
       Serial.print(" (");
       Serial.print(file.size());

@@ -8,6 +8,7 @@
 #include "sensors_data.h"
 #include "control.h"
 #include "base64.h"
+#include "event_log.h"
 
 extern String callSign;
 
@@ -547,15 +548,19 @@ const char* htmlContent = R"###(
             <button id="photoBtn" class="control-btn pressable" onclick="getPhoto()">Get Photo</button>
             <div style="display: inline-block; margin-left: 10px; position: relative;">
               <button id="logBtn" class="control-btn pressable" onclick="toggleLogMenu()">
-                Mission Logs ▾
+                Onboard data ▾
               </button>
               <div id="logMenu">
-                <p>Select log file:</p>
+                <p>Mission data files:</p>
                 <select id="logFilesList" class="control-btn">
                   <option>Loading logs...</option>
                 </select>
                 <button class="control-btn pressable log-download-btn" onclick="downloadSelectedLog()">
                   Download Selected (.csv)
+                </button>
+                <hr style="border-color:rgba(255,255,255,0.3); margin:6px 0;">
+                <button class="control-btn pressable log-download-btn" onclick="downloadEventLog()">
+                  Download Event Log (.txt)
                 </button>
               </div>
             </div>
@@ -767,6 +772,10 @@ const char* htmlContent = R"###(
 
       console.log("Downloading log:", fileName);
       window.location.href = `/download_log?file=${fileName}`;
+    }
+
+    function downloadEventLog() {
+      window.location.href = '/download_event_log';
     }
 
     window.onclick = function(event) {
@@ -1290,6 +1299,7 @@ void handleGetPhoto() {
     serializeJson(doc, response);
     
     server.send(200, "application/json", response);
+    writeEventLog("PHOTO " + String(globalPhotoCounter));
     logDebug("[PHOTO] Successfully saved and sent photo #" + String(globalPhotoCounter));
   } else {
     server.send(500, "text/plain", "Failed to save photo");
@@ -1312,16 +1322,15 @@ void handleGetLogList() {
         String filename = String(file.name());
         if (filename.startsWith("/")) filename = filename.substring(1);
 
-        if (filename.startsWith("log_") && filename.endsWith(".csv")) {
+        if (filename.startsWith("mdata_") && filename.endsWith(".csv")) {
             JsonObject fileObj = files.createNestedObject();
             fileObj["name"] = filename;
             fileObj["size"] = file.size();
 
-            if (filename.length() >= 20) {
-                String d = filename.substring(4, 12);  
-                String t = filename.substring(13, 19); 
-                
-                fileObj["date"] = d.substring(0, 4) + "-" + d.substring(4, 6) + "-" + d.substring(6, 8) + 
+            if (filename.length() >= 29) {
+                String d = filename.substring(6, 14);   
+                String t = filename.substring(15, 21); 
+                fileObj["date"] = d.substring(0, 4) + "-" + d.substring(4, 6) + "-" + d.substring(6, 8) +
                                   " " + t.substring(0, 2) + ":" + t.substring(2, 4);
             } else {
                 fileObj["date"] = "Unknown Date";
@@ -1361,6 +1370,24 @@ void handleDownloadLog() {
   logDebug("[WEB] File downloaded: " + filename);
 }
 
+void handleDownloadEventLog() {
+  logDebug("[WEB] Request: /download_event_log");
+  const char* path = "/event_log.txt";
+  if (!LittleFS.exists(path)) {
+    server.send(404, "text/plain", "Event log not found");
+    return;
+  }
+  File file = LittleFS.open(path, "r");
+  if (!file) {
+    server.send(500, "text/plain", "Failed to open event log");
+    return;
+  }
+  server.sendHeader("Content-Disposition", "attachment; filename=\"event_log.txt\"");
+  server.streamFile(file, "text/plain");
+  file.close();
+  logDebug("[WEB] Event log downloaded");
+}
+
 bool stateLight = false;
 
 void light_on() {
@@ -1389,6 +1416,7 @@ void initServer() {
   server.on("/get_photo_by_id", HTTP_GET, handleGetPhotoById);
   server.on("/get_log_list", HTTP_GET, handleGetLogList);
   server.on("/download_log", HTTP_GET, handleDownloadLog);
+  server.on("/download_event_log", HTTP_GET, handleDownloadEventLog);
 
   server.onNotFound([]() {
     String path = server.uri();

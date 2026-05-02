@@ -44,13 +44,15 @@ void setup() {
   }
 
   LOG_INFO("[FS] LittleFS mounted successfully.");
+  Wire.begin(def_SDA, def_SCL);
+  initSensors();
   initStarLed();
   initSignalLed();
   setTime();
+  writeEventLog("SHUTDOWN");  
+  initEventLog();
   loadLoggerState();
   loadCallSign(callSign);
-  Wire.begin(def_SDA, def_SCL);
-  initSensors();
   if(loadWiFiConfig(ssid, password, useWiFi)){
     if (useWiFi.equalsIgnoreCase("Yes")) {
       tryConnectWiFi();
