@@ -9,6 +9,7 @@
 #include "control.h"
 #include "base64.h"
 #include "event_log.h"
+#include "data_logger.h"
 
 extern String callSign;
 
@@ -268,6 +269,16 @@ const char* htmlContent = R"###(
 #logMenu p {
   font-size: 12px;
   margin-bottom: 5px;
+}
+#loggingDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+  background-color: #555;
+  transition: background-color 0.3s ease;
 }
 #logFilesList {
   width: 100%;
@@ -550,6 +561,7 @@ const char* htmlContent = R"###(
               <button id="logBtn" class="control-btn pressable" onclick="toggleLogMenu()">
                 Onboard data ▾
               </button>
+              <span id="loggingDot" title="Mission data logging status"></span>
               <div id="logMenu">
                 <p>Mission data files:</p>
                 <select id="logFilesList" class="control-btn">
@@ -1038,6 +1050,16 @@ setInterval(updateConnectionStatus, 1000);
                     photoBtn.title = "Camera not found!";
                   }
                 }
+
+                const loggingDot = document.getElementById("loggingDot");
+                if (loggingDot) {
+                  loggingDot.style.backgroundColor = responseData.logging_active
+                    ? "#00FF00"  
+                    : "#FF4444"; 
+                  loggingDot.title = responseData.logging_active
+                    ? "Mission data logging: ACTIVE"
+                    : "Mission data logging: STOPPED";
+                }
           
                 updateLightChart(
                   responseData.ph1,
@@ -1088,7 +1110,7 @@ WebServer server(80);
 
 String json_string = "";
 
-const size_t bufferSize = JSON_OBJECT_SIZE(35);
+const size_t bufferSize = JSON_OBJECT_SIZE(36); 
 
 DynamicJsonDocument json_sensors(bufferSize);
 
@@ -1159,6 +1181,7 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
   json_sensors["motor_state"] = motor_state;
   json_sensors["callSign"] = callSign;
   json_sensors["camera_ready"] = init_status.camera_;
+  json_sensors["logging_active"] = logger.enabled;
   serializeJson(json_sensors, json_string);
 
   if(debug_mode_active){

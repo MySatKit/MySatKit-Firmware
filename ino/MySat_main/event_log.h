@@ -21,7 +21,7 @@ static void dropOldestEventLine() {
   File src = LittleFS.open(EVENT_LOG_FILE, "r");
   if (!src) return;
 
-  src.readStringUntil('\n');
+  src.readStringUntil('\n'); // Skip first line (oldest event)
 
   const char* TMP = "/event_log.tmp";
   File tmp = LittleFS.open(TMP, "w");
