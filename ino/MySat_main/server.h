@@ -1053,12 +1053,17 @@ setInterval(updateConnectionStatus, 1000);
 
                 const loggingDot = document.getElementById("loggingDot");
                 if (loggingDot) {
-                  loggingDot.style.backgroundColor = responseData.logging_active
-                    ? "#00FF00"  
-                    : "#FF4444"; 
-                  loggingDot.title = responseData.logging_active
-                    ? "Mission data logging: ACTIVE"
-                    : "Mission data logging: STOPPED";
+                  let state = responseData.logging_state;
+                  if (state === 1) {
+                    loggingDot.style.backgroundColor = "#00FF00";
+                    loggingDot.title = "Mission data logging: ACTIVE";
+                  } else if (state === 2) {
+                    loggingDot.style.backgroundColor = "#FF4444"; 
+                    loggingDot.title = "Mission data logging: STOPPED (Memory Full)";
+                  } else {
+                    loggingDot.style.backgroundColor = "#808080"; 
+                    loggingDot.title = "Mission data logging: OFF";
+                  }
                 }
           
                 updateLightChart(
@@ -1181,7 +1186,7 @@ String* generateSensorsDataJson(pointer_of_sensors* data_, bool motor_state) {
   json_sensors["motor_state"] = motor_state;
   json_sensors["callSign"] = callSign;
   json_sensors["camera_ready"] = init_status.camera_;
-  json_sensors["logging_active"] = logger.enabled;
+  json_sensors["logging_state"] = getLoggingState();
   serializeJson(json_sensors, json_string);
 
   if(debug_mode_active){
@@ -1350,13 +1355,16 @@ void handleGetLogList() {
             fileObj["name"] = filename;
             fileObj["size"] = file.size();
 
-            if (filename.length() >= 29) {
-                String d = filename.substring(6, 14);   
-                String t = filename.substring(15, 21); 
+            if (filename.indexOf("nortc") != -1) {
+                fileObj["date"] = "No RTC (Uptime used)";
+            } 
+            else if (filename.length() >= 30) {
+                String d = filename.substring(11, 19);   
+                String t = filename.substring(20, 26); 
                 fileObj["date"] = d.substring(0, 4) + "-" + d.substring(4, 6) + "-" + d.substring(6, 8) +
                                   " " + t.substring(0, 2) + ":" + t.substring(2, 4);
             } else {
-                fileObj["date"] = "Unknown Date";
+                fileObj["date"] = filename; 
             }
         }
         file = root.openNextFile();

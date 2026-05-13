@@ -3,7 +3,6 @@
 #include "sensors_data.h"
 
 const int MAX_TOTAL_ROWS = 3600;
-const int MAX_FILES = 100;
 const unsigned long HOUR_MS = 3600000;
 const char* LOGGER_STATE_FILE = "/logger_state.txt";
 
@@ -36,28 +35,39 @@ void saveLoggerState() {
   }
 }
 
+int getLoggingState() {
+  if (logger.enabled) {
+    return 1; // Active
+  } else if (logger.total_rows >= MAX_TOTAL_ROWS && MAX_TOTAL_ROWS > 0) {
+    return 2; // Stopped (Full)
+  }
+  return 0; // Off
+}
+
 String createCSVHeader() {
   return "RTC_Time,ESP32_Uptime,Temperature,Pressure,Humidity,Gas_Resistance,IAQ,IAQ_Accuracy,"
          "Roll - X,Pitch - Y,Yaw - Z,PH1,PH2,PH3,PH4,Battery_V,Battery_I,Solar_V,Solar_I_L,Solar_I_R\n";
 }
 
 bool createNewLogFile() {
-  char filename[48];
+  char filename[64];
+
+  logger.file_number++;
 
   if (init_status.rtc_) {
     rtc_struct* rtc = get_rtc();
-    snprintf(filename, sizeof(filename), "/mdata_%04d%02d%02d_%02d%02d%02d_row%d.csv",
+    snprintf(filename, sizeof(filename), "/mdata_%04d_%04d%02d%02d_%02d%02d%02d.csv",
+             logger.file_number,
              rtc->year_, rtc->month_, rtc->day_,
-             rtc->hour_, rtc->minute_, rtc->second_,
-             logger.total_rows);
+             rtc->hour_, rtc->minute_, rtc->second_);
   } else {
     LOG_WARN("[LOGGER] RTC unavailable, using uptime for filename.");
-    snprintf(filename, sizeof(filename), "/mdata_nortc_%lu_row%d.csv",
-             millis(), logger.total_rows);
+    snprintf(filename, sizeof(filename), "/mdata_%04d_nortc_%010lu.csv", 
+             logger.file_number, millis());
   }
 
   logger.current_filename = String(filename);
-  logger.file_number++;
+  logger.session_start = millis();
 
   logDebug("[LOGGER] Attempting: " + logger.current_filename
            + "  free: " + String(LittleFS.totalBytes() - LittleFS.usedBytes()) + "B");
@@ -67,6 +77,7 @@ bool createNewLogFile() {
     LOG_ERROR("[LOGGER] Failed to create file: " + logger.current_filename);
     LOG_ERROR("[LOGGER] FS used: " + String(LittleFS.usedBytes())
               + " / " + String(LittleFS.totalBytes()) + "B");
+    logger.file_number--;
     return false;
   }
 
@@ -121,17 +132,6 @@ void loadLoggerState() {
   }
 }
 
-int extractRowNumber(const String& filename) {
-  int rowPos = filename.indexOf("_row");
-  if (rowPos < 0) return -1;
-
-  int dotPos = filename.indexOf(".csv");
-  if (dotPos < 0) return -1;
-
-  String rowStr = filename.substring(rowPos + 4, dotPos);
-  return rowStr.toInt();
-}
-
 bool isLogFile(const String& filename) {
   return (filename.startsWith("/mdata_") || filename.startsWith("mdata_")) &&
          filename.endsWith(".csv");
@@ -152,55 +152,33 @@ int countRowsInFile(const String& path) {
   }
   f.close();
 
-  rows--; // мінус заголовок CSV
+  rows--; // subtract the CSV header row
   return rows < 0 ? 0 : rows;
 }
 
 int deleteOldestLogFile() {
-  const int NO_VALUE = INT_MAX;
-
   File root = LittleFS.open("/");
   File file = root.openNextFile();
 
   String oldestFile = "";
-  int oldestRow = NO_VALUE;
-  int nextOldestRow = NO_VALUE;
 
   while (file) {
     String filename = file.name();
-
     if (isLogFile(filename)) {
-      int row = extractRowNumber(filename);
-
-      if (row >= 0) {
-        if (row < oldestRow) {
-          nextOldestRow = oldestRow;
-          oldestRow = row;
-          oldestFile = filename;
-        } else if (row < nextOldestRow) {
-          nextOldestRow = row;
-        }
+      if (oldestFile == "" || filename < oldestFile) {
+        oldestFile = filename;
       }
     }
-
     file = root.openNextFile();
   }
 
   if (oldestFile.isEmpty()) return 0;
 
-  int rowsInFile = 0;
-
-  if (nextOldestRow != NO_VALUE) {
-    // різниця між файлами
-    rowsInFile = nextOldestRow - oldestRow;
-  } else {
-    String path = normalizePath(oldestFile);
-    rowsInFile = countRowsInFile(path);
-  }
-
   String path = normalizePath(oldestFile);
+  
+  int rowsInFile = countRowsInFile(path); 
+
   LittleFS.remove(path.c_str());
-  logger.file_number--;
 
   LOG_INFO("[LOGGER] Deleted oldest file: " + oldestFile +
            " (" + String(rowsInFile) + " rows freed)");
@@ -220,21 +198,12 @@ void freeSpaceForNewFile() {
     logger.total_rows -= removed;
     if (logger.total_rows < 0) logger.total_rows = 0;
   }
+  saveLoggerState();
 }
 
 void checkHourlyFileRotation() {
-  unsigned long session_duration = millis() - logger.session_start;
-  int expected_file = (int)(session_duration / HOUR_MS) + 1;
-
-  if (expected_file > logger.file_number) {
-
-    if (logger.total_rows >= MAX_TOTAL_ROWS) {
-      freeSpaceForNewFile();
-    } else if (logger.file_number >= MAX_FILES) {
-      int removed = deleteOldestLogFile();
-      logger.total_rows -= removed;
-      if (logger.total_rows < 0) logger.total_rows = 0;
-    }
+  if (millis() - logger.session_start >= HOUR_MS) {
+    LOG_INFO("[LOGGER] Hourly rotation triggered.");
 
     createNewLogFile();
   }
@@ -348,7 +317,6 @@ void startLogging() {
   Serial.println(logger.period_seconds);
 
   logger.enabled = true;
-  logger.session_start = millis();
   logger.last_log_time = millis();
 
   if (logger.total_rows >= MAX_TOTAL_ROWS) {
@@ -359,11 +327,10 @@ void startLogging() {
 
   if (!createNewLogFile()) {
     logger.enabled = false;
+    saveLoggerState();
     LOG_ERROR("[LOGGER] Failed to start logging!");
     return;
   }
-
-  saveLoggerState();
 
   int max_time_hours = (int)((unsigned long)(MAX_TOTAL_ROWS - logger.total_rows)
                              * logger.period_seconds / 3600);

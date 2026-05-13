@@ -253,10 +253,12 @@ void handleCommands() {  // read commands for changing data
 
       } else if (inputBuffer.equalsIgnoreCase("SendEventLog")) {
         sendEventLogToSerial();
+        pauseToRead();
         recognized = true;
 
       } else if(inputBuffer.equalsIgnoreCase("DeleteLogging")){
         deleteMissionLogs();
+        pauseToRead();
         recognized = true;
       }
 
