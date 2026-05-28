@@ -3,6 +3,8 @@
 #include <Preferences.h>
 #include "sensors_data.h"
 
+#define HEARTBEAT_INTERVAL_MS 5000
+
 const char* EVENT_LOG_FILE  = "/event_log.txt";
 const int   MAX_EVENT_LINES = 100;
 
@@ -164,7 +166,7 @@ void finalizeSystemStartup() {
 void updateSystemHeartbeat() {
   unsigned long now = millis();
   
-  if (isSystemStable && init_status.rtc_ && (now - lastHeartbeatUpdate >= 60000)) {
+  if (isSystemStable && init_status.rtc_ && (now - lastHeartbeatUpdate >= HEARTBEAT_INTERVAL_MS)) {
      lastHeartbeatUpdate = now;
      saveHeartbeatToNVS(); 
   }

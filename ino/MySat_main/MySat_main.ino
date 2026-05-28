@@ -85,7 +85,7 @@ void loop() {
      outputData(data);
   }
 
-  updateSystemHeartbeat(); // Update Heartbeat every 60 seconds
+  updateSystemHeartbeat(); // Update Heartbeat every 5 seconds
 
   saveBsecState();
 }
