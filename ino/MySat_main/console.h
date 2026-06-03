@@ -4,7 +4,7 @@
 #include "data_logger.h"
 #include "event_log.h"
 #include <LittleFS.h>
-#define FIRMWARE_VERSION "v.1.3"
+#define FIRMWARE_VERSION "v.1.4"
 #define OUTPUT_FREQUENCE 1500
 
 extern String useWiFi;
