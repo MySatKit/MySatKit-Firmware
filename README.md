@@ -22,21 +22,35 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 
 # Release notes
 
+## V.1.4
+
+**Release date: ????.2026**  
+**Changes**:
+|||
+|:-|--|
+| New Features → | • implemented a system event logging with Web GUI export capability |
+| | • added telemetry frame counting |
+| | • added the ability to clear mission data csv files |
+| UI Updates → | • added a mission data logging status indicator to the Web GUI |
+
+**MySat boards support:**
+> *full:* v.1.5.6+  
+> *partial:* v.1.5.2+
+
 ## V.1.3
 
 **Release date: 06.04.2026**  
 **Changes**:
 |||
 |:-|--|
-| New Features → | • implemented local photo storage (circular buffer for last 10 images) |
-| | • implemented Telemetry Logging to Flash in CSV format with adjustable periods |
+| New Features → | • implemented local photo storage (buffer for 10 images) |
+| | • implemented Mission data logging to CSV files|
 | | • added `BlinkLED` command for quick hardware connection testing |
-| | • added persistent storage for logging states (ON/OFF) and WiFi configurations |
-| UI Updates → | • new Web GUI Gallery: 10 interactive slots for viewing stored photos |
+| UI Updates → | • added support for displaying saved camera frames |
 | | • integrated "Connection Status" indicator to monitor real-time data sync |
 | | • revamped "Sunlight Trackers" widget with coordinate axes (X/Y) and sensor mapping |
 | | • added "Battery" and "Solar panels" monitors to Web GUI |
-| | • added log file download capability from ESP32 directly via Web GUI |
+| | • added log file download capability via the Web GUI |
 | | • minor changes |
 | Bug Fixes → | • minor bug fixes|
 
