@@ -2,14 +2,16 @@
 #include "sensors_data.h"
 #include "control.h"
 #include "data_logger.h"
+#include "event_log.h"
 #include <LittleFS.h>
-#define FIRMWARE_VERSION "v.1.3"
+#define FIRMWARE_VERSION "v.1.4"
 #define OUTPUT_FREQUENCE 1500
 
 extern String useWiFi;
 extern String ssid;
 extern String password;
 String callSign = "MYSAT";
+static uint32_t frameCounter = 0;
 extern bool debug_mode_active;
 enum TelemetryMode { text,
                      plotter,
@@ -109,7 +111,7 @@ void auditFileSystem() {
     if (file.isDirectory()) {
       Serial.printf("[DIR]  /%s\n", file.name());
       int allDirSize = 0;
-      
+
       File subDir = LittleFS.open(file.name());
       File subFile = subDir.openNextFile();
       while (subFile) {
@@ -188,7 +190,7 @@ void handleCommands() {  // read commands for changing data
           currentMode = plotter;
           reactToCommand("Mode: PLOTTER.");
           selectPlotterMode();
-          
+
         } else if (currentMode == plotter) {
           currentMode = text;
           reactToCommand("Mode: TEXT.");
@@ -203,46 +205,65 @@ void handleCommands() {  // read commands for changing data
         }
         recognized = true;
 
-      } else if(inputBuffer.equalsIgnoreCase("DebugModeOn")){
+      } else if (inputBuffer.equalsIgnoreCase("DebugModeOn")) {
         currentMode = debug;
         debug_mode_active = true;
         reactToCommand("Mode: DEBUG.");
+        if (useWiFi.equalsIgnoreCase("Yes") && WiFi.status() == WL_CONNECTED) {
+          Serial.print("[DEBUG] Server IP: ");
+          Serial.println(WiFi.localIP());
+        } else {
+          Serial.println("[DEBUG] WiFi not connected.");
+        }
         recognized = true;
 
-      } else if(inputBuffer.equalsIgnoreCase("DebugModeOff")){
+      } else if (inputBuffer.equalsIgnoreCase("DebugModeOff")) {
         debug_mode_active = false;
         currentMode = text;
         reactToCommand("Mode: TEXT.");
         recognized = true;
 
-      }else if(inputBuffer.equalsIgnoreCase("SetRadio")){
+      } else if (inputBuffer.equalsIgnoreCase("SetRadio")) {
         setRadio();
         reactToCommand("Radio(HC-12) AT-config mode activated.");
         recognized = true;
-        
-      }else if(inputBuffer.equalsIgnoreCase("StartLogging")){
+
+      } else if (inputBuffer.equalsIgnoreCase("StartLogging")) {
         startLogging();
-        reactToCommand("Start logging...");
         recognized = true;
-        
-      }else if(inputBuffer.equalsIgnoreCase("StopLogging")){
+
+      } else if (inputBuffer.equalsIgnoreCase("StopLogging")) {
         stopLogging();
         reactToCommand("Stop logging...");
         recognized = true;
 
-      }else if(inputBuffer.equalsIgnoreCase("AuditFileSystem")){
+      } else if (inputBuffer.equalsIgnoreCase("AuditFileSystem")) {
         auditFileSystem();
         pauseToRead();
         recognized = true;
 
-      }else if(inputBuffer.equalsIgnoreCase("ListLogFiles")){
+      } else if (inputBuffer.equalsIgnoreCase("ListLogFiles")) {
         listLogFiles();
         pauseToRead();
         recognized = true;
 
-      }else if(inputBuffer.equalsIgnoreCase("BlinkLed")){
+      } else if (inputBuffer.equalsIgnoreCase("BlinkLed")) {
         startBlink(stateLight);
         recognized = true;
+
+      } else if (inputBuffer.equalsIgnoreCase("SendEventLog")) {
+        sendEventLogToSerial();
+        pauseToRead();
+        recognized = true;
+
+      } else if(inputBuffer.equalsIgnoreCase("DeleteLogging")){
+        deleteMissionLogs();
+        pauseToRead();
+        recognized = true;
+      }
+
+      if (recognized) {
+        writeEventLog("COMMAND_RECEIVED \"" + inputBuffer + "\"");
       }
 
       if (inputBuffer.length() >= 3 && !recognized) {
@@ -258,31 +279,31 @@ void handleCommands() {  // read commands for changing data
 
 void outputDataText(pointer_of_sensors* data_) {
   Serial.println("\n\n\n" + callSign + "(" FIRMWARE_VERSION ")");
+  Serial.println("  Frame: " + String(frameCounter));
 
   if (init_status.bme_) {
     if (data_->bme_->data_available) {
       Serial.println("===ENVIRONMENT:==================");
-      Serial.print("  Temperature = ");
+
+      Serial.print("  Temp = ");
       Serial.print(data_->bme_->temperature);
-      Serial.println(F(" *C"));
-
-      Serial.print("  Pressure = ");
-      Serial.print(data_->bme_->pressure);
-      Serial.println(" hPa");
-
-      Serial.print("  Humidity = ");
-      Serial.print(data_->bme_->humidity);
-      Serial.println(" %");
-
-      Serial.print("  Gas resistance = ");
+      Serial.print(F(" *C"));
+      Serial.print("   \t| Gas res. = ");
       Serial.print(data_->bme_->gas_resistance);
       Serial.println(" KOhms");
 
-      Serial.print("  IAQ = ");
-      Serial.println(data_->bme_->iaq);
-
-      Serial.print("  IAQ Accuracy: ");
-      Serial.println(data_->bme_->iaq_accuracy);
+      Serial.print("  Pres = ");
+      Serial.print(data_->bme_->pressure);
+      Serial.print(" hPa");
+      Serial.print(" \t| IAQ = ");
+      Serial.print(data_->bme_->iaq);
+      switch (data_->bme_->iaq_accuracy) {
+        case 0: Serial.println(" (low)"); break;
+        case 1: Serial.println(" (medium)"); break;
+        case 2: Serial.println(" (high)"); break;
+        case 3: Serial.println(" (verified)"); break;
+        default: Serial.println(" (?)"); break;
+      }
 
     } else {
       Serial.println("===ENVIRONMENT:==================");
@@ -404,10 +425,10 @@ void outputDataText(pointer_of_sensors* data_) {
   Serial.print("StarLED: ");
   Serial.println(stateLight ? "ON" : "OFF");
 
-  if(logger.total_rows >= MAX_TOTAL_ROWS && logger.total_rows > 0){
-    Serial.println("  Logging: STOPPED (memory full)");
-  }else if(logger.enabled){
-    Serial.print("  Logging: ACTIVE (period: ");
+  if (logger.total_rows >= MAX_TOTAL_ROWS && logger.total_rows > 0) {
+    Serial.println("  Mission data logging: STOPPED (memory full)");
+  } else if (logger.enabled) {
+    Serial.print("  Mission data logging: ACTIVE (period: ");
     Serial.print(logger.period_seconds);
     Serial.print(" s, rows: ");
     Serial.print(logger.total_rows);
@@ -416,21 +437,18 @@ void outputDataText(pointer_of_sensors* data_) {
     Serial.println(")");
   }
 
-  if (useWiFi.equalsIgnoreCase("Yes")) {
-    Serial.println("================================");
-    Serial.print("  CONNECT VIA WIFI “");
-    Serial.print(ssid);
+  Serial.println("================================");
+  if (!LittleFS.exists("/bootstrap.css")) {
+    Serial.println("  ▲ Files for Web-GUI not found!");
+  } else if (useWiFi.equalsIgnoreCase("Yes")) {
+    Serial.print("  CONNECT VIA WIFI “"); 
+    Serial.print(ssid); 
     Serial.println("”:");
-    if (LittleFS.exists("/bootstrap.css")) {
-      Serial.println(  WiFi.localIP());
-    } else {
-      Serial.println("  ▲ Files for WebGUI not found!");
-    }
-    Serial.println("================================");
+    Serial.println(WiFi.localIP());
   } else {
-    Serial.println("================================");
-    Serial.println("WiFi not configured. Use the command: SetWIFI");
+    Serial.println("  WiFi not configured. Use the command: SetWIFI");
   }
+  Serial.println("================================");
 }
 
 void outputDataPlotter(pointer_of_sensors* data_) {
@@ -516,6 +534,7 @@ void outputData(pointer_of_sensors* data_) {
   unsigned long now = millis();
 
   if (now - lastOutput >= OUTPUT_FREQUENCE && output) {
+    frameCounter++;
     if (currentMode == text) {
       outputDataText(data_);
     } else if (currentMode == plotter) {

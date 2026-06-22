@@ -6,7 +6,7 @@
  * Main satellite firmware that simulates CubeSat operations and 
  *   manages all subsystems of the MySat educational kit
  *
- * version: v.1.3
+ * version: v.1.4
  * author: MySat Developmet team
  * license: Open Source (MIT) – github.com/mysatkit
  *
@@ -15,15 +15,20 @@
 */
 
 #include <Wire.h>
+#include <LittleFS.h>
+#include <Preferences.h>
 #include "server.h"
 #include "console.h"
-#include <LittleFS.h>
 
 String ssid = "";
 String password = "";
 String useWiFi = "";
 
 bool debug_mode_active = false;
+
+Preferences prefs;
+bool isSystemStable = false;
+unsigned long lastHeartbeatUpdate = 0;
 
 bool loadWiFiConfig(String& ssid, String& password, String& useWiFi);
 void saveWiFiConfig(const String& ssid, const String& password, const String& useWiFi);
@@ -44,13 +49,14 @@ void setup() {
   }
 
   LOG_INFO("[FS] LittleFS mounted successfully.");
+  Wire.begin(def_SDA, def_SCL);
+  initSensors();
   initStarLed();
   initSignalLed();
   setTime();
+  initEventLog();
   loadLoggerState();
   loadCallSign(callSign);
-  Wire.begin(def_SDA, def_SCL);
-  initSensors();
   if(loadWiFiConfig(ssid, password, useWiFi)){
     if (useWiFi.equalsIgnoreCase("Yes")) {
       tryConnectWiFi();
@@ -74,9 +80,13 @@ void loop() {
   unsigned long now = millis();
   if (now - lastSensorUpdate >= SENSOR_INTERVAL) {
      lastSensorUpdate = now;
+     finalizeSystemStartup(); // Check stable system startup (runs only once)
      pointer_of_sensors* data = get_sensors_data();
      outputData(data);
   }
+
+  updateSystemHeartbeat(); // Update Heartbeat every 5 seconds
+
   saveBsecState();
 }
 
