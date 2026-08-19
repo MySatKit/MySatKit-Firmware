@@ -7,13 +7,13 @@
  *  - servomotor (MySat solar panels deployment);
  *  - HC-12 module (MySat radio transceiver);
  *
- * version: v.1.3
- * date: 2026-07-26
+ * version: v.1.2.0
+ * date: 23.09.2025
  *
  *
  */
 
-#define VERSION "v.1.3.0"
+#define VERSION "v.1.2.0"
 
 #include <Wire.h>
 #include <Servo.h> 
@@ -60,7 +60,6 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RF_ON_PIN, OUTPUT);
   digitalWrite(RF_ON_PIN, LOW); //allows HC-12 to always work by default (necessary for boards v.1.5.5)
-  digitalWrite(RF_SET_PIN, LOW); //exit from the HC-12 setup mode
   //  I2C settings:
   Wire.begin(0x08); 
   Wire.onReceive(ESP32_I2C_handler); 
@@ -152,13 +151,13 @@ void motor() {
   }
 }
 
-void blink_LED() { //blinking the built-in LED according to the pattern: ----****-*-*----
-  static const uint16_t pattern[] = {400, 200, 100, 200, 100, 3000}; // [ms]
+void blink_LED() { //blinking the built-in LED according to the pattern: -----*--*-----
+  static const uint16_t pattern[] = {400, 200, 100, 3000}; // [ms]
   static uint8_t step = 0;
   static unsigned long timer = 0;
   if (millis() - timer > pattern[step]) {
     digitalWrite(LED_BUILTIN, step % 2); // 0 - LOW, 1 - HIGH
     timer = millis();
-    step = (step + 1) % 6;
+    step = (step + 1) % 4;
   }
 }
