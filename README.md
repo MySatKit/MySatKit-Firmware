@@ -22,9 +22,25 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 
 # Release notes
 
+## V.1.4.1
+
+**Release date:** 2026/08/19  
+**Changes**:
+|||
+|:-|--|
+| Bug Fixes → | • fixed a bug causing the HC-12 to stop working during operation|
+
+**Microcontoller firmware versions:**
+> *ESP32-CAM:* v.1.4  
+> *ATmega 328p:* v.1.3.0
+
+**MySat boards support:**
+> *full:* v.1.5.6+  
+> *partial:* v.1.5.2+
+
 ## V.1.4
 
-**Release date: 2026/06/22**  
+**Release date:** 2026/06/22  
 **Changes**:
 |||
 |:-|--|
@@ -33,13 +49,17 @@ This repository contains the main firmware for MySat Kit microcontrollers (ESP32
 | | • added the ability to clear mission data csv files |
 | UI Updates → | • added a mission data logging status indicator to the Web GUI |
 
+**Microcontoller firmware versions:**
+> *ESP32-CAM:* v.1.4  
+> *ATmega 328p:* v.1.2.0
+
 **MySat boards support:**
 > *full:* v.1.5.6+  
 > *partial:* v.1.5.2+
 
 ## V.1.3
 
-**Release date: 2026/04/06**  
+**Release date:** 2026/04/06  
 **Changes**:
 |||
 |:-|--|
