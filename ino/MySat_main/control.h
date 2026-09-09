@@ -185,9 +185,3 @@ bool setStateMotor(bool newState) {
   }
   return false;
 }
-
-void setRadio(){
-  Wire.beginTransmission(8);
-  Wire.write(byte(3));
-  Wire.endTransmission();
-}
