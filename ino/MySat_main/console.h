@@ -2,9 +2,10 @@
 #include "sensors_data.h"
 #include "control.h"
 #include "data_logger.h"
+#include "radio.h"
 #include "event_log.h"
 #include <LittleFS.h>
-#define FIRMWARE_VERSION "v.1.4"
+#define FIRMWARE_VERSION "v.1.5"
 #define OUTPUT_FREQUENCE 1500
 
 extern String useWiFi;
@@ -225,7 +226,6 @@ void handleCommands() {  // read commands for changing data
 
       } else if (inputBuffer.equalsIgnoreCase("SetRadio")) {
         setRadio();
-        reactToCommand("Radio(HC-12) AT-config mode activated.");
         recognized = true;
 
       } else if (inputBuffer.equalsIgnoreCase("StartLogging")) {
