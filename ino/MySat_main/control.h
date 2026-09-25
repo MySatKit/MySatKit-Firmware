@@ -18,7 +18,7 @@ const int LED = 14;  //MySat STAR LED
 const int SIGNAL_LED = 2;  //MySat SIGNAL LED
 const int NUM_LEDS = 1;
 
-Adafruit_NeoPixel signalStrip(NUM_LEDS, SIGNAL_LED, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel signalStrip(NUM_LEDS, SIGNAL_LED, NEO_RGB + NEO_KHZ800);
 
 enum LedMode { LED_OFF,
                LED_SOLID,
