@@ -21,10 +21,11 @@
 enum Commands_list {
     MOTOR_OPEN,
     MOTOR_CLOSE,
-    RF_TURN,
-    RF_SET
+    RF_TURN, // param: 1 = power HC-12 on, 0 = power HC-12 off
+    RF_SET // param: 1 = enter AT-config mode (D4=HIGH), 0 = exit / normal radio mode (D4=LOW)
 };
 Commands_list command;
+uint8_t command_param = 0;
 bool command_flag = 0;
 
 //  Servo motor angles:
@@ -60,6 +61,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RF_ON_PIN, OUTPUT);
   digitalWrite(RF_ON_PIN, LOW); //allows HC-12 to always work by default (necessary for boards v.1.5.5)
+  pinMode(RF_SET_PIN, OUTPUT);
   digitalWrite(RF_SET_PIN, LOW); //exit from the HC-12 setup mode
   //  I2C settings:
   Wire.begin(0x08); 
@@ -76,12 +78,17 @@ void loop() {
     blink_LED();
 }
 
-
-
-
 void ESP32_I2C_handler() {
-  while (0 < Wire.available()) {
-    command = Wire.read();
+  //Protocol: byte 0 = command, byte 1 (optional) = parameter.
+  //Motor commands ignore the parameter; RF commands require it.
+  if (Wire.available()) {
+    command = (Commands_list)Wire.read();
+  }
+  if (Wire.available()) {
+    command_param = Wire.read();
+  }
+  while (Wire.available()) { 
+    Wire.read();
   }
   command_flag = true;
 }
@@ -97,8 +104,14 @@ void command_handler() {
           direction = command; //save the command for turning operation
         }
         break;
-      case RF_TURN:
-      case RF_SET:
+      case RF_TURN: //power HC-12 on/off
+        digitalWrite(RF_ON_PIN, command_param ? LOW : HIGH); //LOW = powered on, per setup() default
+        Serial.print("RF power -> "); Serial.println(command_param ? "ON" : "OFF");
+        break;
+
+      case RF_SET: //enter/exit HC-12 AT-config mode
+        digitalWrite(RF_SET_PIN, command_param ? HIGH : LOW);
+        Serial.print("RF SET pin -> "); Serial.println(command_param ? "HIGH (config mode)" : "LOW (radio mode)");
         break;
     }
   }

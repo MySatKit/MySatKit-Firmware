@@ -6,7 +6,7 @@
  * Main satellite firmware that simulates CubeSat operations and 
  *   manages all subsystems of the MySat educational kit
  *
- * version: v.1.4
+ * version: v.1.5
  * author: MySat Developmet team
  * license: Open Source (MIT) – github.com/mysatkit
  *
@@ -40,8 +40,6 @@ const int def_SDA(15);
 const int def_SCL(13);
 
 void setup() {
-  loadStateMotor();
-  control_motor(stateMotor);
   Serial.begin(115200);
   if (!LittleFS.begin(true)) {
     LOG_ERROR("[FS] Failed to mount LittleFS!");
@@ -50,6 +48,8 @@ void setup() {
 
   LOG_INFO("[FS] LittleFS mounted successfully.");
   Wire.begin(def_SDA, def_SCL);
+  loadStateMotor();
+  control_motor(stateMotor);
   initSensors();
   initStarLed();
   initSignalLed();
