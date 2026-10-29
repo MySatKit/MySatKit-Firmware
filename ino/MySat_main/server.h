@@ -717,6 +717,13 @@ const char* htmlContent = R"###(
         document.getElementById("photoFromESP").src =
           "data:image/jpeg;base64," + data.image;
 
+        if (data.saved === false) {   // shown, but not stored on the satellite
+          document.getElementById("photoInfo").textContent =
+            `⚠ Photo NOT saved (${data.warning}). Free space: ${data.free_bytes} B. ` +
+            `Delete old logs to free space.`;
+          return;
+        }
+
         let nice = "Time unknown(module RTC not found)";
         if(data.timestamp && data.timestamp !== "unknown"){
           const date = new Date(data.timestamp);
@@ -1314,24 +1321,29 @@ void handleGetPhoto() {
     strcpy(timestamp, "unknown");
   }
 
-  if (savePhoto(fb, timestamp)) {
-    DynamicJsonDocument doc(fb->len * 1.4 + 256); 
-    
-    String base64String = base64::encode(fb->buf, fb->len);
-    
-    doc["id"] = globalPhotoCounter; 
-    doc["timestamp"] = timestamp;
-    doc["image"] = base64String;
+  PhotoSaveResult saveResult;
+  bool saved = savePhoto(fb, timestamp, &saveResult);
 
-    String response;
-    serializeJson(doc, response);
-    
-    server.send(200, "application/json", response);
+  DynamicJsonDocument doc(fb->len * 1.4 + 384);
+
+  String base64String = base64::encode(fb->buf, fb->len);
+
+  doc["id"] = saved ? globalPhotoCounter : 0;
+  doc["saved"] = saved;
+  if (!saved) doc["warning"] = photoSaveResultText(saveResult);
+  doc["free_bytes"] = getFreeStorageBytes();
+  doc["timestamp"] = timestamp;
+  doc["image"] = base64String;
+
+  String response;
+  serializeJson(doc, response);
+
+  server.send(200, "application/json", response);
+  if (saved) {
     writeEventLog("PHOTO " + String(globalPhotoCounter));
     logDebug("[PHOTO] Successfully saved and sent photo #" + String(globalPhotoCounter));
   } else {
-    server.send(500, "text/plain", "Failed to save photo");
-    logDebug("[PHOTO] Failed to save photo");
+    LOG_ERROR("[PHOTO] Photo delivered but NOT stored: " + String(photoSaveResultText(saveResult)));
   }
 
   esp_camera_fb_return(fb);
